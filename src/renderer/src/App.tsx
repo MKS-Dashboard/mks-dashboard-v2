@@ -401,7 +401,7 @@ function App() {
         </section>
         <footer className="app-footer">
           <span>
-            Versie {appInfo?.version ?? "…"} · {appInfo?.channel === "dev" ? "Dev-kanaal" : "Stable-kanaal"} · Game-API rechtstreeks vanaf deze pc
+            Versie {appInfo?.version ?? "…"} · {appInfo?.channel === "dev" ? "Dev-kanaal" : "Stable-kanaal"}
           </span>
         </footer>
       </main>
