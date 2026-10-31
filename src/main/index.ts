@@ -277,7 +277,7 @@ ipcMain.handle("updates:install", (event) => {
   if (updateStatus.state !== "downloaded") {
     throw new Error("Er is geen gedownloade update klaar om te installeren.");
   }
-  autoUpdater.quitAndInstall();
+  autoUpdater.quitAndInstall(true, true);
 });
 
 app.whenReady().then(() => {
