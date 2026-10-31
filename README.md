@@ -48,7 +48,7 @@ Er zijn twee updatekanalen:
 
 Beide installers controleren bij het starten en daarna periodiek op updates voor hun eigen kanaal. Updates worden automatisch gedownload en bij het afsluiten geïnstalleerd; de app biedt ook een knop om direct opnieuw te starten en bij te werken. De installernaam bevat de UTC-tijd in het formaat `YYYY.MM.DD.HH.MM` en het kanaal. De interne appversie gebruikt een SemVer-compatibele, compacte datum/tijd-versie, zodat de Electron-updater versies goed kan vergelijken.
 
-Je kunt de workflow ook handmatig starten via **Actions → Windows installer → Run workflow** op GitHub; dit maakt een testartifact maar publiceert geen release. Installatieartifacts blijven 14 dagen beschikbaar. Voor releases is geen code signing ingesteld; Windows kan daarom een waarschuwing tonen wanneer je een installer start.
+De Windows-installer wordt gebouwd op een gratis GitHub-hosted Linux-runner met Wine en een virtueel scherm. Je kunt de workflow ook handmatig starten via **Actions → Windows installer → Run workflow** op GitHub; dit maakt een testartifact maar publiceert geen release. Installatieartifacts blijven 14 dagen beschikbaar. Voor releases is geen code signing ingesteld; Windows kan daarom een waarschuwing tonen wanneer je een installer start.
 
 ## Huidige gegevensbronnen
 

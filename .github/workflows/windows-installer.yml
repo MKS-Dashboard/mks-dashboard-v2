@@ -38,10 +38,11 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Install Wine
+      - name: Install Wine and virtual display
         run: |
+          sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install --no-install-recommends --yes wine
+          sudo apt-get install --no-install-recommends --yes wine wine32:i386 xvfb xauth
 
       - name: Install dependencies
         run: npm ci
@@ -73,7 +74,7 @@ jobs:
           echo "UPDATE_CHANNEL=stable" >> "$GITHUB_ENV"
 
       - name: Build Windows installer
-        run: npm run dist
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x800x24" npm run dist
 
       - name: Publish Dev prerelease
         if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
