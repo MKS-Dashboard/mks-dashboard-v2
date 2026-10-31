@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { BuildingsPage, ProgressPage, VehiclesPage } from "./DashboardPages";
 import {
   dashboardResources,
   type AppInfo,
@@ -7,7 +8,7 @@ import {
   type UpdateStatus,
 } from "../../shared/contracts";
 
-type PageKey = "overview" | DashboardResourceKey;
+type PageKey = "overview" | "progressdata" | DashboardResourceKey;
 
 function recordsFrom(data: unknown): unknown[] {
   if (Array.isArray(data)) return data;
@@ -148,7 +149,7 @@ function App() {
       .slice(0, 200);
   }, [activeResource, data, search]);
 
-  const selectedLabel = activeResource?.label ?? "Overzicht";
+  const selectedLabel = page === "progressdata" ? "Progressdata" : activeResource?.label ?? "Overzicht";
   const updateMessage = {
     idle: "",
     checking: "Controleren op updates...",
@@ -188,6 +189,9 @@ function App() {
               )}
             </button>
           ))}
+          <button className={`nav-item ${page === "progressdata" ? "active" : ""}`} onClick={() => setPage("progressdata")}>
+            <span className="nav-icon">P</span> Progressdata
+          </button>
         </nav>
 
         <div className="sidebar-footer">
@@ -347,7 +351,10 @@ function App() {
             </>
           )}
 
-          {activeResource && data && activeResult && (
+          {page === "vehicles" && data && <VehiclesPage result={data.vehicles} />}
+          {page === "buildings" && data && <BuildingsPage result={data.buildings} />}
+          {page === "progressdata" && data && <ProgressPage data={data} />}
+          {activeResource && page !== "vehicles" && page !== "buildings" && data && activeResult && (
             <section className="data-panel">
               <div className="data-toolbar">
                 <div>

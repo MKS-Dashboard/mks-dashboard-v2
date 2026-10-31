@@ -673,6 +673,96 @@ input:focus-visible {
   text-decoration: underline;
 }
 
+.report-page,
+.report-category {
+  display: grid;
+  gap: 20px;
+}
+
+.report-page .section-heading {
+  margin: 0;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.report-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.report-table th,
+.report-table td {
+  padding: 13px 20px;
+  border-bottom: 1px solid #e9edf3;
+  text-align: left;
+}
+
+.report-table th {
+  color: #39495f;
+  background: #eef1f6;
+}
+
+.report-table td:last-child,
+.report-table th:last-child {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-table tbody tr:nth-child(even) {
+  background: #fafbfd;
+}
+
+.report-table.fire th { background: #fbe0e2; }
+.report-table.medical th { background: #fff1c4; }
+.report-table.police th { background: #dceaff; }
+.report-table.rescue th { background: #ffe5cd; }
+
+.capacity-panel {
+  padding: 24px;
+}
+
+.capacity-panel h2 {
+  margin: 0 0 20px;
+  font-size: 18px;
+}
+
+.capacity-row + .capacity-row {
+  margin-top: 24px;
+}
+
+.capacity-label,
+.capacity-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.capacity-track {
+  height: 24px;
+  margin: 10px 0;
+  overflow: hidden;
+  border-radius: 5px;
+  background: #2e9c67;
+}
+
+.capacity-used {
+  height: 100%;
+  background: #d72d35;
+}
+
+.capacity-empty {
+  background: #e9edf3;
+}
+
+.capacity-legend {
+  color: #627088;
+}
+
 .spinner {
   width: 12px;
   height: 12px;

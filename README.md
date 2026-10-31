@@ -6,6 +6,27 @@ Een desktop-app voor Windows die de belangrijkste overzichten van het [MKS Dashb
 
 De eerste desktopbasis is in ontwikkeling. De app gebruikt Electron, React en TypeScript. De bestaande webapp is de functionele referentie; nog niet alle onderdelen daarvan zijn overgezet.
 
+## Dashboardpagina's
+
+- **Voertuigen:** aantallen per hulpdienst en voertuigtype, voertuiggroepen en extra waarden (zoals watercapaciteit), met zoekfunctie en gekleurde tabellen zoals in de webapp.
+- **Gebouwen:** fysieke en technische aantallen per type, uitbreidingen met actief/inactief-status en specialisaties. Kleine gebouwen, niveaus en SAR-hangars worden volgens de telling van de webapp verwerkt.
+- **Progressdata:** bezette en vrije ziekenhuisbedden, cellen en klaslokalen, apart voor eigen gebouwen en teamgebouwen. Nog niet beschikbare uitbreidingen tellen niet mee voor capaciteit.
+
+Deze pagina's tonen geen raw JSON. Typenamen en rekenregels zijn gebaseerd op de `dev`-webapp; de gamecatalogus is lokaal meegeleverd en vereist geen MKS-proxy. Onbekende typen blijven zichtbaar met hun type-ID. Andere pagina's hebben voorlopig nog de generieke gegevensweergave.
+
+### Gamecatalogus onderhouden
+
+De vaste gegevens staan per gegevenssoort in `src/renderer/src/data`:
+
+- `vehicles.json`: voertuig-ID's, afkortingen, omschrijvingen en hulpdiensten.
+- `vehicle-groups.json`: voertuiggroepen met verwijzingen naar voertuig-ID's.
+- `vehicle-values.json`: extra waarden per voertuigtype, zoals watercapaciteit.
+- `buildings.json`: gebouwtypen en regels voor kleine gebouwen, niveaus en uitbreidingen.
+- `specializations.json`: namen van gebouwspecialisaties.
+- `schools.json`: schooltypen met hun gebouw-ID's.
+
+De uitgangsgegevens komen uit de [webapp op commit 8ec5374](https://github.com/MKS-Dashboard/mks-dashboard.github.io/tree/8ec537480f00a71c583c8fc3513426d2cacde021/src/Lists). Bewaar bestaande ID's en controleer verwijzingen tussen de bestanden wanneer je typen toevoegt of wijzigt. Voer daarna `npm test` en `npm run build` uit. De bestanden worden met de app meegebouwd; gewijzigde catalogusgegevens komen bij gebruikers terecht via een nieuwe appversie.
+
 ## Privacy en verbinding
 
 - De app en de API-aanroepen draaien op je eigen pc.
@@ -33,6 +54,7 @@ npm run dev
 
 ```powershell
 npm run typecheck
+npm test
 npm run build
 npm run dist
 ```
