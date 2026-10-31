@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BuildingsPage, ProgressPage, read, VehiclesPage } from "./DashboardPages";
+import { BuildingsPage, ProgressPage, read, VehiclesPage, VehicleDetailsPage } from "./DashboardPages";
 import { schoolingRecords } from "./schoolings";
 import { defaultRefreshMinutes, parseRefreshMinutes, refreshDue } from "./refresh-interval";
 import { accountUsername, AccountPage, AlliancePage, BuildingDetailsPage, CreditsPage, SchoolingsPage, SuggestionsPage } from "./AccountPages";
@@ -52,6 +52,8 @@ function App() {
   const [refreshSettingError, setRefreshSettingError] = useState("");
   const [refreshSettingsLoaded, setRefreshSettingsLoaded] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [selectedVehicleTypeId, setSelectedVehicleTypeId] = useState<number | null>(null);
+  const [gameVersion, setGameVersion] = useState<"brandweer" | "politie">("brandweer");
 
   useEffect(() => {
     if (error) recordAppIssue("App", error);
@@ -73,6 +75,7 @@ function App() {
     try {
       const saved = localStorage.getItem("mks-refresh-minutes");
       const enabled = localStorage.getItem("mks-auto-refresh");
+      const version = localStorage.getItem("mks-game-version");
       if (enabled !== null && enabled !== "true" && enabled !== "false") {
         throw new Error("De opgeslagen instelling voor automatisch vernieuwen is ongeldig.");
       }
@@ -80,6 +83,9 @@ function App() {
       setRefreshMinutes(minutes);
       setRefreshDraft(String(minutes));
       setAutoRefresh(enabled !== "false");
+      if (version === "politie" || version === "brandweer") {
+        setGameVersion(version);
+      }
       setRefreshSettingsLoaded(true);
     } catch (cause) {
       setRefreshSettingError(cause instanceof Error ? cause.message : "Het vernieuwingsinterval kon niet worden geladen.");
@@ -105,6 +111,15 @@ function App() {
       setRefreshSettingError("");
     } catch (cause) {
       setRefreshSettingError(cause instanceof Error ? cause.message : "Het vernieuwingsinterval kon niet worden opgeslagen.");
+    }
+  }
+
+  function changeGameVersion(version: "brandweer" | "politie"): void {
+    try {
+      localStorage.setItem("mks-game-version", version);
+      setGameVersion(version);
+    } catch (cause) {
+      setRefreshSettingError(cause instanceof Error ? cause.message : "De spelversie kon niet worden opgeslagen.");
     }
   }
 
@@ -493,6 +508,20 @@ function App() {
                   <button className="button button-secondary" type="submit" disabled={!autoRefresh}>Opslaan</button>
                 </div>
               </form>
+              <div className="settings-option">
+                <div className="settings-option-copy">
+                  <div className="settings-option-title">
+                    <label htmlFor="game-version-select">Spelversie</label>
+                  </div>
+                  <p id="game-version-description">Kies welke spelversie je gebruikt. Dit bepaalt naar welke server gegevens worden opgehaald.</p>
+                </div>
+                <select id="game-version-select" className="settings-select" value={gameVersion}
+                  aria-describedby="game-version-description" disabled={!refreshSettingsLoaded}
+                  onChange={(event) => changeGameVersion(event.target.value as "brandweer" | "politie")}>
+                  <option value="brandweer">Brandweer (meldkamerspel.com)</option>
+                  <option value="politie">Politie (politie.meldkamerspel.com)</option>
+                </select>
+              </div>
               {appInfo?.channel === "dev" && <div className="settings-option">
                 <div className="settings-option-copy">
                   <div className="settings-option-title">
@@ -636,7 +665,8 @@ function App() {
           )}
 
           {signedIn && currentPageAllowed && <>
-          {page === "vehicles" && data && <VehiclesPage result={data.vehicles} />}
+          {page === "vehicles" && data && selectedVehicleTypeId === null && <VehiclesPage result={data.vehicles} onShowDetails={(id) => setSelectedVehicleTypeId(id)} />}
+          {page === "vehicles" && data && selectedVehicleTypeId !== null && <VehicleDetailsPage result={data.vehicles} buildingsResult={data.buildings} vehicleTypeId={selectedVehicleTypeId} gameVersion={gameVersion} onBack={() => setSelectedVehicleTypeId(null)} />}
           {page === "buildings" && data && <BuildingsPage result={data.buildings} />}
           {page === "allianceBuildings" && data && <BuildingsPage result={data.allianceBuildings} alliance />}
           {page === "progressdata" && data && <ProgressPage data={data} />}

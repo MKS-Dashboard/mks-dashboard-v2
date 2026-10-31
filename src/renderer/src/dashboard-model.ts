@@ -8,7 +8,10 @@ import schools from "./data/schools.json" with { type: "json" };
 const catalog = { vehicles, groups, values, buildings, specializations, schools };
 
 export interface Vehicle {
+  id?: number;
   type: number;
+  buildingId?: number;
+  name?: string;
 }
 
 export interface Extension {
@@ -54,7 +57,12 @@ function array(value: unknown): unknown[] {
 export function parseVehicles(value: unknown): Vehicle[] {
   return array(value).map((item) => {
     const record = object(item);
-    return { type: number(record.vehicle_type, "vehicle_type") };
+    return { 
+      id: record.id == null ? undefined : number(record.id, "id"),
+      type: number(record.vehicle_type, "vehicle_type"),
+      buildingId: record.building_id == null ? undefined : number(record.building_id, "building_id"),
+      name: typeof record.caption === "string" ? record.caption : undefined,
+    };
   });
 }
 
@@ -218,4 +226,9 @@ export function capacityOverview(buildings: Building[], alliance = false) {
         (building) => building.schoolings),
     })),
   };
+}
+
+export function getVehicleTypeInfo(typeId: number): { id: number; name: string; description: string } | null {
+  const vehicleType = catalog.vehicles.find((v) => v.id === typeId);
+  return vehicleType ? { id: vehicleType.id, name: vehicleType.name, description: vehicleType.description } : null;
 }
