@@ -122,6 +122,8 @@ Openbare missiegegevens komen uit [Missionfiles-All-Versions](https://github.com
 
 ### Releases
 
+Na een geslaagde releasepublicatie worden automatisch de nieuwste **10 Stable-releases en 10 Beta-releases** bewaard, op basis van het versienummer. Oudere releases, hun downloadbestanden en bijbehorende Git-tags worden verwijderd. Conceptreleases en releases met onbekende tagformaten worden niet opgeruimd.
+
 - **Beta:** een push naar `dev` publiceert automatisch een prerelease.
 - **Stable:** een push naar `main`, bijvoorbeeld na een merge, publiceert automatisch een release na een geslaagde test en build. Handmatig een tag van `main` publiceren in het formaat `vYYYY.MM.DD.HH.MM` blijft mogelijk.
 - Stable-tags worden automatisch gegenereerd als `vYYYY.MM.DD.HH.MM`. Als een tag voor de huidige minuut al bestaat, wacht de versievoorbereiding tot de volgende minuut.
