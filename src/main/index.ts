@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { getUpdateFeed } from "./update-feed";
 import {
   dashboardResources,
   type AuthStatus,
@@ -41,6 +42,8 @@ async function checkForUpdates(): Promise<void> {
 
   setUpdateStatus({ state: "checking" });
   try {
+    const url = await getUpdateFeed(/-beta(?:\.|$)/.test(app.getVersion()));
+    autoUpdater.setFeedURL({ provider: "generic", url });
     await autoUpdater.checkForUpdates();
   } catch (error) {
     const message = error instanceof Error ? error.message : "Controleren op updates is mislukt.";
@@ -52,8 +55,9 @@ async function checkForUpdates(): Promise<void> {
 function configureAutoUpdates(): void {
   if (!app.isPackaged) return;
 
-  const isDevChannel = app.getVersion().includes("-beta.");
+  const isDevChannel = /-beta(?:\.|$)/.test(app.getVersion());
   autoUpdater.channel = isDevChannel ? "beta" : "latest";
+  autoUpdater.allowDowngrade = false;
   autoUpdater.allowPrerelease = isDevChannel;
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
@@ -258,7 +262,7 @@ ipcMain.handle("app:info", (event) => {
   const version = app.getVersion();
   return {
     version: getDisplayVersion(version),
-    channel: version.includes("-beta.") ? "dev" : "stable",
+    channel: /-beta(?:\.|$)/.test(version) ? "dev" : "stable",
   };
 });
 

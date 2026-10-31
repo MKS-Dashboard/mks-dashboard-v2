@@ -1,4 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
+import { setTimeout as delay } from "node:timers/promises";
 
 const [channel, tagArgument] = process.argv.slice(2);
 const packagePath = new URL("../package.json", import.meta.url);
@@ -56,15 +57,36 @@ if (channel === "stable") {
   version = `${year}.${month}${day}.${hour}${minute}`;
   releaseTag = tag;
 } else {
-  const runNumber = process.env.GITHUB_RUN_NUMBER;
-  if (!runNumber || !/^\d+$/.test(runNumber)) {
-    throw new Error("GITHUB_RUN_NUMBER ontbreekt; start de Dev-release vanuit GitHub Actions.");
+  const token = process.env.GH_TOKEN;
+  if (!token) {
+    throw new Error("GH_TOKEN ontbreekt; start de Dev-release vanuit GitHub Actions.");
   }
 
-  const timestamp = getTimestampParts(new Date());
-  version = `${timestamp.versionPrefix}-beta.${runNumber}`;
-  displayTimestamp = timestamp.displayTimestamp;
-  releaseTag = `v${version}`;
+  for (;;) {
+    const now = new Date();
+    const timestamp = getTimestampParts(now);
+    releaseTag = `v${timestamp.displayTimestamp}-beta`;
+    const response = await fetch(
+      `https://api.github.com/repos/MKS-Dashboard/mks-dashboard-v2/git/ref/tags/${releaseTag}`,
+      {
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${token}`,
+        },
+        signal: AbortSignal.timeout(30_000),
+      },
+    );
+    if (response.status === 404) {
+      version = `${timestamp.versionPrefix}-beta`;
+      displayTimestamp = timestamp.displayTimestamp;
+      break;
+    }
+    if (!response.ok) {
+      throw new Error(`Dev-tag controleren is mislukt (HTTP ${response.status}).`);
+    }
+    console.log(`Tag ${releaseTag} bestaat al; wachten tot de volgende minuut.`);
+    await delay(60_000 - (Date.now() % 60_000));
+  }
 }
 
 packageJson.version = version;
