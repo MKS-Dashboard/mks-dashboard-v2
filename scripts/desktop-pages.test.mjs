@@ -17,8 +17,139 @@ async function loadModule(path) {
 }
 const reference = await loadModule("src/main/reference-data.ts");
 const pages = await loadModule("src/renderer/src/AccountPages.tsx");
+const infoblocks = await loadModule("src/renderer/src/infoblocks.ts");
+const rawPages = await loadModule("src/renderer/src/RawResponsesPage.tsx");
+const navigation = await loadModule("src/renderer/src/navigation.ts");
+const schoolings = await loadModule("src/renderer/src/schoolings.ts");
 const ok = (data) => ({ ok: true, data });
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
+
+test("schoolings support API result wrappers and show actual course fields for own and team data", () => {
+  const course = { id: 1, education_title: "Duikopleiding", building_id: 7, running: true,
+    open_spaces: 0, finish_time: "2026-10-31T12:00:00Z" };
+  for (const alliance of [false, true]) {
+    for (const payload of [[course], { result: [course] }]) {
+      const html = render(pages.SchoolingsPage, { result: ok(payload), alliance });
+      assert.match(html, /Duikopleiding/);
+      assert.match(html, /31-10-2026/);
+      assert.match(html, /Vrije plaatsen/);
+      assert.equal(html.includes("Deelnemers"), false);
+      assert.equal(html.includes("Niet beschikbaar"), false);
+      assert.match(html, /<td>0<\/td><td>Ja<\/td>/);
+      assert.equal(html.includes('role="alert"'), false);
+    }
+  }
+  assert.equal(schoolings.schoolingRecords({ result: Array(501).fill(course) }).length, 501);
+  assert.match(render(pages.SchoolingsPage, { result: ok({ result: [] }), alliance: true }), /Geen resultaten/);
+  for (const payload of [{}, { result: null }, { result: {} }, { result: [null] }]) {
+    assert.throws(() => schoolings.schoolingRecords(payload), /ongeldig|geldige lijst/);
+    assert.match(render(pages.SchoolingsPage, { result: ok(payload) }), /role="alert"/);
+  }
+});
+
+test("navigation hides account pages when logged out and keeps Dev options independent", () => {
+  const accountPages = navigation.navigationPages.filter((item) => !infoblocks.isInfoblockPage(item.key));
+  for (const { key } of accountPages) {
+    assert.equal(navigation.pageAllowed(key, false, "dev", true, true), false);
+    assert.equal(navigation.pageAllowed(key, true, "stable", false, false), true);
+  }
+  for (const key of ["overview", "settings"]) {
+    assert.equal(navigation.pageAllowed(key, false, "stable", false, false), true);
+  }
+  for (const key of [...infoblocks.infoblockPages, "rawResponses"]) {
+    assert.equal(navigation.pageAllowed(key, false, "dev", true, true), true);
+    assert.equal(navigation.pageAllowed(key, true, "stable", true, true), false);
+    assert.equal(navigation.pageAllowed(key, true, "dev", false, false), false);
+  }
+});
+
+test("web-style groups contain unique known pages and keep team pages together", () => {
+  const grouped = navigation.navigationGroups.flatMap((group) => group.pages);
+  assert.equal(new Set(grouped).size, grouped.length);
+  for (const key of grouped) assert.ok(navigation.navigationPages.some((item) => item.key === key));
+  assert.deepEqual(navigation.navigationGroups.find((group) => group.label === "Team").pages,
+    ["allianceInfo", "allianceBuildings", "teamHospitals", "teamCells", "allianceSchoolings"]);
+});
+
+test("account usernames use the API field and the same fallback as account details", () => {
+  for (const [payload, expected] of [
+    [{ user_name: " Speler ", name: "Andere naam" }, "Speler"],
+    [{ name: "Legacyspeler" }, "Legacyspeler"],
+    [{ user_name: 42 }, null], [{ user_name: " " }, null], [[], null], [null, null],
+  ]) {
+    assert.equal(pages.accountUsername(ok(payload)), expected);
+  }
+  assert.equal(pages.accountUsername(undefined), null);
+  assert.equal(pages.accountUsername({ ok: false, error: "HTTP 503" }), null);
+  assert.match(render(pages.AccountPage, { result: ok({ user_name: "Speler" }) }), /Speler/);
+});
+
+test("account balances use real userinfo fields, preserve zero and support legacy data", () => {
+  const html = render(pages.AccountPage, { result: ok({
+    user_name: "Speler", credits_user_current: 123456, coins_user_current: 0, credits_user_total: 987654,
+    credits: 111, coins: 222, credits_total: 333,
+    user_toplist_position: 1234, user_level_title: "Hoofdcentralist",
+  }) });
+  assert.match(html, />123\.456</);
+  assert.match(html, />987\.654</);
+  assert.match(html, />Coins<\/td><td>0</);
+  assert.match(html, />Plek op ranglijst<\/td><td>1\.234</);
+  assert.match(html, />Rang<\/td><td>Hoofdcentralist</);
+  assert.equal(html.includes("Niet beschikbaar"), false);
+  const legacy = render(pages.AccountPage, { result: ok({ name: "Speler", credits: 123, coins: 4, credits_total: 567 }) });
+  assert.match(legacy, />123</);
+  assert.match(legacy, />567</);
+  assert.match(legacy, />Plek op ranglijst<\/td><td>Niet beschikbaar</);
+  assert.match(legacy, />Rang<\/td><td>Niet beschikbaar</);
+  assert.match(render(pages.AccountPage, { result: ok({ user_name: "Speler" }) }), /Niet beschikbaar/);
+});
+
+test("raw responses preserve complete JSON, show the request URL and escape API content", () => {
+  const payload = Array.from({ length: 501 }, (_, id) => ({ id, caption: id === 500 ? "<script>last</script>" : "Voertuig" }));
+  const data = { vehicles: { ...ok(payload), requestUrl: "https://meldkamerspel.com/api/vehicles?_session_id=[afgeschermd]" } };
+  const html = render(rawPages.RawResponsesPage, { data });
+  assert.match(html, /https:\/\/meldkamerspel.com\/api\/vehicles\?_session_id=\[afgeschermd\]/);
+  assert.match(html, /&quot;id&quot;: 500/);
+  assert.match(html, /&lt;script&gt;last&lt;\/script&gt;/);
+  assert.equal(html.includes("<script>"), false);
+  assert.match(html, /value="allianceEvents"/);
+});
+
+test("account numbers returned as strings use Dutch thousands and decimal separators", () => {
+  const html = render(pages.AccountPage, { result: ok({
+    user_name: "27063", credits_user_current: "27063", coins_user_current: "0",
+    credits_user_total: "1234567.5", user_toplist_position: "1234", user_level_title: "12345",
+  }) });
+  assert.match(html, />Credits<\/td><td>27\.063</);
+  assert.match(html, />Coins<\/td><td>0</);
+  assert.match(html, />Totaal verdiende credits<\/td><td>1\.234\.567,5</);
+  assert.match(html, />Plek op ranglijst<\/td><td>1\.234</);
+  assert.match(html, />Naam<\/td><td>27063</);
+  assert.match(html, />Rang<\/td><td>12345</);
+});
+
+test("raw responses explicitly present missing data, empty successes and failed requests", () => {
+  assert.match(render(rawPages.RawResponsesPage, { data: null }), /Klik op Gegevens ophalen/);
+  assert.match(render(rawPages.RawResponsesPage, { data: { vehicles: ok([]) } }), />\[\]<\/pre>/);
+  const failure = render(rawPages.RawResponsesPage, {
+    data: { vehicles: { ok: false, error: "De game-API gaf HTTP 503 terug.", requestUrl: "https://meldkamerspel.com/api/vehicles" } },
+  });
+  assert.match(failure, /role="alert"/);
+  assert.match(failure, /HTTP 503/);
+  assert.equal(failure.includes("<pre"), false);
+});
+
+test("infoblocks require Dev and explicit opt-in, and classify all ten public pages", () => {
+  assert.equal(infoblocks.infoblocksAllowed("dev", true), true);
+  assert.equal(infoblocks.infoblocksAllowed("dev", false), false);
+  assert.equal(infoblocks.infoblocksAllowed("stable", true), false);
+  assert.equal(infoblocks.infoblocksAllowed(undefined, true), false);
+  assert.equal(infoblocks.infoblockPages.length, 10);
+  for (const page of ["vehicles", "buildings", "allianceBuildings", "progressdata", "credits", "allianceInfo", "settings"]) {
+    assert.equal(infoblocks.isInfoblockPage(page), false);
+  }
+  for (const page of infoblocks.infoblockPages) assert.equal(infoblocks.isInfoblockPage(page), true);
+});
 
 test("reference data permits only known keys and does not forward session credentials", async () => {
   assert.throws(() => reference.referenceUrl("missions:../../secret"), /niet toegestaan/);
@@ -60,6 +191,15 @@ test("credit statistics split ordinary, planned and alliance missions and handle
   ]), [2, 200, 1, 800, 1, 2000]);
   assert.deepEqual(pages.creditStatistics([]), [0, "Geen missies", 0, "Geen missies", 0, "Geen missies"]);
   assert.throws(() => pages.creditStatistics([{ average_credits: "100", additional: {} }]), /creditwaarde/);
+});
+
+test("missing team nicknames stay blank while configured nicknames remain visible", () => {
+  for (const caption of [undefined, null, "", "Bijnaam"]) {
+    const html = render(pages.AlliancePage, { result: ok({
+      id: 7, name: "Demoteam", users: [{ name: "Speler", caption, roles: [] }],
+    }) });
+    assert.ok(html.includes(`<td>Speler</td><td>${caption ?? ""}</td>`));
+  }
 });
 
 test("team overview presents finance and members without JSON", () => {

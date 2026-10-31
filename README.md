@@ -8,6 +8,10 @@ De eerste desktopbasis is in ontwikkeling. De app gebruikt Electron, React en Ty
 
 ## Dashboardpagina's
 
+De openbare pagina's (missies, geplande/grote teammissies, evenementen, teamevents, POI's, onderscheidingen, informatie, creditvergelijking en suggesties) zijn standaard verborgen. Alleen in **Dev** kun je ze zichtbaar maken via **Instellingen > Infoblocks**. Deze keuze wordt lokaal onthouden; Stable toont deze pagina's nooit, ook niet als de optie eerder in Dev is ingeschakeld.
+
+Accountafhankelijke pagina's en overzichtskaarten zijn verborgen totdat de sessie succesvol gamegegevens heeft opgehaald, en verdwijnen weer bij uitloggen of een mislukte sessiecontrole. Het zijmenu groepeert gebouwen (inclusief eigen opleidingen), teamgegevens (inclusief teamopleidingen) en openbare informatie in inklapbare groepen, zoals de webapp. Overzicht en Instellingen blijven bereikbaar zonder aanmelding; de Dev-opties blijven onafhankelijk van de accountkoppeling.
+
 - **Voertuigen:** aantallen per hulpdienst en voertuigtype, voertuiggroepen en extra waarden (zoals watercapaciteit), met zoekfunctie en gekleurde tabellen zoals in de webapp.
 - **Gebouwen:** fysieke en technische aantallen per type, uitbreidingen met actief/inactief-status en specialisaties. Kleine gebouwen, niveaus en SAR-hangars worden volgens de telling van de webapp verwerkt.
 - **Progressdata:** bezette en vrije ziekenhuisbedden, cellen en klaslokalen, apart voor eigen gebouwen en teamgebouwen. Nog niet beschikbare uitbreidingen tellen niet mee voor capaciteit.
@@ -19,6 +23,8 @@ Verder zijn er teamgebouwen, eigen/teamziekenhuizen en cellen met bezetting per 
 **Missies**, **Geplande missies**, **Grote teammissies**, **Evenementen** en **Teamevents** tonen doorzoekbare missieoverzichten met filters, creditgrenzen, paginering en uitklapbare eisen. Evenementen zijn de seizoens-/feestdagmissies; geplande missies worden apart gefilterd op `guard_mission`. **POI's** geeft per POI-type de gekoppelde missieaantallen, niet de persoonlijke kaartlocaties. **Onderscheidingen** toont de medaillevoorwaarden; **Informatie** vat de missiegegevens samen. De sessie-invoer en versie-/updatestatus blijven in de desktopinterface; juridische en privacyteksten van de website zijn niet overgenomen.
 
 Deze pagina's tonen geen raw JSON. Typenamen en rekenregels zijn gebaseerd op de `dev`-webapp; de gamecatalogus is lokaal meegeleverd en vereist geen MKS-proxy. Onbekende typen blijven zichtbaar met hun type-ID.
+
+Voor troubleshooting kun je in **Dev > Instellingen > Dev mode** de pagina **Raw API-responses** inschakelen. Kies daar een dashboardgegevensbron om de volledige laatst opgehaalde JSON-response en de gebruikte GET-URL te bekijken; bij mislukte requests zie je de foutmelding. De SessionID in de URL is afgeschermd. Responses kunnen account- en teamgegevens bevatten: deel ze niet zomaar. Er worden geen extra requests gedaan en responses worden niet op schijf opgeslagen. De optie staat standaard uit, wordt lokaal onthouden en is nooit beschikbaar in Stable. Dev mode werkt onafhankelijk van Infoblocks; de normale overzichten blijven behouden.
 
 ### Gamecatalogus onderhouden
 
@@ -45,7 +51,12 @@ De uitgangsgegevens komen uit de [webapp op commit 8ec5374](https://github.com/M
 - Je voert zelf je Meldkamerspel-SessionID in, zoals in de bestaande webapp.
 - De app voegt de SessionID toe aan de `_session_id`-queryparameter en vraagt de game-API rechtstreeks om gegevens. Je sessie wordt niet naar de MKS-proxy van de webapp gestuurd.
 - De live gamegegevens vereisen een internetverbinding. Lokaal draaien is dus niet hetzelfde als volledig offline werken.
-- Als je **Bewaar de SessionID versleuteld op deze pc** aanvinkt, slaat de app deze versleuteld op met de Windows-beveiliging. Je kunt de opgeslagen SessionID wissen met **Verwijder SessionID**.
+- Als je **Bewaar de SessionID versleuteld op deze pc** aanvinkt, slaat de app deze versleuteld op met de Windows-beveiliging. Via **Gebruikersmenu > Uitloggen** wis je de sessie en de opgehaalde gegevens uit de app en keer je terug naar het aanmeldscherm. Gebruik dit ook om een andere SessionID in te voeren.
+- **Gegevens ophalen** en **Updates controleren** staan rechtsboven onder **Gebruikersmenu**. Zodra een update klaarstaat, blijft **Herstarten en bijwerken** direct zichtbaar.
+- De menuknop toont de spelersnaam uit de accountgegevens. **Details** in dit menu opent **Accountgegevens**; deze pagina staat niet meer in het zijmenu of tussen de overzichtskaarten. **Instellingen** staat ook in dit menu en blijft zonder actieve sessie beschikbaar. Zonder actieve sessie staat er **Niet aangemeld**; als de naam niet kan worden opgehaald, staat er **Naam niet beschikbaar**.
+- **Accountgegevens** toont ook **Plek op ranglijst** (`user_toplist_position`) en **Rang** (`user_level_title`) uit `/api/userinfo`.
+- Eigen en teamopleidingen lezen de `result`-lijst uit de API en tonen onder meer de opleidingsnaam (`education_title`), vrije plaatsen, gestart-status en einddatum (`finish_time`). Het menu telt dezelfde opleidingen als de pagina.
+- Getallen worden Nederlands opgemaakt met een punt als duizendscheidingsteken (bijvoorbeeld `27.063`) en een komma voor decimalen. Raw API-responses blijven ongewijzigd.
 - Bij het opstarten probeert de app automatisch de opgeslagen SessionID en haalt daarmee je gegevens op. Het invoerveld verschijnt pas als er geen opgeslagen SessionID is of het ophalen mislukt. Geldige lege lijsten tellen ook als een geslaagde sessie; bij een verbindingsfout blijft de opgeslagen SessionID behouden zodat je opnieuw kunt proberen.
 - API-verzoeken zijn alleen-lezen en gaan naar de officiële game-API.
 - Openbare missiegegevens en de creditvergelijking worden rechtstreeks vanaf deze pc opgehaald uit `Piet2001/Missionfiles-All-Versions` op GitHub. Suggesties worden opgehaald uit de issues van de webapp. Deze openbare verzoeken bevatten nooit je SessionID. Links openen alleen toegestane GitHub- en Meldkamerspel-pagina's in je browser.

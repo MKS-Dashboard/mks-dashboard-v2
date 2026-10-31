@@ -160,6 +160,7 @@ async function requestGameResource(
   endpoint: string,
   sessionRequired: boolean,
 ): Promise<[DashboardResourceKey, DashboardResourceResult]> {
+  let diagnosticUrl = new URL(endpoint, GAME_ORIGIN).href;
   try {
     const currentSessionId = await loadSessionId();
     if (sessionRequired && !currentSessionId) {
@@ -169,6 +170,7 @@ async function requestGameResource(
     const requestUrl = new URL(endpoint, GAME_ORIGIN);
     if (sessionRequired && currentSessionId) {
       requestUrl.searchParams.set("_session_id", currentSessionId);
+      diagnosticUrl = `${diagnosticUrl}?_session_id=[afgeschermd]`;
     }
     const response = await fetch(requestUrl, {
       headers: {
@@ -190,9 +192,9 @@ async function requestGameResource(
       throw new Error("De game-API heeft geen JSON teruggegeven. Meld opnieuw aan en probeer het nog eens.");
     }
 
-    return [key, { ok: true, data: await response.json() }];
+    return [key, { ok: true, data: await response.json(), requestUrl: diagnosticUrl }];
   } catch (error) {
-    return [key, { ok: false, error: asErrorMessage(error) }];
+    return [key, { ok: false, error: asErrorMessage(error), requestUrl: diagnosticUrl }];
   }
 }
 

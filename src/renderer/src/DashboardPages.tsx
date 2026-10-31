@@ -31,7 +31,7 @@ export function Table({ title, headers, rows, tone = "", empty = "Geen gegevens 
         <div className="table-scroll"><table>
           <thead><tr>{headers.map((header) => <th key={header}>{header}</th>)}</tr></thead>
           <tbody>{rows.map((row, index) => <tr key={index}>{row.map((cell, column) =>
-            <td key={column}>{cell}</td>)}</tr>)}</tbody>
+            <td key={column}>{typeof cell === "number" ? count(cell) : cell}</td>)}</tr>)}</tbody>
         </table></div>
       )}
     </section>

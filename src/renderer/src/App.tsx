@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
-import { BuildingsPage, ProgressPage, VehiclesPage } from "./DashboardPages";
-import { AccountPage, AlliancePage, BuildingDetailsPage, CreditsPage, SchoolingsPage, SuggestionsPage } from "./AccountPages";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { BuildingsPage, ProgressPage, read, VehiclesPage } from "./DashboardPages";
+import { schoolingRecords } from "./schoolings";
+import { accountUsername, AccountPage, AlliancePage, BuildingDetailsPage, CreditsPage, SchoolingsPage, SuggestionsPage } from "./AccountPages";
 import { AllianceEventsPage, AllianceMissionsPage, AwardsPage, EventsPage, InformationPage, MissionsPage, PlannedMissionsPage, POIPage } from "./InformationPages";
+import { infoblocksAllowed, isInfoblockPage } from "./infoblocks";
+import { RawResponsesPage } from "./RawResponsesPage";
+import { extraPages, navigationGroups, navigationPages, pageAllowed, type PageKey } from "./navigation";
 import {
   dashboardResources,
   type AppInfo,
@@ -9,23 +13,6 @@ import {
   type DashboardResourceKey,
   type UpdateStatus,
 } from "../../shared/contracts";
-
-const extraPages = [
-  { key: "progressdata", label: "Progressdata" },
-  { key: "specializations", label: "Gebouwspecialisaties" },
-  { key: "hospitals", label: "Eigen ziekenhuizen" },
-  { key: "cells", label: "Eigen cellen" },
-  { key: "teamHospitals", label: "Teamziekenhuizen" },
-  { key: "teamCells", label: "Teamcellen" },
-  { key: "creditComparison", label: "Credits per spelversie" },
-  { key: "suggestions", label: "Suggesties" },
-  { key: "plannedMissions", label: "Geplande missies" },
-  { key: "seasonalEvents", label: "Evenementen" },
-  { key: "largeAllianceMissions", label: "Grote teammissies" },
-  { key: "awards", label: "Onderscheidingen" },
-  { key: "information", label: "Informatie" },
-] as const;
-type PageKey = "overview" | typeof extraPages[number]["key"] | DashboardResourceKey;
 
 function recordsFrom(data: unknown): unknown[] {
   if (Array.isArray(data)) return data;
@@ -37,18 +24,73 @@ function recordsFrom(data: unknown): unknown[] {
 }
 
 function App() {
+  const userMenu = useRef<HTMLDetailsElement>(null);
   const [page, setPage] = useState<PageKey>("overview");
   const [data, setData] = useState<DashboardData | null>(null);
   const [hasSessionId, setHasSessionId] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
   const [sessionDraft, setSessionDraft] = useState("");
   const [rememberSession, setRememberSession] = useState(true);
   const [showSessionForm, setShowSessionForm] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: "idle" });
+  const [infoblocks, setInfoblocks] = useState(false);
+  const [devMode, setDevMode] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  useEffect(() => {
+    function closeUserMenu(event: PointerEvent) {
+      if (event.target instanceof Node && !userMenu.current?.contains(event.target)) {
+        if (userMenu.current) userMenu.current.open = false;
+      }
+    }
+    document.addEventListener("pointerdown", closeUserMenu);
+    return () => document.removeEventListener("pointerdown", closeUserMenu);
+  }, []);
+
+  useEffect(() => {
+    try {
+      for (const [key, label, setter] of [
+        ["mks-infoblocks", "Infoblocks", setInfoblocks],
+        ["mks-dev-mode", "Dev mode", setDevMode],
+      ] as const) {
+        const saved = localStorage.getItem(key);
+        if (saved !== null && saved !== "true" && saved !== "false") {
+          throw new Error(`De opgeslagen instelling voor ${label} is ongeldig.`);
+        }
+        setter(saved === "true");
+      }
+      setSettingsLoaded(true);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Instellingen konden niet worden geladen.");
+    }
+  }, []);
+
+  const showInfoblocks = infoblocksAllowed(appInfo?.channel, infoblocks);
+  const showDevMode = appInfo?.channel === "dev" && devMode;
+  const allowed = (key: PageKey) => pageAllowed(key, signedIn, appInfo?.channel, infoblocks, devMode);
+  const visibleResources = dashboardResources.filter((item) => item.key !== "credits" && allowed(item.key));
+  const visiblePages = navigationPages.filter((item) => item.key !== "credits" && allowed(item.key));
+  const currentPageAllowed = allowed(page);
+
+  useEffect(() => {
+    if (!currentPageAllowed) setPage("overview");
+  }, [currentPageAllowed]);
+
+  function changeSetting(setting: "infoblocks" | "dev-mode", enabled: boolean): void {
+    try {
+      localStorage.setItem(`mks-${setting}`, String(enabled));
+      if (setting === "infoblocks") setInfoblocks(enabled);
+      else setDevMode(enabled);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "De instelling kon niet worden opgeslagen.");
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -85,12 +127,14 @@ function App() {
       const sessionAccepted = dashboardResources.some(
         ({ key, sessionRequired = true }) => sessionRequired && result[key].ok,
       );
+      setSignedIn(sessionAccepted);
       setShowSessionForm(!sessionAccepted);
       if (!sessionAccepted) {
         const auth = await window.mksDashboard.getAuthStatus();
         if (auth.hasSessionId) setError("De gamegegevens zijn niet opgehaald. Controleer je SessionID en internetverbinding.");
       }
     } catch (cause) {
+      setSignedIn(false);
       setError(cause instanceof Error ? cause.message : "De gegevens konden niet worden opgehaald.");
       setShowSessionForm(true);
     } finally {
@@ -139,23 +183,49 @@ function App() {
   }, [hasSessionId, rememberSession, refresh, sessionDraft]);
 
   const deleteSession = useCallback(async () => {
+    setLoggingOut(true);
     try {
       await window.mksDashboard.logout();
       setHasSessionId(false);
+      setSignedIn(false);
       setSessionDraft("");
       setData(null);
+      setLastUpdated(null);
+      setShowSessionForm(true);
+      setPage("overview");
       setError("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "De SessionID kon niet worden verwijderd.");
+      setError(cause instanceof Error ? cause.message : "Uitloggen is mislukt.");
+    } finally {
+      setLoggingOut(false);
     }
   }, []);
+
+  function runUserAction(action: () => Promise<unknown>): void {
+    if (userMenu.current) userMenu.current.open = false;
+    void action().catch((cause: unknown) => {
+      setError(cause instanceof Error ? cause.message : "De actie kon niet worden uitgevoerd.");
+    });
+  }
 
   const activeResource = page === "overview"
     ? null
     : dashboardResources.find((resource) => resource.key === page);
-  const selectedLabel = extraPages.find((item) => item.key === page)?.label ?? activeResource?.label ?? "Overzicht";
-  const publicPage = ["creditComparison", "suggestions", "awards", "information", "missions",
-    "plannedMissions", "seasonalEvents", "largeAllianceMissions", "allianceEvents", "pointsOfInterest"].includes(page);
+  const selectedLabel = page === "settings" ? "Instellingen" : page === "rawResponses" ? "Raw API-responses" :
+    extraPages.find((item) => item.key === page)?.label ?? activeResource?.label ?? "Overzicht";
+  const publicPage = isInfoblockPage(page);
+  const username = hasSessionId ? accountUsername(data?.credits) : null;
+  const userMenuLabel = username ?? (checkingSession ? "Account laden..." : hasSessionId ? "Naam niet beschikbaar" : "Niet aangemeld");
+  function navigationButton(item: typeof navigationPages[number]) {
+    const resource = dashboardResources.find((entry) => entry.key === item.key);
+    return (
+      <button className={`nav-item ${page === item.key ? "active" : ""}`} key={item.key} onClick={() => setPage(item.key)}>
+        <span className="nav-icon">{item.label.slice(0, 1)}</span>{item.label}
+        {resource && data?.[resource.key]?.ok && !["credits", "allianceInfo", "pointsOfInterest"].includes(resource.key) &&
+          <span className="nav-count">{resourceCount(data, resource.key)}</span>}
+      </button>
+    );
+  }
   const updateMessage = {
     idle: "",
     checking: "Controleren op updates...",
@@ -182,21 +252,27 @@ function App() {
           <button className={`nav-item ${page === "overview" ? "active" : ""}`} onClick={() => setPage("overview")}>
             <span className="nav-icon">O</span> Overzicht
           </button>
-          {dashboardResources.map((resource) => (
-            <button
-              className={`nav-item ${page === resource.key ? "active" : ""}`}
-              key={resource.key}
-              onClick={() => setPage(resource.key)}
-            >
-              <span className="nav-icon">{resource.label.slice(0, 1)}</span>
-              {resource.label}
-              {data?.[resource.key]?.ok && !["credits", "allianceInfo", "pointsOfInterest"].includes(resource.key) && (
-                <span className="nav-count">{resourceCount(data, resource.key)}</span>
-              )}
+          {visiblePages.filter((item) => item.key === "vehicles").map(navigationButton)}
+          {navigationGroups.map((group) => {
+            const items = group.pages.flatMap((key) => visiblePages.filter((item) => item.key === key));
+            if (!items.length) return null;
+            return (
+              <details className="nav-group" key={group.label} open>
+                <summary className={`nav-item ${group.pages.includes(page) ? "active" : ""}`}>
+                  <span className="nav-icon">{group.label.slice(0, 1)}</span>{group.label}
+                  <span className="nav-group-chevron" aria-hidden="true">▾</span>
+                </summary>
+                <div className="nav-group-items">{items.map(navigationButton)}</div>
+              </details>
+            );
+          })}
+          {visiblePages.filter((item) => item.key !== "vehicles" &&
+            !navigationGroups.some((group) => group.pages.includes(item.key))).map(navigationButton)}
+          {showDevMode && (
+            <button className={`nav-item ${page === "rawResponses" ? "active" : ""}`} onClick={() => setPage("rawResponses")}>
+              <span className="nav-icon">D</span> Raw API-responses
             </button>
-          ))}
-          {extraPages.map((item) => <button key={item.key} className={`nav-item ${page === item.key ? "active" : ""}`}
-            onClick={() => setPage(item.key)}><span className="nav-icon">{item.label.slice(0, 1)}</span>{item.label}</button>)}
+          )}
         </nav>
 
         <div className="sidebar-footer">
@@ -212,45 +288,60 @@ function App() {
             <h1>{selectedLabel}</h1>
           </div>
           <div className="topbar-actions">
-            {updateStatus.state === "downloaded" ? (
+            {updateStatus.state === "downloaded" && (
               <button className="button button-primary" onClick={() => void window.mksDashboard.installUpdate()}>
                 Herstarten en bijwerken
               </button>
-            ) : (
-              <button
-                className="button button-secondary"
-                disabled={
-                  updateStatus.state === "checking" ||
-                  updateStatus.state === "available" ||
-                  updateStatus.state === "downloading"
+            )}
+            <details className="user-menu" ref={userMenu}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false;
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.currentTarget.open = false;
+                  event.currentTarget.querySelector("summary")?.focus();
                 }
-                onClick={() => void window.mksDashboard.checkForUpdates()}
-              >
-                {updateStatus.state === "downloading" ? "Update downloaden..." : "Updates controleren"}
-              </button>
-            )}
-            <button className="button button-primary" disabled={loading} onClick={() => void refresh()}>
-              {loading ? <><span className="spinner" /> Ophalen...</> : "Gegevens ophalen"}
-            </button>
-            {hasSessionId && data && (
-              <button className="button button-secondary" onClick={() => setShowSessionForm(true)}>
-                SessionID aanpassen
-              </button>
-            )}
-            {hasSessionId && (
-              <button
-                className="button button-quiet"
-                onClick={() => void deleteSession()}
-              >
-                SessionID wissen
-              </button>
-            )}
+              }}>
+              <summary className="button button-secondary">
+                <span className="user-avatar" aria-hidden="true">{username ? Array.from(username)[0].toLocaleUpperCase("nl-NL") : "U"}</span>
+                <span className="user-menu-name" title={userMenuLabel}>{userMenuLabel}</span>
+                <span className="user-menu-chevron" aria-hidden="true">▾</span>
+              </summary>
+              <div className="user-menu-dropdown">
+                <div className="user-menu-heading">{hasSessionId ? "Aangemeld" : "Niet aangemeld"}</div>
+                {signedIn && (
+                  <button onClick={() => {
+                    if (userMenu.current) userMenu.current.open = false;
+                    setPage("credits");
+                  }}>Details</button>
+                )}
+                <button aria-current={page === "settings" ? "page" : undefined} onClick={() => {
+                  if (userMenu.current) userMenu.current.open = false;
+                  setPage("settings");
+                }}>Instellingen</button>
+                <button disabled={loading || checkingSession || loggingOut} onClick={() => runUserAction(refresh)}>
+                  {loading ? "Gegevens ophalen..." : "Gegevens ophalen"}
+                </button>
+                <button disabled={["checking", "available", "downloading", "downloaded"].includes(updateStatus.state)}
+                  onClick={() => runUserAction(() => window.mksDashboard.checkForUpdates())}>
+                  {updateStatus.state === "downloading" ? "Update downloaden..." :
+                    updateStatus.state === "checking" ? "Updates controleren..." : "Updates controleren"}
+                </button>
+                {hasSessionId && (
+                  <button className="user-menu-logout" disabled={loading || checkingSession || loggingOut}
+                    onClick={() => runUserAction(deleteSession)}>
+                    {loggingOut ? "Uitloggen..." : "Uitloggen"}
+                  </button>
+                )}
+              </div>
+            </details>
           </div>
         </header>
 
         <section className="content">
           {error && <div className="notice notice-error" role="alert">{error}</div>}
-          {updateStatus.state !== "idle" && (
+          {page === "overview" && updateStatus.state !== "idle" && (
             <div
               className={`notice notice-update ${updateStatus.state === "error" ? "notice-error" : ""}`}
               role="status"
@@ -259,10 +350,56 @@ function App() {
             </div>
           )}
 
-          {checkingSession && !publicPage && (
+          {page === "settings" && (
+            <section className="settings-panel" aria-labelledby="settings-display">
+              <div className="settings-heading">
+                <h2 id="settings-display">Weergave</h2>
+                <p>Pas aan welke onderdelen je in het dashboard ziet.</p>
+              </div>
+              <div className="settings-option">
+                <div className="settings-option-copy">
+                  <div className="settings-option-title">
+                    <label htmlFor={appInfo?.channel === "dev" ? "infoblocks-toggle" : undefined}>Infoblocks</label>
+                    <span className="settings-badge">Alleen Dev</span>
+                  </div>
+                  <p id="infoblocks-description">
+                    Toon openbare informatie zoals missies, evenementen en POI's, zonder accountkoppeling.
+                  </p>
+                </div>
+                {appInfo?.channel === "dev" && (
+                  <input id="infoblocks-toggle" className="settings-toggle" type="checkbox"
+                    aria-describedby="infoblocks-description" checked={infoblocks} disabled={!settingsLoaded}
+                    onChange={(event) => changeSetting("infoblocks", event.target.checked)} />
+                )}
+              </div>
+              {appInfo?.channel === "dev" && (
+                <div className="settings-option">
+                  <div className="settings-option-copy">
+                    <div className="settings-option-title">
+                      <label htmlFor="dev-mode-toggle">Dev mode</label>
+                      <span className="settings-badge">Alleen Dev</span>
+                    </div>
+                    <p id="dev-mode-description">
+                      Toon Raw API-responses in het menu voor troubleshooting, inclusief de gebruikte URL met afgeschermde SessionID.
+                    </p>
+                  </div>
+                  <input id="dev-mode-toggle" className="settings-toggle" type="checkbox"
+                    aria-describedby="dev-mode-description" checked={devMode} disabled={!settingsLoaded}
+                    onChange={(event) => changeSetting("dev-mode", event.target.checked)} />
+                </div>
+              )}
+              <div className="settings-footnote">
+                {appInfo?.channel === "dev"
+                  ? "Automatisch opgeslagen op deze pc. Standaard uitgeschakeld."
+                  : "Infoblocks zijn alleen beschikbaar in de Dev-versie."}
+              </div>
+            </section>
+          )}
+          {showDevMode && page === "rawResponses" && <RawResponsesPage data={data} />}
+          {checkingSession && !publicPage && page !== "settings" && page !== "rawResponses" && (
             <div className="notice" role="status">Opgeslagen SessionID controleren en gegevens ophalen...</div>
           )}
-          {(!data || showSessionForm) && !checkingSession && !publicPage && (
+          {(!data || showSessionForm) && !checkingSession && !publicPage && page !== "settings" && page !== "rawResponses" && (
             <section className="welcome-panel">
               <div className="welcome-icon">M</div>
               <div className="welcome-copy">
@@ -292,7 +429,7 @@ function App() {
                   <span>Bewaar de SessionID versleuteld op deze pc</span>
                 </label>
                 <div className="welcome-actions">
-                  <button className="button button-primary" disabled={loading} onClick={() => void saveAndRefresh()}>
+                  <button className="button button-primary" disabled={loading || loggingOut} onClick={() => void saveAndRefresh()}>
                     {loading ? "Gegevens ophalen..." : sessionDraft.trim() ? "SessionID opslaan en ophalen" : "Gegevens ophalen"}
                   </button>
                 </div>
@@ -310,7 +447,7 @@ function App() {
 
           {page === "overview" && data && (
             <>
-              <section className="summary-row">
+              {signedIn && <section className="summary-row">
                 <div className="summary-card">
                   <span className="summary-label">Voertuigen</span>
                   <strong>{resourceCount(data, "vehicles")}</strong>
@@ -331,7 +468,7 @@ function App() {
                   <strong className="summary-time">{lastUpdated ? lastUpdated.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" }) : "—"}</strong>
                   <span className="summary-hint">{lastUpdated ? lastUpdated.toLocaleDateString("nl-NL") : "nog niet opgehaald"}</span>
                 </div>
-              </section>
+              </section>}
               <div className="section-heading">
                 <div>
                   <h2>Gegevensbronnen</h2>
@@ -339,7 +476,7 @@ function App() {
                 </div>
               </div>
               <section className="resource-grid">
-                {dashboardResources.map((resource) => {
+                {visibleResources.map((resource) => {
                   const result = data[resource.key];
                   return (
                     <button className="resource-card" key={resource.key} onClick={() => setPage(resource.key)}>
@@ -348,7 +485,7 @@ function App() {
                         <strong>{resource.label}</strong>
                         <small>{!result.ok ? "Niet beschikbaar" : resource.key === "pointsOfInterest" ? "Missies per POI-type" :
                           resource.key === "credits" ? "Accountoverzicht" : resource.key === "allianceInfo" ? "Teamkas en leden" :
-                            `${recordsFrom(result.data).length} items`}</small>
+                            `${resourceCount(data, resource.key)} items`}</small>
                       </span>
                       <span className="resource-arrow">›</span>
                     </button>
@@ -361,6 +498,7 @@ function App() {
             </>
           )}
 
+          {signedIn && currentPageAllowed && <>
           {page === "vehicles" && data && <VehiclesPage result={data.vehicles} />}
           {page === "buildings" && data && <BuildingsPage result={data.buildings} />}
           {page === "allianceBuildings" && data && <BuildingsPage result={data.allianceBuildings} alliance />}
@@ -373,6 +511,8 @@ function App() {
           {(page === "hospitals" || page === "cells") && data && <BuildingDetailsPage result={data.buildings} kind={page} />}
           {(page === "teamHospitals" || page === "teamCells") && data &&
             <BuildingDetailsPage result={data.allianceBuildings} kind={page === "teamHospitals" ? "hospitals" : "cells"} alliance />}
+          </>}
+          {showInfoblocks && <>
           {page === "creditComparison" && <CreditsPage />}
           {page === "suggestions" && <SuggestionsPage />}
           {page === "awards" && <AwardsPage />}
@@ -385,6 +525,7 @@ function App() {
           {page === "information" && data && <InformationPage result={data.missions} />}
           {publicPage && page !== "awards" && page !== "creditComparison" && page !== "suggestions" && !data &&
             <div className="empty-state">Klik op Gegevens ophalen om de openbare missiegegevens te laden. Een SessionID is hiervoor niet nodig.</div>}
+          </>}
         </section>
         <footer className="app-footer">
           <span>
@@ -398,7 +539,11 @@ function App() {
 
 function resourceCount(data: DashboardData, key: DashboardResourceKey): number | string {
   const result = data[key];
-  return result.ok ? recordsFrom(result.data).length : "—";
+  if (key === "schoolings" || key === "allianceSchoolings") {
+    const parsed = read(result, schoolingRecords);
+    return parsed.ok ? parsed.value.length.toLocaleString("nl-NL") : "—";
+  }
+  return result.ok ? recordsFrom(result.data).length.toLocaleString("nl-NL") : "—";
 }
 
 export default App;

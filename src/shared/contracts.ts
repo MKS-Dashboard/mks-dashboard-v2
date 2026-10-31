@@ -14,8 +14,8 @@ export const dashboardResources = [
 export type DashboardResourceKey = (typeof dashboardResources)[number]["key"];
 
 export type DashboardResourceResult =
-  | { ok: true; data: unknown }
-  | { ok: false; error: string };
+  | { ok: true; data: unknown; requestUrl?: string }
+  | { ok: false; error: string; requestUrl?: string };
 
 export type DashboardData = Record<DashboardResourceKey, DashboardResourceResult>;
 

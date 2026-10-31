@@ -5,6 +5,7 @@ import {
 import { Failure, read, Table } from "./DashboardPages";
 import { parseBuildings, capacityOverview, type Building } from "./dashboard-model";
 import specializations from "./data/specializations.json";
+import { schoolingRecords } from "./schoolings";
 
 type Scalar = string | number;
 type Row = { cells: Scalar[]; url?: string };
@@ -61,18 +62,36 @@ function list(data: unknown): unknown[] {
 function scalar(value: unknown): Scalar {
   return typeof value === "string" || typeof value === "number" && Number.isFinite(value) ? value : "Niet beschikbaar";
 }
+function accountNumber(value: unknown): Scalar {
+  if (typeof value === "string" && /^-?\d+(?:\.\d+)?$/.test(value.trim())) {
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  return scalar(value);
+}
 function yes(value: unknown): string {
   return value === true ? "Ja" : value === false ? "Nee" : "Niet beschikbaar";
+}
+
+export function accountUsername(result: DashboardResourceResult | undefined): string | null {
+  if (!result?.ok || !result.data || typeof result.data !== "object" || Array.isArray(result.data)) return null;
+  const account = record(result.data);
+  const name = account.user_name ?? account.name;
+  return typeof name === "string" && name.trim() ? name.trim() : null;
 }
 
 export function AccountPage({ result }: { result: DashboardResourceResult }) {
   const parsed = read(result, record);
   if (!parsed.ok) return <Failure message={parsed.error} />;
-  const fields: [string, string][] = [
-    ["Naam", "user_name"], ["Credits", "credits"], ["Coins", "coins"], ["Totaal verdiende credits", "credits_total"],
+  const fields: [string, string, string?][] = [
+    ["Naam", "user_name"], ["Credits", "credits_user_current", "credits"],
+    ["Coins", "coins_user_current", "coins"], ["Totaal verdiende credits", "credits_user_total", "credits_total"],
+    ["Plek op ranglijst", "user_toplist_position"], ["Rang", "user_level_title"],
   ];
-  return <Table title="Accountgegevens" headers={["Gegeven", "Waarde"]} rows={fields.map(([label, key]) =>
-    [label, format(scalar(parsed.value[key] ?? (key === "user_name" ? parsed.value.name : undefined)))])} />;
+  return <Table title="Accountgegevens" headers={["Gegeven", "Waarde"]} rows={fields.map(([label, key, legacyKey]) =>
+    [label, key === "user_name" ? accountUsername(result) ?? "Niet beschikbaar" :
+      format((key === "user_level_title" ? scalar : accountNumber)(
+        parsed.value[key] ?? (legacyKey ? parsed.value[legacyKey] : undefined)))])} />;
 }
 
 export function AlliancePage({ result }: { result: DashboardResourceResult }) {
@@ -81,7 +100,7 @@ export function AlliancePage({ result }: { result: DashboardResourceResult }) {
     if (team.id == null) throw new Error("Je account heeft geen beschikbare teamgegevens.");
     const users = list(team.users).map((item): Row => {
       const user = record(item);
-      return { cells: [scalar(user.name), scalar(user.caption), list(user.roles).map(scalar).join(", ")] };
+      return { cells: [scalar(user.name), user.caption == null ? "" : scalar(user.caption), list(user.roles).map(scalar).join(", ")] };
     });
     return { team, users };
   });
@@ -130,19 +149,18 @@ export function BuildingDetailsPage({ result, kind, alliance = false }: {
 }
 
 export function SchoolingsPage({ result, alliance = false }: { result: DashboardResourceResult; alliance?: boolean }) {
-  const parsed = read(result, (data) => list(data).map((item): Row => {
-    const schooling = record(item);
-    const students = schooling.students ?? schooling.participants;
-    const end = schooling.ends_at ?? schooling.end_time;
+  const parsed = read(result, (data) => schoolingRecords(data).map((schooling): Row => {
+    const end = schooling.finish_time ?? schooling.ends_at ?? schooling.end_time;
     const timestamp = typeof end === "number" ? end * 1000 : typeof end === "string" ? Date.parse(end) : NaN;
     return { cells: [
-      scalar(schooling.caption ?? schooling.name ?? schooling.schooling_type ?? schooling.id),
-      scalar(schooling.building_id), Array.isArray(students) ? students.length : scalar(schooling.number_of_students ?? students),
+      scalar(schooling.education_title ?? schooling.caption ?? schooling.name ?? schooling.schooling_type ?? schooling.id),
+      scalar(schooling.building_id),
+      scalar(schooling.open_spaces), yes(schooling.running),
       Number.isFinite(timestamp) ? new Date(timestamp).toLocaleString("nl-NL") : scalar(end),
     ] };
   }));
   return parsed.ok ? <DataTable title={alliance ? "Teamopleidingen" : "Opleidingen"}
-    headers={["Opleiding", "Gebouw", "Deelnemers", "Einddatum"]} rows={parsed.value} /> : <Failure message={parsed.error} />;
+    headers={["Opleiding", "Gebouw", "Vrije plaatsen", "Gestart", "Einddatum"]} rows={parsed.value} /> : <Failure message={parsed.error} />;
 }
 
 function useReference(key: ReferenceKey) {
