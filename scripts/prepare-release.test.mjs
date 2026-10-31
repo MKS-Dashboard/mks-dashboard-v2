@@ -6,6 +6,24 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import test from "node:test";
 
+test("Stable workflow prepares, labels and publishes main pushes and explicit tags", async () => {
+  const workflow = (await readFile(new URL("../.github/workflows/windows-installer.yml", import.meta.url), "utf8")).replace(/\r\n/g, "\n");
+  const condition = "(github.event_name == 'push' && github.ref == 'refs/heads/main') || startsWith(github.ref, 'refs/tags/v')";
+  for (const name of ["Prepare Stable version", "Set Stable build labels", "Publish Stable release"]) {
+    const start = workflow.indexOf(`      - name: ${name}\n`);
+    assert.notEqual(start, -1);
+    const end = workflow.indexOf("\n      - name:", start + 1);
+    const step = workflow.slice(start, end === -1 ? undefined : end);
+    assert.ok(step.includes(`        if: ${condition}\n`), name);
+    if (name === "Prepare Stable version") {
+      assert.ok(step.includes("GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}"));
+    }
+  }
+  assert.ok(workflow.indexOf("name: Test update channel selection") < workflow.indexOf("name: Prepare Stable version"));
+  assert.ok(workflow.indexOf("name: Build Windows installer") < workflow.indexOf("name: Publish Stable release"));
+  assert.ok(workflow.includes("--target \"$GITHUB_SHA\""));
+});
+
 async function prepare(channel, { tag, collision = false, status = 404, instant = "2026-10-31T12:02:59.999Z" } = {}) {
   const root = await mkdtemp(join(tmpdir(), "mks-release-test-"));
   try {
@@ -32,7 +50,7 @@ async function prepare(channel, { tag, collision = false, status = 404, instant 
     const result = spawnSync(process.execPath, [
       "--import", pathToFileURL(mock).href, script, channel, ...(tag ? [tag] : []),
     ], {
-      env: { ...process.env, GH_TOKEN: "test-placeholder", GITHUB_OUTPUT: output },
+      env: { ...process.env, GH_TOKEN: "test-placeholder", GITHUB_OUTPUT: output, GITHUB_REF_TYPE: tag ? "tag" : "branch", GITHUB_REF_NAME: tag ?? channel },
       encoding: "utf8",
       timeout: 10_000,
     });
@@ -68,6 +86,29 @@ test("Stable has no beta suffix", async () => {
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.package.version, "2026.1031.1302");
   assert.match(result.output, /^tag=v2026\.10\.31\.13\.02$/m);
+  assert.match(result.output, /^display_timestamp=2026\.10\.31\.13\.02$/m);
+});
+
+test("Stable branch pushes generate a Dutch timestamp and update both manifests", async () => {
+  const result = await prepare("stable");
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.package.version, "2026.1031.1302");
+  assert.equal(result.lock.version, result.package.version);
+  assert.equal(result.lock.packages[""].version, result.package.version);
+  assert.match(result.output, /^tag=v2026\.10\.31\.13\.02$/m);
+  assert.match(result.output, /^channel=stable$/m);
+  assert.match(result.output, /^display_timestamp=2026\.10\.31\.13\.02$/m);
+});
+
+test("Stable branch pushes wait on tag collisions and use Dutch summer time", async () => {
+  const collision = await prepare("stable", { collision: true });
+  assert.equal(collision.status, 0, collision.stderr);
+  assert.equal(collision.package.version, "2026.1031.1303");
+  assert.match(collision.output, /^tag=v2026\.10\.31\.13\.03$/m);
+  const summer = await prepare("stable", { instant: "2026-06-01T12:02:59.999Z" });
+  assert.equal(summer.status, 0, summer.stderr);
+  assert.equal(summer.package.version, "2026.0601.1402");
+  assert.match(summer.output, /^tag=v2026\.06\.01\.14\.02$/m);
 });
 
 test("Dutch summer time is used and nonexistent spring clock times are rejected", async () => {
@@ -84,6 +125,10 @@ test("API failures and invalid Stable dates fail before changing versions", asyn
   assert.notEqual(api.status, 0);
   assert.match(api.stderr, /HTTP 403/);
   assert.equal(api.package.version, "0.1.0");
+  const stableApi = await prepare("stable", { status: 403 });
+  assert.notEqual(stableApi.status, 0);
+  assert.match(stableApi.stderr, /HTTP 403/);
+  assert.equal(stableApi.package.version, "0.1.0");
   const invalid = await prepare("stable", { tag: "v2026.02.31.12.02" });
   assert.notEqual(invalid.status, 0);
   assert.equal(invalid.package.version, "0.1.0");

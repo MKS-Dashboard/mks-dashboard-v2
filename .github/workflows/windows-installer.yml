@@ -58,8 +58,10 @@ jobs:
         run: node scripts/prepare-release.mjs dev
 
       - name: Prepare Stable version
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || startsWith(github.ref, 'refs/tags/v')
         id: stable-version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/prepare-release.mjs stable
 
       - name: Ensure Stable tag belongs to main
@@ -73,7 +75,7 @@ jobs:
           echo "UPDATE_CHANNEL=dev" >> "$GITHUB_ENV"
 
       - name: Set Stable build labels
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || startsWith(github.ref, 'refs/tags/v')
         run: |
           echo "BUILD_TIMESTAMP=${{ steps.stable-version.outputs.display_timestamp }}" >> "$GITHUB_ENV"
           echo "UPDATE_CHANNEL=stable" >> "$GITHUB_ENV"
@@ -95,7 +97,7 @@ jobs:
             --generate-notes
 
       - name: Publish Stable release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ steps.stable-version.outputs.tag }}

@@ -123,7 +123,8 @@ Openbare missiegegevens komen uit [Missionfiles-All-Versions](https://github.com
 ### Releases
 
 - **Beta:** een push naar `dev` publiceert automatisch een prerelease.
-- **Stable:** publiceer een tag van `main` in het formaat `vYYYY.MM.DD.HH.MM`.
+- **Stable:** een push naar `main`, bijvoorbeeld na een merge, publiceert automatisch een release na een geslaagde test en build. Handmatig een tag van `main` publiceren in het formaat `vYYYY.MM.DD.HH.MM` blijft mogelijk.
+- Stable-tags worden automatisch gegenereerd als `vYYYY.MM.DD.HH.MM`. Als een tag voor de huidige minuut al bestaat, wacht de versievoorbereiding tot de volgende minuut.
 - Beta-tags gebruiken `vYYYY.MM.DD.HH.MM-beta`. Versietijden gebruiken `Europe/Amsterdam`, inclusief zomer- en wintertijd.
 - De [installerworkflow](.github/workflows/windows-installer.yml) test en bouwt op Linux met Wine. Handmatig starten maakt een testartifact, geen release.
 - [Dependabot](.github/dependabot.yml) stelt afhankelijkheidsupdates voor; deze worden niet automatisch samengevoegd.
