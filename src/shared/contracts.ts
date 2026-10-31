@@ -60,6 +60,7 @@ export interface MksDashboardApi {
   loadDashboard: () => Promise<DashboardData>;
   loadReference: (key: ReferenceKey) => Promise<DashboardResourceResult>;
   openExternal: (url: string) => Promise<void>;
+  saveErrorReport: (report: string) => Promise<boolean>;
   getAppInfo: () => Promise<AppInfo>;
   getUpdateStatus: () => Promise<UpdateStatus>;
   checkForUpdates: () => Promise<void>;

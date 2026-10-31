@@ -6,6 +6,8 @@ import { accountUsername, AccountPage, AlliancePage, BuildingDetailsPage, Credit
 import { AllianceEventsPage, AllianceMissionsPage, AwardsPage, EventsPage, InformationPage, MissionsPage, PlannedMissionsPage, POIPage } from "./InformationPages";
 import { infoblocksAllowed, isInfoblockPage } from "./infoblocks";
 import { RawResponsesPage } from "./RawResponsesPage";
+import { ErrorReportPanel } from "./ErrorReportPanel";
+import { clearReportIssues, recordAppIssue } from "./error-report";
 import { extraPages, navigationGroups, navigationPages, pageAllowed, type PageKey } from "./navigation";
 import {
   dashboardResources,
@@ -50,6 +52,22 @@ function App() {
   const [refreshSettingError, setRefreshSettingError] = useState("");
   const [refreshSettingsLoaded, setRefreshSettingsLoaded] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
+
+  useEffect(() => {
+    if (error) recordAppIssue("App", error);
+    if (refreshSettingError) recordAppIssue("Instellingen", refreshSettingError);
+  }, [error, refreshSettingError]);
+
+  useEffect(() => {
+    const onError = (event: ErrorEvent) => recordAppIssue("Runtime", event.message);
+    const onRejection = (event: PromiseRejectionEvent) => recordAppIssue("Onverwerkte promise", event.reason);
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onRejection);
+    return () => {
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onRejection);
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -255,6 +273,7 @@ function App() {
       setSignedIn(false);
       setSessionDraft("");
       setData(null);
+      clearReportIssues();
       setLastUpdated(null);
       setShowSessionForm(true);
       setPage("overview");
@@ -445,6 +464,7 @@ function App() {
           )}
 
           {page === "settings" && currentPageAllowed && (
+            <div className="report-page">
             <section className="settings-panel" aria-labelledby="settings-display">
               <div className="settings-heading">
                 <h2 id="settings-display">Dashboardinstellingen</h2>
@@ -509,6 +529,9 @@ function App() {
                 Instellingen worden op deze pc onthouden. Huidig vernieuwingsinterval: {refreshMinutes} minuten.
               </div>
             </section>
+            <ErrorReportPanel data={data} appInfo={appInfo} lastUpdated={lastUpdated} updateStatus={updateStatus}
+              errors={[error, refreshSettingError]} />
+            </div>
           )}
           {showDevMode && page === "rawResponses" && <RawResponsesPage data={data} />}
           {checkingSession && !publicPage && page !== "settings" && page !== "rawResponses" && (
@@ -521,8 +544,7 @@ function App() {
                 <span className="eyebrow">{data ? "ACCOUNTINSTELLINGEN" : "JOUW LOKALE DASHBOARD"}</span>
                 <h2>{data ? "SessionID aanpassen" : "Welkom bij MKS Dashboard Desktop"}</h2>
                 <p>
-                  Voer de SessionID van Meldkamerspel in. De app stuurt deze rechtstreeks
-                  naar de game-API.
+                  Voer de SessionID van Meldkamerspel in.
                 </p>
                 <label className="field-label" htmlFor="session-id">Meldkamerspel-SessionID</label>
                 <input

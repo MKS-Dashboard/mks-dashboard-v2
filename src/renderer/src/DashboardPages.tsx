@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { recordAppIssue } from "./error-report";
 import type { DashboardData, DashboardResourceResult } from "../../shared/contracts";
 import {
   buildingOverview, capacityOverview, parseBuildings, parseVehicles, vehicleOverview,
@@ -18,6 +19,7 @@ export function read<T>(result: DashboardResourceResult, parse: (data: unknown) 
 }
 
 export function Failure({ message }: { message: string }) {
+  useEffect(() => { recordAppIssue("Dashboardpagina", message); }, [message]);
   return <div className="notice notice-error" role="alert">{message}</div>;
 }
 

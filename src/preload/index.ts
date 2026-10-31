@@ -8,6 +8,7 @@ const api: MksDashboardApi = {
   loadDashboard: () => ipcRenderer.invoke("dashboard:load"),
   loadReference: (key) => ipcRenderer.invoke("reference:load", key),
   openExternal: (url) => ipcRenderer.invoke("external:open", url),
+  saveErrorReport: (report) => ipcRenderer.invoke("report:save", report),
   getAppInfo: () => ipcRenderer.invoke("app:info"),
   getUpdateStatus: () => ipcRenderer.invoke("updates:status"),
   checkForUpdates: () => ipcRenderer.invoke("updates:check"),

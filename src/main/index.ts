@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, safeStorage, shell, type IpcMainInvokeEvent } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, safeStorage, shell, type IpcMainInvokeEvent } from "electron";
 import { autoUpdater } from "electron-updater";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
@@ -264,6 +264,24 @@ ipcMain.handle("reference:load", async (event, key: unknown) => {
 ipcMain.handle("external:open", async (event, value: unknown) => {
   assertMainWindow(event);
   await shell.openExternal(allowedExternalUrl(value));
+});
+
+ipcMain.handle("report:save", async (event, report: unknown) => {
+  assertMainWindow(event);
+  if (typeof report !== "string" || !report.trim()) {
+    throw new Error("Het errorrapport bevat geen geldige tekst.");
+  }
+  const owner = BrowserWindow.fromWebContents(event.sender);
+  if (!owner) throw new Error("Het app-venster is niet beschikbaar.");
+  const result = await dialog.showSaveDialog(owner, {
+    title: "Errorrapport opslaan",
+    defaultPath: resolve(app.getPath("downloads"), `MKS-Dashboard-errorrapport-${Date.now()}.txt`),
+    filters: [{ name: "Tekstbestand", extensions: ["txt"] }],
+  });
+  if (result.canceled) return false;
+  if (!result.filePath) throw new Error("Er is geen bestandslocatie gekozen voor het errorrapport.");
+  await writeFile(result.filePath, report, "utf8");
+  return true;
 });
 
 ipcMain.handle("auth:set-session-id", async (event, value: unknown, remember: unknown) => {

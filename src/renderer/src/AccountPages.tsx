@@ -6,6 +6,7 @@ import { Failure, read, Table } from "./DashboardPages";
 import { parseBuildings, capacityOverview, type Building } from "./dashboard-model";
 import specializations from "./data/specializations.json";
 import { schoolingRecords } from "./schoolings";
+import { loadReportedReference } from "./error-report";
 
 type Scalar = string | number;
 type Row = { cells: Scalar[]; url?: string };
@@ -169,7 +170,7 @@ function useReference(key: ReferenceKey) {
   useEffect(() => {
     let active = true;
     setResult(null);
-    void window.mksDashboard.loadReference(key).then((data) => { if (active) setResult(data); })
+    void loadReportedReference(key).then((data) => { if (active) setResult(data); })
       .catch((cause: unknown) => { if (active) setResult({ ok: false, error: cause instanceof Error ? cause.message : "Gegevens ophalen is mislukt." }); });
     return () => { active = false; };
   }, [key, reload]);
@@ -236,7 +237,7 @@ export function CreditsPage() {
     void (async () => {
       const results: Row[] = [];
       const failures: string[] = [];
-      const updated = await window.mksDashboard.loadReference("missionUpdate");
+      const updated = await loadReportedReference("missionUpdate");
       if (updated.ok) {
         const parsed = read(updated, (data) => scalar(record(record(record(record(data).commit).commit).author).date));
         if (parsed.ok && active) setTimestamp(String(parsed.value));
@@ -245,7 +246,7 @@ export function CreditsPage() {
       for (let index = 0; index < gameLocales.length; index += 4) {
         if (!active) return;
         await Promise.all(gameLocales.slice(index, index + 4).map(async (locale) => {
-          const result = await window.mksDashboard.loadReference(`missions:${locale}`);
+          const result = await loadReportedReference(`missions:${locale}`);
           const parsed = read(result, creditStatistics);
           if (parsed.ok) results.push({ cells: [locale, ...parsed.value] });
           else failures.push(`${locale}: ${parsed.error}`);

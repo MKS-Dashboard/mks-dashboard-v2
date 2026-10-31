@@ -703,6 +703,32 @@ input:focus-visible {
   line-height: 1.7;
 }
 
+.error-report-content {
+  display: grid;
+  gap: 14px;
+  padding: 0 25px 25px;
+}
+
+.error-report-content p {
+  margin: 0;
+  color: #788599;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.error-report-text {
+  width: 100%;
+  resize: vertical;
+  padding: 16px;
+  border: 1px solid #e9edf3;
+  border-radius: 8px;
+  color: #39475c;
+  background: #f6f8fb;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
 .summary-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

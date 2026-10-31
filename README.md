@@ -53,6 +53,12 @@ Als automatisch vernieuwen uitstaat, is het intervalveld uitgeschakeld en blijft
 
 Dit interval geldt voor gamegegevens, niet voor app-updates.
 
+### Errorrapport
+
+Via **Instellingen > Genereer error rapport** maak je een momentopname van de beschikbare foutstatussen en de laatst opgehaalde gegevens. Het rapport vermeldt onbekende voertuigtypen, gebouwtypen en specialisaties, verwerkingsfouten, mislukte gegevensverzoeken, updatefouten en overige waargenomen appfouten. Die laatste kunnen inmiddels zijn opgelost.
+
+Je kunt het rapport in de app bekijken, kopieren of als tekstbestand downloaden. Dit werkt in Stable en Beta en doet geen extra API-verzoeken. Nog niet opgehaalde bronnen kunnen niet worden beoordeeld. Volledige responses worden niet opgenomen en SessionID-parameters worden afgeschermd. Controleer foutmeldingen op overige gevoelige informatie voordat je het rapport deelt. Waargenomen fouten worden alleen in het geheugen bewaard en bij uitloggen gewist.
+
 ## Updates
 
 De app controleert bij het starten en vervolgens iedere vier uur op een nieuwe versie. Je kunt ook zelf **Updates controleren** kiezen.
