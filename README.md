@@ -1,139 +1,149 @@
-# MKS Dashboard Desktop
+# MKS Dashboard
 
-Een desktop-app voor Windows die de belangrijkste overzichten van het [MKS Dashboard](https://github.com/MKS-Dashboard/mks-dashboard.github.io/tree/dev) naar je pc brengt.
+Een Windows-desktopapp met overzicht over je Meldkamerspel-account, voertuigen, gebouwen en team. Gebaseerd op [MKS Dashboard voor het web](https://github.com/MKS-Dashboard/mks-dashboard.github.io/tree/dev).
 
-## Status
+De app draait op je eigen pc en haalt gamegegevens rechtstreeks op bij Meldkamerspel, zonder de MKS-proxy van de webapp.
 
-De eerste desktopbasis is in ontwikkeling. De app gebruikt Electron, React en TypeScript. De bestaande webapp is de functionele referentie; nog niet alle onderdelen daarvan zijn overgezet.
+## Downloaden en installeren
 
-## Dashboardpagina's
+**Benodigd:** Windows 10 of nieuwer en een internetverbinding. Node.js is niet nodig om de app te gebruiken.
 
-De openbare pagina's (missies, geplande/grote teammissies, evenementen, teamevents, POI's, onderscheidingen, informatie, creditvergelijking en suggesties) zijn standaard verborgen. Alleen in **Dev** kun je ze zichtbaar maken via **Instellingen > Infoblocks**. Deze keuze wordt lokaal onthouden; Stable toont deze pagina's nooit, ook niet als de optie eerder in Dev is ingeschakeld.
+| Versie | Download | Voor wie? |
+|---|---|---|
+| **Stable — MKS Dashboard** | [Download Stable](https://github.com/MKS-Dashboard/mks-dashboard-v2/raw/refs/heads/main/install/MKS-Dashboard-Setup-Stable.exe) | Voor dagelijks gebruik |
+| **Beta — MKS Dashboard Beta** | [Download Beta](https://github.com/MKS-Dashboard/mks-dashboard-v2/raw/refs/heads/dev/install/MKS-Dashboard-Setup-Beta.exe) | Voor het uitproberen van nieuwe functies |
 
-Ook de instellingen voor Infoblocks en Dev mode zelf zijn volledig verborgen in Stable.
+1. Download en open de kleine installer voor jouw versie.
+2. De installer downloadt de nieuwste volledige installer van GitHub en controleert het bestand.
+3. Volg de installatiewizard en start MKS Dashboard.
 
-Het rode MKS-appicoon staat in `build/icon.png` en wordt gebruikt voor het appvenster, de Windows-app en de installer.
+Je kunt de volledige installer ook zelf downloaden via [GitHub Releases](https://github.com/MKS-Dashboard/mks-dashboard-v2/releases). Kies voor Beta een release die als **Pre-release** is gemarkeerd.
 
-**Automatisch vernieuwen** staat standaard aan en kan in Instellingen worden uitgeschakeld. Ook deze keuze wordt lokaal onthouden; handmatig ophalen blijft altijd mogelijk.
+Stable en Beta kunnen naast elkaar worden geïnstalleerd. Ze hebben afzonderlijke instellingen en opgeslagen sessies. Beta kan nog onvoltooide functies of fouten bevatten.
 
-**Spelersmenu > Instellingen > Gegevens vernieuwen (minuten)** bepaalt hoe vaak dashboardgegevens automatisch worden opgehaald. Standaard is dit **5 minuten**; vul een geheel getal van minimaal 1 in en klik op **Opslaan**. De keuze wordt lokaal onthouden en is beschikbaar in Dev en Stable, ook zonder aanmelding. Automatisch ophalen gebeurt alleen na succesvolle aanmelding, stopt bij uitloggen of een mislukte sessiecontrole en overlapt niet met lopende requests. Handmatig ophalen begint het interval opnieuw. Dit is geen interval voor app-updates.
+> De installers zijn niet digitaal ondertekend. Windows kan daarom een beveiligingswaarschuwing tonen. Download uitsluitend uit deze repository.
 
-Accountafhankelijke pagina's en overzichtskaarten zijn verborgen totdat de sessie succesvol gamegegevens heeft opgehaald, en verdwijnen weer bij uitloggen of een mislukte sessiecontrole. Het zijmenu groepeert gebouwen (inclusief eigen opleidingen), teamgegevens (inclusief teamopleidingen) en openbare informatie in inklapbare groepen, zoals de webapp. Overzicht en Instellingen blijven bereikbaar zonder aanmelding; de Dev-opties blijven onafhankelijk van de accountkoppeling.
+## Aan de slag
 
-- **Voertuigen:** aantallen per hulpdienst en voertuigtype, voertuiggroepen en extra waarden (zoals watercapaciteit), met zoekfunctie en gekleurde tabellen zoals in de webapp.
-- **Gebouwen:** fysieke en technische aantallen per type, uitbreidingen met actief/inactief-status en specialisaties. Kleine gebouwen, niveaus en SAR-hangars worden volgens de telling van de webapp verwerkt.
-- **Progressdata:** bezette en vrije ziekenhuisbedden, cellen en klaslokalen, apart voor eigen gebouwen en teamgebouwen. Nog niet beschikbare uitbreidingen tellen niet mee voor capaciteit.
+Voer bij de eerste start je Meldkamerspel-SessionID in. Je kunt deze versleuteld op je pc bewaren, zodat de app bij een volgende start automatisch je gegevens probeert op te halen.
 
-Verder zijn er teamgebouwen, eigen/teamziekenhuizen en cellen met bezetting per locatie, gebouwspecialisaties met actief-status, accountgegevens, teamkas en een doorzoekbare/sorteerbare ledenlijst. Opleidingen en teamopleidingen tonen cursusgegevens voor zover de game-API deze beschikbaar stelt.
+Na een succesvolle aanmelding verschijnen de accountgebonden overzichten. Rechtsboven vind je het gebruikersmenu:
 
-**Credits per spelversie** vergelijkt aantallen en gemiddelde opbrengsten van gewone, geplande en teammissies in alle 24 spelversies. **Suggesties** toont openstaande GitHub-issues van de webapp, met labels, de selectie voor de volgende webupdate en links om te reageren of een suggestie in te dienen.
+- **Gegevens ophalen:** vernieuw je dashboard handmatig.
+- **Details:** bekijk je accountgegevens, saldo, rang en ranglijstpositie.
+- **Instellingen:** pas het automatisch vernieuwen aan.
+- **Updates controleren:** controleer of een nieuwe appversie beschikbaar is.
+- **Uitloggen:** wis de sessie en opgehaalde gegevens uit de app. Gebruik dit ook om van account te wisselen.
 
-**Missies**, **Geplande missies**, **Grote teammissies**, **Evenementen** en **Teamevents** tonen doorzoekbare missieoverzichten met filters, creditgrenzen, paginering en uitklapbare eisen. Evenementen zijn de seizoens-/feestdagmissies; geplande missies worden apart gefilterd op `guard_mission`. **POI's** geeft per POI-type de gekoppelde missieaantallen, niet de persoonlijke kaartlocaties. **Onderscheidingen** toont de medaillevoorwaarden; **Informatie** vat de missiegegevens samen. De sessie-invoer en versie-/updatestatus blijven in de desktopinterface; juridische en privacyteksten van de website zijn niet overgenomen.
+### Overzichten
 
-Deze pagina's tonen geen raw JSON. Typenamen en rekenregels zijn gebaseerd op de `dev`-webapp; de gamecatalogus is lokaal meegeleverd en vereist geen MKS-proxy. Onbekende typen blijven zichtbaar met hun type-ID.
+- **Voertuigen:** aantallen per hulpdienst, voertuigtype en groep, inclusief extra waarden zoals watercapaciteit.
+- **Gebouwen:** gebouwtypen, uitbreidingen, specialisaties en opleidingen.
+- **Capaciteit:** bezette en vrije ziekenhuisbedden, cellen en klaslokalen.
+- **Team:** teamgegevens, teamkas, leden, gebouwen en teamopleidingen.
+- **Account:** spelersnaam, credits, coins, rang en ranglijstpositie.
 
-Voor troubleshooting kun je in **Dev > Instellingen > Dev mode** de pagina **Raw API-responses** inschakelen. Kies daar een dashboardgegevensbron om de volledige laatst opgehaalde JSON-response en de gebruikte GET-URL te bekijken; bij mislukte requests zie je de foutmelding. De SessionID in de URL is afgeschermd. Responses kunnen account- en teamgegevens bevatten: deel ze niet zomaar. Er worden geen extra requests gedaan en responses worden niet op schijf opgeslagen. De optie staat standaard uit, wordt lokaal onthouden en is nooit beschikbaar in Stable. Dev mode werkt onafhankelijk van Infoblocks; de normale overzichten blijven behouden.
+De beschikbare gegevens zijn afhankelijk van wat de Meldkamerspel-API voor je account aanbiedt.
 
-### Gamecatalogus onderhouden
+### Automatisch vernieuwen
 
-De vaste gegevens staan per gegevenssoort in `src/renderer/src/data`:
+Automatisch vernieuwen staat standaard **aan**, met een interval van **5 minuten**. In **Gebruikersmenu > Instellingen** kun je dit uitschakelen of een ander interval instellen: een geheel aantal minuten, minimaal 1.
 
-- `vehicles.json`: voertuig-ID's, afkortingen, omschrijvingen en hulpdiensten.
-- `vehicle-groups.json`: voertuiggroepen met verwijzingen naar voertuig-ID's.
-- `vehicle-values.json`: extra waarden per voertuigtype, zoals watercapaciteit.
-- `buildings.json`: gebouwtypen en regels voor kleine gebouwen, niveaus en uitbreidingen.
-- `specializations.json`: namen van gebouwspecialisaties.
-- `schools.json`: schooltypen met hun gebouw-ID's.
-- `awards.json`: onderscheidingen en medailledrempels.
-- `poi.json`: POI-typen.
-- `events.json`: seizoens-/feestdagevenementen met missie-ID's.
-- `event-categories.json`: categorieen voor evenementen.
-- `mission-translations.json`: vertalingen van missie-eisen en aanvullende velden.
-- `mission-exclusions.json`: uitzonderingen voor het indelen van missies.
+Als automatisch vernieuwen uitstaat, is het intervalveld uitgeschakeld en blijft de gekozen waarde bewaard. Handmatig ophalen blijft beschikbaar. Automatisch ophalen gebeurt alleen met een actieve sessie; handmatig ophalen begint het interval opnieuw.
 
-De uitgangsgegevens komen uit de [webapp op commit 8ec5374](https://github.com/MKS-Dashboard/mks-dashboard.github.io/tree/8ec537480f00a71c583c8fc3513426d2cacde021/src/Lists). Bewaar bestaande ID's en controleer verwijzingen tussen de bestanden wanneer je typen toevoegt of wijzigt. Voer daarna `npm test` en `npm run build` uit. De bestanden worden met de app meegebouwd; gewijzigde catalogusgegevens komen bij gebruikers terecht via een nieuwe appversie.
+Dit interval geldt voor gamegegevens, niet voor app-updates.
+
+## Updates
+
+De app controleert bij het starten en vervolgens iedere vier uur op een nieuwe versie. Je kunt ook zelf **Updates controleren** kiezen.
+
+Controleren downloadt of installeert niets. Klik op **Bijwerken** om de update uit te voeren:
+
+1. De app toont de downloadvoortgang.
+2. De app sluit en de installer toont de installatievoortgang.
+3. De nieuwe versie start automatisch.
+
+Een al gedownloade update installeer je met **Herstarten en bijwerken**. Updates worden niet bij normaal afsluiten geïnstalleerd. Windows kan om beheerdersrechten vragen als de installatie die nodig heeft.
+
+Stable ontvangt uitsluitend Stable-updates; Beta uitsluitend Beta-updates. Er wordt niet automatisch van kanaal gewisseld.
 
 ## Privacy en verbinding
 
-- De app en de API-aanroepen draaien op je eigen pc.
-- Je voert zelf je Meldkamerspel-SessionID in, zoals in de bestaande webapp.
-- De app voegt de SessionID toe aan de `_session_id`-queryparameter en vraagt de game-API rechtstreeks om gegevens. Je sessie wordt niet naar de MKS-proxy van de webapp gestuurd.
-- De live gamegegevens vereisen een internetverbinding. Lokaal draaien is dus niet hetzelfde als volledig offline werken.
-- Als je **Bewaar de SessionID versleuteld op deze pc** aanvinkt, slaat de app deze versleuteld op met de Windows-beveiliging. Via **Gebruikersmenu > Uitloggen** wis je de sessie en de opgehaalde gegevens uit de app en keer je terug naar het aanmeldscherm. Gebruik dit ook om een andere SessionID in te voeren.
-- **Gegevens ophalen** en **Updates controleren** staan rechtsboven onder **Gebruikersmenu**. Zodra een update klaarstaat, blijft **Herstarten en bijwerken** direct zichtbaar.
-- De menuknop toont de spelersnaam uit de accountgegevens. **Details** in dit menu opent **Accountgegevens**; deze pagina staat niet meer in het zijmenu of tussen de overzichtskaarten. **Instellingen** staat ook in dit menu en blijft zonder actieve sessie beschikbaar. Zonder actieve sessie staat er **Niet aangemeld**; als de naam niet kan worden opgehaald, staat er **Naam niet beschikbaar**.
-- **Accountgegevens** toont ook **Plek op ranglijst** (`user_toplist_position`) en **Rang** (`user_level_title`) uit `/api/userinfo`.
-- Eigen en teamopleidingen lezen de `result`-lijst uit de API en tonen onder meer de opleidingsnaam (`education_title`), vrije plaatsen, gestart-status en einddatum (`finish_time`). Het menu telt dezelfde opleidingen als de pagina.
-- Getallen worden Nederlands opgemaakt met een punt als duizendscheidingsteken (bijvoorbeeld `27.063`) en een komma voor decimalen. Raw API-responses blijven ongewijzigd.
-- Bij het opstarten probeert de app automatisch de opgeslagen SessionID en haalt daarmee je gegevens op. Het invoerveld verschijnt pas als er geen opgeslagen SessionID is of het ophalen mislukt. Geldige lege lijsten tellen ook als een geslaagde sessie; bij een verbindingsfout blijft de opgeslagen SessionID behouden zodat je opnieuw kunt proberen.
-- API-verzoeken zijn alleen-lezen en gaan naar de officiële game-API.
-- Openbare missiegegevens en de creditvergelijking worden rechtstreeks vanaf deze pc opgehaald uit `Piet2001/Missionfiles-All-Versions` op GitHub. Suggesties worden opgehaald uit de issues van de webapp. Deze openbare verzoeken bevatten nooit je SessionID. Links openen alleen toegestane GitHub- en Meldkamerspel-pagina's in je browser.
+- Game-API-verzoeken worden lokaal uitgevoerd en zijn alleen-lezen.
+- Je SessionID wordt uitsluitend bij gameverzoeken naar Meldkamerspel gestuurd, niet naar de MKS-proxy of GitHub.
+- Optioneel wordt je SessionID versleuteld opgeslagen met de Windows-beveiliging.
+- GitHub wordt gebruikt voor app-updates en, bij de aanvullende Beta-pagina's, openbare gegevens en suggesties. Deze verzoeken bevatten geen SessionID.
+- Voor actuele gamegegevens, downloads en openbare gegevens is internet nodig. Lokaal draaien betekent niet volledig offline werken.
 
-De API is afhankelijk van de beschikbaarheid en voorwaarden van Meldkamerspel en kan veranderen. Behandel je SessionID als een wachtwoord en deel deze nooit met anderen.
+**Behandel je SessionID als een wachtwoord en deel deze nooit.** De app is afhankelijk van de beschikbaarheid en voorwaarden van de [Meldkamerspel-API](https://www.meldkamerspel.com/api-infos).
 
-## Benodigdheden
+## Extra functies in Beta
 
-- Windows 10 of nieuwer
-- [Node.js LTS](https://nodejs.org/) met npm
+Beta gebruikt intern het **Dev**-kanaal. De volgende opties staan standaard uit en zijn niet beschikbaar in Stable:
 
-## Ontwikkelen
+- **Instellingen > Infoblocks:** aanvullende openbare pagina's voor missies, geplande en grote teammissies, evenementen, teamevents, POI's, onderscheidingen, informatie, credits per spelversie en suggesties.
+- **Instellingen > Dev mode:** de pagina **Raw API-responses** voor probleemonderzoek. Deze toont de laatst opgehaalde responses zonder extra verzoeken of opslag op schijf. De SessionID in de getoonde verzoek-URL is afgeschermd.
+
+Raw responses kunnen account- en teamgegevens bevatten. Controleer de inhoud voordat je deze deelt.
+
+## Hulp en problemen melden
+
+Meld fouten of wensen via [GitHub Issues](https://github.com/MKS-Dashboard/mks-dashboard-v2/issues). Vermeld je appversie, Stable of Beta, en de stappen waarmee het probleem optreedt. Deel geen SessionID of ongecontroleerde accountgegevens.
+
+Lukt aanmelden of gegevens ophalen niet, controleer dan je internetverbinding en probeer opnieuw. Een opgeslagen SessionID blijft bij een verbindingsfout bewaard. Als de app na een update niet automatisch start, open deze via het Windows-startmenu.
+
+Heb je een oudere Dev-installatie die nog **MKS Dashboard** heet? Vervang die eenmalig door de nieuwe Beta-installatie voordat je Stable daarnaast installeert. Voer je SessionID opnieuw in voor Beta.
+
+## Ontwikkeling en onderhoud
+
+De app gebruikt Electron, React en TypeScript. Voor ontwikkeling heb je Node.js 24 met npm nodig.
 
 ```powershell
-npm install
+npm ci
 npm run dev
 ```
 
-## Controleren en bouwen
+Tests en een Windows-installer bouwen:
 
 ```powershell
-npm run typecheck
 npm test
-npm run build
-npm run dist
+npm run dist -- --publish never
 ```
 
-`npm run dist` maakt een Windows-installatiebestand in de map `release`.
+De installer verschijnt in [release](release). `npm run dist` voert ook de typecontrole en appbuild uit. Deze zijn afzonderlijk beschikbaar als `npm run typecheck` en `npm run build`.
 
-## Releases en automatische updates
+### Gamecatalogus
 
-Stable heet **MKS Dashboard**; Dev heet **MKS Dashboard Beta** en heeft een eigen Windows-appidentiteit, installatiemap, snelkoppelingen en gegevensmap. Beide kunnen naast elkaar worden geïnstalleerd. SessionID en instellingen worden niet gedeeld. De lokale ontwikkelapp gebruikt ook de Beta-gegevensmap. Een oude Dev-installatie met de Stable-identiteit moet eenmalig worden vervangen door een nieuwe Beta-installer; verwijder de oude installatie voordat je Stable daarnaast installeert. Voer je SessionID opnieuw in voor Beta.
+De vaste JSON-catalogi blijven in [src/renderer/src/data](src/renderer/src/data), per gegevenssoort opgesplitst. Rekenregels blijven in de app. Cataloguswijzigingen worden via een nieuwe appversie verspreid.
 
-### Kleine installer voor nieuwe gebruikers
+De uitgangsgegevens komen uit de [webapp op commit 8ec5374](https://github.com/MKS-Dashboard/mks-dashboard.github.io/tree/8ec537480f00a71c583c8fc3513426d2cacde021/src/Lists). Behoud bestaande ID's, controleer verwijzingen tussen de bestanden en voer na wijzigingen `npm test` en `npm run build` uit.
 
-Voor Beta is er ook [MKS-Dashboard-Setup-Beta.exe](install/MKS-Dashboard-Setup-Beta.exe). Deze selecteert uitsluitend Beta-prereleases en gebruikt `beta.yml`; Stable gebruikt uitsluitend Stable-releases en `latest.yml`. Beide kleine installers staan in `install` en worden samen gebouwd met het onderstaande bouwscript. Neem bij wijzigingen beide vernieuwde executables op in de repository.
+Openbare missiegegevens komen uit [Missionfiles-All-Versions](https://github.com/Piet2001/Missionfiles-All-Versions); suggesties uit de issues van de webapp.
 
-Download [MKS-Dashboard-Setup-Stable.exe](install/MKS-Dashboard-Setup-Stable.exe) uit de map `install` (op GitHub via **Download raw file**). Deze kleine Windows-installer zoekt de nieuwste Stable-release, downloadt de volledige installer met voortgangsbalk, controleert de SHA-512 uit `latest.yml` en start de normale installatiewizard. Internet is vereist. Als er nog geen Stable-release is, toont hij een foutmelding met de mogelijkheid opnieuw te proberen. Dev-releases worden nooit geselecteerd.
+### Releases
 
-De bootstrap blijft in de repository; de volledige installers blijven in GitHub Releases. Hij zoekt bij elke start opnieuw, dus een nieuwe apprelease vereist geen nieuwe bootstrap. Downloadbestanden worden tijdelijk opgeslagen en na afloop verwijderd. Windows kan een waarschuwing tonen omdat de bootstrap niet digitaal ondertekend is.
+- **Beta:** een push naar `dev` publiceert automatisch een prerelease.
+- **Stable:** publiceer een tag van `main` in het formaat `vYYYY.MM.DD.HH.MM`.
+- Beta-tags gebruiken `vYYYY.MM.DD.HH.MM-beta`. Versietijden gebruiken `Europe/Amsterdam`, inclusief zomer- en wintertijd.
+- De [installerworkflow](.github/workflows/windows-installer.yml) test en bouwt op Linux met Wine. Handmatig starten maakt een testartifact, geen release.
+- [Dependabot](.github/dependabot.yml) stelt afhankelijkheidsupdates voor; deze worden niet automatisch samengevoegd.
 
-Onderhoud: na wijzigingen aan `install/Bootstrap.cs` of het logo voer je op Windows `powershell -ExecutionPolicy Bypass -File scripts\build-bootstrap.ps1` uit en neem je de vernieuwde `install/MKS-Dashboard-Setup-Stable.exe` samen met de bronwijzigingen op in de repository. De aparte bootstrap-workflow bouwt en test wijzigingen, maar publiceert geen release en commit geen bestanden automatisch.
+### Kleine installers onderhouden
 
-### Afhankelijkheden bijwerken
+De kleine installers staan in [install](install); volledige installers staan in GitHub Releases. Elke kleine installer zoekt bij het starten de nieuwste release binnen zijn eigen kanaal. Een normale apprelease vereist daarom geen nieuwe kleine installer.
 
-Dependabot controleert npm-afhankelijkheden en GitHub Actions iedere maandag rond 09:00 (Europe/Amsterdam). Versie-update-PR's richten zich op `dev`, met maximaal vijf open PR's per ecosysteem. Er is geen automatisch samenvoegen ingesteld. De bestaande PR-workflow voert tests, typecontrole en een installerbuild uit; na samenvoegen in `dev` verschijnt een Dev-release. Breng geteste wijzigingen daarna naar `main` voor Stable.
+Na wijzigingen aan [Bootstrap.cs](install/Bootstrap.cs) of het logo bouw je op Windows beide installers opnieuw:
 
-De configuratie staat in [.github/dependabot.yml](.github/dependabot.yml) en moet ook op de standaardbranch `main` staan voordat GitHub deze activeert. Schakel daarnaast **Dependabot alerts** en **Dependabot security updates** in onder **Settings > Advanced Security** (of **Code security**). Beveiligingsupdates richten zich op de standaardbranch, niet op de ingestelde `target-branch` voor gewone versie-updates; breng zulke fixes ook naar `dev`.
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\build-bootstrap.ps1
+```
 
-### Appreleases
+Neem beide vernieuwde executables samen met de bronwijzigingen op in de repository. De [bootstrapworkflow](.github/workflows/bootstrap-installer.yml) bouwt en test, maar commit de executables niet automatisch.
 
-Er zijn twee updatekanalen:
+De update-herstart-hook kun je na een installerbuild afzonderlijk testen:
 
-- **Stable:** publiceer een Git-tag in het formaat `vYYYY.MM.DD.HH.MM`, bijvoorbeeld `v2026.10.31.12.26`. De release en updates zijn gebaseerd op die tag van `main`.
-- **Dev:** iedere push naar `dev` publiceert automatisch een nieuwe pre-release. Gebruik de Dev-installer om deze updates te ontvangen.
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\test-installer-restart.ps1
+```
 
-Dev-tags gebruiken `vYYYY.MM.DD.HH.MM-beta`, zonder runnummer; Stable-tags gebruiken `vYYYY.MM.DD.HH.MM`. Alle releasetijden en versienummers worden gegenereerd in `Europe/Amsterdam`, inclusief zomer- en wintertijd. Als de Dev-tag voor de huidige Nederlandse minuut al bestaat, wacht de build tot een nieuwe tag beschikbaar is. Stable-tags met een niet-bestaande lokale tijd tijdens de overgang naar zomertijd worden afgewezen. Intern gebruikt Electron een SemVer-versie met drie nummerdelen, bijvoorbeeld `2026.1031.1302-beta` voor Dev en `2026.1031.1302` voor Stable. De interface en GitHub-tags gebruiken de volledige datum.
-
-Bij iedere updatecontrole kiest de app de hoogste gepubliceerde versie binnen het eigen kanaal. Dev gebruikt uitsluitend Dev-prereleases (`beta.yml`) en Stable uitsluitend Stable-releases (`latest.yml`); er is geen terugval naar het andere kanaal. Oudere versies worden niet als update geïnstalleerd. Deze selectie geldt zodra een installatie deze kanaalscheiding bevat.
-
-Beide installers controleren bij het starten en daarna periodiek op updates voor hun eigen kanaal. **Updates controleren** zoekt alleen naar een nieuwe versie: er wordt niets automatisch gedownload of bij afsluiten geïnstalleerd. Klik zelf op **Bijwerken** om te beginnen. Eerst toont de app een MKS-downloadscherm met voortgang; daarna neemt de installer het over met een installatievoortgangsbalk, zonder installatiekeuzes of bevestiging achteraf. De app opent automatisch na installatie. De balken tonen download- en installatievoortgang, niet de daaropvolgende opstarttijd. Een al gedownloade update kan met **Herstarten en bijwerken** worden geïnstalleerd. Alleen wanneer je de installer zelf start, verschijnt de volledige installatiewizard. Windows kan bij benodigde beheerdersrechten nog om toestemming vragen. Installer- en versietijden gebruiken de Nederlandse tijdzone.
-
-De Windows-installer wordt gebouwd op een gratis GitHub-hosted Linux-runner met Wine en een virtueel scherm. Je kunt de workflow ook handmatig starten via **Actions → Windows installer → Run workflow** op GitHub; dit maakt een testartifact maar publiceert geen release. Installatieartifacts blijven 14 dagen beschikbaar. Voor releases is geen code signing ingesteld; Windows kan daarom een waarschuwing tonen wanneer je een installer start.
-
-## Huidige gegevensbronnen
-
-De app haalt gegevens op via de officiële lees-API van Meldkamerspel, waaronder voertuigen, gebouwen, teamgebouwen, accountgegevens, teaminformatie, opleidingen, POI's en missiegegevens. Niet elk onderdeel van het webdashboard is al onderdeel van deze eerste desktopversie.
-
-## Referentie
-
-- [MKS Dashboard voor het web](https://github.com/MKS-Dashboard/mks-dashboard.github.io/tree/dev)
-- [Officiële API-informatie van Meldkamerspel](https://www.meldkamerspel.com/api-infos)
+Deze test gebruikt een tijdelijke testapp en wijzigt geen bestaande installatie.

@@ -522,7 +522,7 @@ function App() {
                 <h2>{data ? "SessionID aanpassen" : "Welkom bij MKS Dashboard Desktop"}</h2>
                 <p>
                   Voer de SessionID van Meldkamerspel in. De app stuurt deze rechtstreeks
-                  naar de game-API en gebruikt geen externe MKS-proxy.
+                  naar de game-API.
                 </p>
                 <label className="field-label" htmlFor="session-id">Meldkamerspel-SessionID</label>
                 <input

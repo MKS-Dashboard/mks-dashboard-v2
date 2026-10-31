@@ -40,14 +40,25 @@
     ${Else}
       StrCpy $1 ""
     ${EndIf}
-    ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "$1"
+    SetOutPath $INSTDIR
+    ClearErrors
+    ${If} ${UAC_IsAdmin}
+      ${StdUtils.ExecShellAsUser} $0 "$appExe" "open" "$1"
+      ${If} $0 != "ok"
+      ${AndIf} $0 != "fallback"
+        DetailPrint "Automatisch starten is mislukt: $0"
+        SetErrors
+      ${EndIf}
+    ${Else}
+      Exec '"$appExe" $1'
+    ${EndIf}
+    ${If} ${Errors}
+      MessageBox MB_OK|MB_ICONEXCLAMATION "MKS Dashboard is geinstalleerd, maar kon niet automatisch worden gestart. Open de app via het startmenu."
+    ${EndIf}
   FunctionEnd
 
   Function mksFinishPre
     ${If} ${isUpdated}
-      ${If} ${isForceRun}
-        Call StartApp
-      ${EndIf}
       Abort
     ${EndIf}
   FunctionEnd
@@ -56,4 +67,13 @@
   !define MUI_FINISHPAGE_RUN
   !define MUI_FINISHPAGE_RUN_FUNCTION "StartApp"
   !insertmacro MUI_PAGE_FINISH
+!macroend
+
+!macro customInstall
+  ${If} ${isUpdated}
+  ${AndIf} ${isForceRun}
+  ${AndIfNot} ${Silent}
+    !insertmacro MUI_HEADER_TEXT "MKS Dashboard starten" "Installatie voltooid. De nieuwe versie wordt gestart."
+    Call StartApp
+  ${EndIf}
 !macroend
