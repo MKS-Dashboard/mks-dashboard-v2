@@ -49,7 +49,7 @@ let version;
 let displayTimestamp;
 let releaseTag;
 
-if (channel === "stable") {
+if (channel === "stable" && (tagArgument || process.env.GITHUB_REF_TYPE === "tag")) {
   const tag = tagArgument ?? process.env.GITHUB_REF_NAME ?? "";
   const match = /^v(\d{4})\.(\d{2})\.(\d{2})\.(\d{2})\.(\d{2})$/.exec(tag);
   if (!match) {
@@ -76,19 +76,20 @@ if (channel === "stable") {
     throw new Error("De datum in de Stable-tag bestaat niet als Nederlandse lokale tijd.");
   }
 
-  ({ displayTimestamp } = getTimestampParts(date));
+  displayTimestamp = `${year}.${month}.${day}.${hour}.${minute}`;
   version = `${year}.${month}${day}.${hour}${minute}`;
   releaseTag = tag;
 } else {
   const token = process.env.GH_TOKEN;
   if (!token) {
-    throw new Error("GH_TOKEN ontbreekt; start de Dev-release vanuit GitHub Actions.");
+    throw new Error("GH_TOKEN ontbreekt; start de release vanuit GitHub Actions.");
   }
 
   for (;;) {
     const now = new Date();
     const timestamp = getTimestampParts(now);
-    releaseTag = `v${timestamp.displayTimestamp}-beta`;
+    const suffix = channel === "dev" ? "-beta" : "";
+    releaseTag = `v${timestamp.displayTimestamp}${suffix}`;
     const response = await fetch(
       `https://api.github.com/repos/MKS-Dashboard/mks-dashboard-v2/git/ref/tags/${releaseTag}`,
       {
@@ -100,12 +101,12 @@ if (channel === "stable") {
       },
     );
     if (response.status === 404) {
-      version = `${timestamp.versionPrefix}-beta`;
+      version = `${timestamp.versionPrefix}${suffix}`;
       displayTimestamp = timestamp.displayTimestamp;
       break;
     }
     if (!response.ok) {
-      throw new Error(`Dev-tag controleren is mislukt (HTTP ${response.status}).`);
+      throw new Error(`Release-tag controleren is mislukt (HTTP ${response.status}).`);
     }
     console.log(`Tag ${releaseTag} bestaat al; wachten tot de volgende minuut.`);
     await delay(60_000 - (Date.now() % 60_000));
