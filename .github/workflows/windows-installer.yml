@@ -116,7 +116,7 @@ jobs:
         run: node scripts/cleanup-releases.mjs
 
       - name: Upload installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mks-dashboard-windows-setup-${{ github.run_number }}
           path: release/*.exe
