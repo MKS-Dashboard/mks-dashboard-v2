@@ -12,7 +12,13 @@ De eerste desktopbasis is in ontwikkeling. De app gebruikt Electron, React en Ty
 - **Gebouwen:** fysieke en technische aantallen per type, uitbreidingen met actief/inactief-status en specialisaties. Kleine gebouwen, niveaus en SAR-hangars worden volgens de telling van de webapp verwerkt.
 - **Progressdata:** bezette en vrije ziekenhuisbedden, cellen en klaslokalen, apart voor eigen gebouwen en teamgebouwen. Nog niet beschikbare uitbreidingen tellen niet mee voor capaciteit.
 
-Deze pagina's tonen geen raw JSON. Typenamen en rekenregels zijn gebaseerd op de `dev`-webapp; de gamecatalogus is lokaal meegeleverd en vereist geen MKS-proxy. Onbekende typen blijven zichtbaar met hun type-ID. Andere pagina's hebben voorlopig nog de generieke gegevensweergave.
+Verder zijn er teamgebouwen, eigen/teamziekenhuizen en cellen met bezetting per locatie, gebouwspecialisaties met actief-status, accountgegevens, teamkas en een doorzoekbare/sorteerbare ledenlijst. Opleidingen en teamopleidingen tonen cursusgegevens voor zover de game-API deze beschikbaar stelt.
+
+**Credits per spelversie** vergelijkt aantallen en gemiddelde opbrengsten van gewone, geplande en teammissies in alle 24 spelversies. **Suggesties** toont openstaande GitHub-issues van de webapp, met labels, de selectie voor de volgende webupdate en links om te reageren of een suggestie in te dienen.
+
+**Missies**, **Geplande missies**, **Grote teammissies**, **Evenementen** en **Teamevents** tonen doorzoekbare missieoverzichten met filters, creditgrenzen, paginering en uitklapbare eisen. Evenementen zijn de seizoens-/feestdagmissies; geplande missies worden apart gefilterd op `guard_mission`. **POI's** geeft per POI-type de gekoppelde missieaantallen, niet de persoonlijke kaartlocaties. **Onderscheidingen** toont de medaillevoorwaarden; **Informatie** vat de missiegegevens samen. De sessie-invoer en versie-/updatestatus blijven in de desktopinterface; juridische en privacyteksten van de website zijn niet overgenomen.
+
+Deze pagina's tonen geen raw JSON. Typenamen en rekenregels zijn gebaseerd op de `dev`-webapp; de gamecatalogus is lokaal meegeleverd en vereist geen MKS-proxy. Onbekende typen blijven zichtbaar met hun type-ID.
 
 ### Gamecatalogus onderhouden
 
@@ -24,6 +30,12 @@ De vaste gegevens staan per gegevenssoort in `src/renderer/src/data`:
 - `buildings.json`: gebouwtypen en regels voor kleine gebouwen, niveaus en uitbreidingen.
 - `specializations.json`: namen van gebouwspecialisaties.
 - `schools.json`: schooltypen met hun gebouw-ID's.
+- `awards.json`: onderscheidingen en medailledrempels.
+- `poi.json`: POI-typen.
+- `events.json`: seizoens-/feestdagevenementen met missie-ID's.
+- `event-categories.json`: categorieen voor evenementen.
+- `mission-translations.json`: vertalingen van missie-eisen en aanvullende velden.
+- `mission-exclusions.json`: uitzonderingen voor het indelen van missies.
 
 De uitgangsgegevens komen uit de [webapp op commit 8ec5374](https://github.com/MKS-Dashboard/mks-dashboard.github.io/tree/8ec537480f00a71c583c8fc3513426d2cacde021/src/Lists). Bewaar bestaande ID's en controleer verwijzingen tussen de bestanden wanneer je typen toevoegt of wijzigt. Voer daarna `npm test` en `npm run build` uit. De bestanden worden met de app meegebouwd; gewijzigde catalogusgegevens komen bij gebruikers terecht via een nieuwe appversie.
 
@@ -34,7 +46,9 @@ De uitgangsgegevens komen uit de [webapp op commit 8ec5374](https://github.com/M
 - De app voegt de SessionID toe aan de `_session_id`-queryparameter en vraagt de game-API rechtstreeks om gegevens. Je sessie wordt niet naar de MKS-proxy van de webapp gestuurd.
 - De live gamegegevens vereisen een internetverbinding. Lokaal draaien is dus niet hetzelfde als volledig offline werken.
 - Als je **Bewaar de SessionID versleuteld op deze pc** aanvinkt, slaat de app deze versleuteld op met de Windows-beveiliging. Je kunt de opgeslagen SessionID wissen met **Verwijder SessionID**.
+- Bij het opstarten probeert de app automatisch de opgeslagen SessionID en haalt daarmee je gegevens op. Het invoerveld verschijnt pas als er geen opgeslagen SessionID is of het ophalen mislukt. Geldige lege lijsten tellen ook als een geslaagde sessie; bij een verbindingsfout blijft de opgeslagen SessionID behouden zodat je opnieuw kunt proberen.
 - API-verzoeken zijn alleen-lezen en gaan naar de officiële game-API.
+- Openbare missiegegevens en de creditvergelijking worden rechtstreeks vanaf deze pc opgehaald uit `Piet2001/Missionfiles-All-Versions` op GitHub. Suggesties worden opgehaald uit de issues van de webapp. Deze openbare verzoeken bevatten nooit je SessionID. Links openen alleen toegestane GitHub- en Meldkamerspel-pagina's in je browser.
 
 De API is afhankelijk van de beschikbaarheid en voorwaarden van Meldkamerspel en kan veranderen. Behandel je SessionID als een wachtwoord en deel deze nooit met anderen.
 

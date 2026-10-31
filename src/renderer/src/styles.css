@@ -759,6 +759,71 @@ input:focus-visible {
   background: #e9edf3;
 }
 
+.table-sort,
+.text-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.table-sort {
+  font-weight: 700;
+}
+
+.text-link {
+  color: #225eb0;
+  text-decoration: underline;
+}
+
+.information-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 14px;
+  padding: 18px 24px;
+}
+
+.information-filters label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.information-filters select,
+.information-filters input,
+.information-pagination select {
+  padding: 8px;
+  border: 1px solid #d8dfeb;
+  border-radius: 5px;
+  background: #fff;
+}
+
+.information-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.mission-details {
+  padding: 16px 24px;
+}
+
+.mission-details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.information-source {
+  color: #627088;
+  font-size: 12px;
+}
+
 .capacity-legend {
   color: #627088;
 }

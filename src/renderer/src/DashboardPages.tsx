@@ -7,7 +7,7 @@ import {
 
 const count = (value: number) => value.toLocaleString("nl-NL");
 
-function read<T>(result: DashboardResourceResult, parse: (data: unknown) => T):
+export function read<T>(result: DashboardResourceResult, parse: (data: unknown) => T):
   { ok: true; value: T } | { ok: false; error: string } {
   if (!result.ok) return result;
   try {
@@ -17,11 +17,11 @@ function read<T>(result: DashboardResourceResult, parse: (data: unknown) => T):
   }
 }
 
-function Failure({ message }: { message: string }) {
+export function Failure({ message }: { message: string }) {
   return <div className="notice notice-error" role="alert">{message}</div>;
 }
 
-function Table({ title, headers, rows, tone = "", empty = "Geen gegevens in bezit." }: {
+export function Table({ title, headers, rows, tone = "", empty = "Geen gegevens in bezit." }: {
   title: string; headers: string[]; rows: ReactNode[][]; tone?: string; empty?: string;
 }) {
   return (
@@ -76,7 +76,7 @@ export function VehiclesPage({ result }: { result: DashboardResourceResult }) {
   );
 }
 
-export function BuildingsPage({ result }: { result: DashboardResourceResult }) {
+export function BuildingsPage({ result, alliance = false }: { result: DashboardResourceResult; alliance?: boolean }) {
   const [search, setSearch] = useState("");
   const parsed = read(result, parseBuildings);
   if (!parsed.ok) return <Failure message={parsed.error} />;
@@ -84,7 +84,7 @@ export function BuildingsPage({ result }: { result: DashboardResourceResult }) {
   const matches = (name: string) => name.toLocaleLowerCase("nl").includes(search.trim().toLocaleLowerCase("nl"));
   return <div className="report-page">
     <div className="section-heading">
-      <div><h2>Gebouwen</h2><p>Fysieke locaties en technische aantallen volgens de webapp.</p></div>
+      <div><h2>{alliance ? "Teamgebouwen" : "Gebouwen"}</h2><p>Fysieke locaties en technische aantallen volgens de webapp.</p></div>
       <input className="search-input" type="search" aria-label="Zoeken in gebouwen" placeholder="Zoek type of uitbreiding..."
         value={search} onChange={(event) => setSearch(event.target.value)} />
     </div>

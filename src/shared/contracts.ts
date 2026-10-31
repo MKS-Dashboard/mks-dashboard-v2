@@ -6,9 +6,9 @@ export const dashboardResources = [
   { key: "allianceInfo", label: "Teamgegevens", endpoint: "/api/allianceinfo", sessionRequired: true },
   { key: "schoolings", label: "Opleidingen", endpoint: "/api/schoolings", sessionRequired: true },
   { key: "allianceSchoolings", label: "Teamopleidingen", endpoint: "/api/alliance_schoolings", sessionRequired: true },
-  { key: "pointsOfInterest", label: "POI's", endpoint: "/mission_positions", sessionRequired: true },
+  { key: "pointsOfInterest", label: "POI's", endpoint: "/einsaetze.json", sessionRequired: false },
   { key: "missions", label: "Missies", endpoint: "/einsaetze.json", sessionRequired: false },
-  { key: "allianceEvents", label: "Teammissies", endpoint: "/alliance_event_types.json", sessionRequired: false },
+  { key: "allianceEvents", label: "Teamevents", endpoint: "/alliance_event_types.json", sessionRequired: false },
 ] as const;
 
 export type DashboardResourceKey = (typeof dashboardResources)[number]["key"];
@@ -18,6 +18,14 @@ export type DashboardResourceResult =
   | { ok: false; error: string };
 
 export type DashboardData = Record<DashboardResourceKey, DashboardResourceResult>;
+
+export const gameLocales = [
+  "nl_NL", "de_DE", "en_AU", "en_US", "en_GB", "es_ES", "pl_PL", "sv_SE",
+  "it_IT", "fr_FR", "ru_RU", "da_DK", "nb_NO", "cs_CZ", "tr_TR", "pt_PT",
+  "pt_BR", "uk_UA", "ko_KR", "es_MX", "ja_JP", "ro_RO", "fi_FI", "sk_SK",
+] as const;
+
+export type ReferenceKey = "suggestions" | "missionUpdate" | `missions:${typeof gameLocales[number]}`;
 
 export interface AuthStatus {
   hasSessionId: boolean;
@@ -49,6 +57,8 @@ export interface MksDashboardApi {
   setSessionId: (sessionId: string, remember: boolean) => Promise<void>;
   logout: () => Promise<void>;
   loadDashboard: () => Promise<DashboardData>;
+  loadReference: (key: ReferenceKey) => Promise<DashboardResourceResult>;
+  openExternal: (url: string) => Promise<void>;
   getAppInfo: () => Promise<AppInfo>;
   getUpdateStatus: () => Promise<UpdateStatus>;
   checkForUpdates: () => Promise<void>;

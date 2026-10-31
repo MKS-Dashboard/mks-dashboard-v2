@@ -1,0 +1,82 @@
+[
+  {
+    "name": "-- Alles",
+    "key": "all"
+  },
+  {
+    "name": "Seizoenen",
+    "key": "seasonal"
+  },
+  {
+    "name": "Voetbal",
+    "key": "soccer"
+  },
+  {
+    "name": "Halloween",
+    "key": "halloween"
+  },
+  {
+    "name": "Sinterklaas",
+    "key": "sint"
+  },
+  {
+    "name": "Kerst",
+    "key": "christmas"
+  },
+  {
+    "name": "Oud en nieuw",
+    "key": "newyear"
+  },
+  {
+    "name": "Valentijn",
+    "key": "valentine"
+  },
+  {
+    "name": "112-dag",
+    "key": "alarmnumber"
+  },
+  {
+    "name": "Carnaval",
+    "key": "carnival"
+  },
+  {
+    "name": "Winter",
+    "key": "winter"
+  },
+  {
+    "name": "Lente",
+    "key": "spring"
+  },
+  {
+    "name": "Herfst",
+    "key": "authum"
+  },
+  {
+    "name": "Verjaardag",
+    "key": "anniversary"
+  },
+  {
+    "name": "Zomer",
+    "key": "summer"
+  },
+  {
+    "name": "Pasen",
+    "key": "easter"
+  },
+  {
+    "name": "Race event",
+    "key": "racing"
+  },
+  {
+    "name": "Moederdag",
+    "key": "mothersday"
+  },
+  {
+    "name": "Vaderdag",
+    "key": "fathersday"
+  },
+  {
+    "name": "Olymische spelen",
+    "key": "olympics"
+  }
+]

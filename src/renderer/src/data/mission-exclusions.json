@@ -1,0 +1,23 @@
+{
+  "missions": [
+    "filter_id",
+    "patient_specialization_captions",
+    "patient_specialization_ids",
+    "duration",
+    "patient_allow_first_responder_chance",
+    "unavailable_in_normal_missions"
+  ],
+  "allianceMissions": [
+    "only_alliance_mission",
+    "filter_id",
+    "patient_specialization_ids",
+    "patient_specialization_captions",
+    "unavailable_in_normal_missions"
+  ],
+  "allianceEvents": [
+    "filter_id",
+    "patient_specialization_ids",
+    "patient_specialization_captions",
+    "unavailable_in_normal_missions"
+  ]
+}

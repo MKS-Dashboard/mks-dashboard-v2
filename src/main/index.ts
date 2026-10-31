@@ -1,10 +1,11 @@
-import { app, BrowserWindow, ipcMain, safeStorage, type IpcMainInvokeEvent } from "electron";
+import { app, BrowserWindow, ipcMain, safeStorage, shell, type IpcMainInvokeEvent } from "electron";
 import { autoUpdater } from "electron-updater";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getUpdateFeed } from "./update-feed";
+import { allowedExternalUrl, loadReference } from "./reference-data";
 import {
   dashboardResources,
   type AuthStatus,
@@ -238,6 +239,16 @@ function createMainWindow(): void {
 ipcMain.handle("auth:status", async (event) => {
   assertMainWindow(event);
   return getAuthStatus();
+});
+
+ipcMain.handle("reference:load", async (event, key: unknown) => {
+  assertMainWindow(event);
+  return loadReference(key);
+});
+
+ipcMain.handle("external:open", async (event, value: unknown) => {
+  assertMainWindow(event);
+  await shell.openExternal(allowedExternalUrl(value));
 });
 
 ipcMain.handle("auth:set-session-id", async (event, value: unknown, remember: unknown) => {

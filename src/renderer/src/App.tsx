@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BuildingsPage, ProgressPage, VehiclesPage } from "./DashboardPages";
+import { AccountPage, AlliancePage, BuildingDetailsPage, CreditsPage, SchoolingsPage, SuggestionsPage } from "./AccountPages";
+import { AllianceEventsPage, AllianceMissionsPage, AwardsPage, EventsPage, InformationPage, MissionsPage, PlannedMissionsPage, POIPage } from "./InformationPages";
 import {
   dashboardResources,
   type AppInfo,
@@ -8,7 +10,22 @@ import {
   type UpdateStatus,
 } from "../../shared/contracts";
 
-type PageKey = "overview" | "progressdata" | DashboardResourceKey;
+const extraPages = [
+  { key: "progressdata", label: "Progressdata" },
+  { key: "specializations", label: "Gebouwspecialisaties" },
+  { key: "hospitals", label: "Eigen ziekenhuizen" },
+  { key: "cells", label: "Eigen cellen" },
+  { key: "teamHospitals", label: "Teamziekenhuizen" },
+  { key: "teamCells", label: "Teamcellen" },
+  { key: "creditComparison", label: "Credits per spelversie" },
+  { key: "suggestions", label: "Suggesties" },
+  { key: "plannedMissions", label: "Geplande missies" },
+  { key: "seasonalEvents", label: "Evenementen" },
+  { key: "largeAllianceMissions", label: "Grote teammissies" },
+  { key: "awards", label: "Onderscheidingen" },
+  { key: "information", label: "Informatie" },
+] as const;
+type PageKey = "overview" | typeof extraPages[number]["key"] | DashboardResourceKey;
 
 function recordsFrom(data: unknown): unknown[] {
   if (Array.isArray(data)) return data;
@@ -17,15 +34,6 @@ function recordsFrom(data: unknown): unknown[] {
     if (nestedArray) return nestedArray;
   }
   return data === null || data === undefined ? [] : [data];
-}
-
-function recordTitle(record: unknown, index: number): string {
-  if (record && typeof record === "object" && !Array.isArray(record)) {
-    const fields = record as Record<string, unknown>;
-    const title = fields.name ?? fields.caption ?? fields.title ?? fields.id ?? fields.ID;
-    if (typeof title === "string" || typeof title === "number") return String(title);
-  }
-  return `Gegeven ${index + 1}`;
 }
 
 function App() {
@@ -37,27 +45,10 @@ function App() {
   const [showSessionForm, setShowSessionForm] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: "idle" });
-
-  const updateSessionStatus = useCallback(async () => {
-    setCheckingSession(true);
-    try {
-      const status = await window.mksDashboard.getAuthStatus();
-      setHasSessionId(status.hasSessionId);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "De sessiestatus kon niet worden gecontroleerd.");
-    } finally {
-      setCheckingSession(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void updateSessionStatus();
-  }, [updateSessionStatus]);
 
   useEffect(() => {
     let active = true;
@@ -96,14 +87,39 @@ function App() {
       );
       setShowSessionForm(!sessionAccepted);
       if (!sessionAccepted) {
-        setError("De gamegegevens zijn niet opgehaald. Controleer je SessionID en internetverbinding.");
+        const auth = await window.mksDashboard.getAuthStatus();
+        if (auth.hasSessionId) setError("De gamegegevens zijn niet opgehaald. Controleer je SessionID en internetverbinding.");
       }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "De gegevens konden niet worden opgehaald.");
+      setShowSessionForm(true);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const status = await window.mksDashboard.getAuthStatus();
+        if (!active) return;
+        setHasSessionId(status.hasSessionId);
+        if (status.hasSessionId) {
+          await refresh();
+        } else {
+          setShowSessionForm(true);
+        }
+      } catch (cause) {
+        if (!active) return;
+        setError(cause instanceof Error ? cause.message : "De opgeslagen SessionID kon niet worden geladen.");
+        setShowSessionForm(true);
+      } finally {
+        if (active) setCheckingSession(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [refresh]);
 
   const saveAndRefresh = useCallback(async () => {
     setError("");
@@ -137,19 +153,9 @@ function App() {
   const activeResource = page === "overview"
     ? null
     : dashboardResources.find((resource) => resource.key === page);
-  const activeResult = activeResource && data ? data[activeResource.key] : null;
-
-  const visibleRecords = useMemo(() => {
-    if (!activeResource || !data?.[activeResource.key]?.ok) return [];
-    const result = data[activeResource.key];
-    if (!result.ok) return [];
-    const searchTerm = search.trim().toLocaleLowerCase("nl");
-    return recordsFrom(result.data)
-      .filter((record) => !searchTerm || JSON.stringify(record).toLocaleLowerCase("nl").includes(searchTerm))
-      .slice(0, 200);
-  }, [activeResource, data, search]);
-
-  const selectedLabel = page === "progressdata" ? "Progressdata" : activeResource?.label ?? "Overzicht";
+  const selectedLabel = extraPages.find((item) => item.key === page)?.label ?? activeResource?.label ?? "Overzicht";
+  const publicPage = ["creditComparison", "suggestions", "awards", "information", "missions",
+    "plannedMissions", "seasonalEvents", "largeAllianceMissions", "allianceEvents", "pointsOfInterest"].includes(page);
   const updateMessage = {
     idle: "",
     checking: "Controleren op updates...",
@@ -184,14 +190,13 @@ function App() {
             >
               <span className="nav-icon">{resource.label.slice(0, 1)}</span>
               {resource.label}
-              {data?.[resource.key]?.ok && (
+              {data?.[resource.key]?.ok && !["credits", "allianceInfo", "pointsOfInterest"].includes(resource.key) && (
                 <span className="nav-count">{resourceCount(data, resource.key)}</span>
               )}
             </button>
           ))}
-          <button className={`nav-item ${page === "progressdata" ? "active" : ""}`} onClick={() => setPage("progressdata")}>
-            <span className="nav-icon">P</span> Progressdata
-          </button>
+          {extraPages.map((item) => <button key={item.key} className={`nav-item ${page === item.key ? "active" : ""}`}
+            onClick={() => setPage(item.key)}><span className="nav-icon">{item.label.slice(0, 1)}</span>{item.label}</button>)}
         </nav>
 
         <div className="sidebar-footer">
@@ -254,7 +259,10 @@ function App() {
             </div>
           )}
 
-          {(!data || showSessionForm) && (
+          {checkingSession && !publicPage && (
+            <div className="notice" role="status">Opgeslagen SessionID controleren en gegevens ophalen...</div>
+          )}
+          {(!data || showSessionForm) && !checkingSession && !publicPage && (
             <section className="welcome-panel">
               <div className="welcome-icon">M</div>
               <div className="welcome-copy">
@@ -338,7 +346,9 @@ function App() {
                       <span className="resource-icon">{resource.label.slice(0, 1)}</span>
                       <span className="resource-text">
                         <strong>{resource.label}</strong>
-                        <small>{result.ok ? `${recordsFrom(result.data).length} items` : "Niet beschikbaar"}</small>
+                        <small>{!result.ok ? "Niet beschikbaar" : resource.key === "pointsOfInterest" ? "Missies per POI-type" :
+                          resource.key === "credits" ? "Accountoverzicht" : resource.key === "allianceInfo" ? "Teamkas en leden" :
+                            `${recordsFrom(result.data).length} items`}</small>
                       </span>
                       <span className="resource-arrow">›</span>
                     </button>
@@ -353,58 +363,28 @@ function App() {
 
           {page === "vehicles" && data && <VehiclesPage result={data.vehicles} />}
           {page === "buildings" && data && <BuildingsPage result={data.buildings} />}
+          {page === "allianceBuildings" && data && <BuildingsPage result={data.allianceBuildings} alliance />}
           {page === "progressdata" && data && <ProgressPage data={data} />}
-          {activeResource && page !== "vehicles" && page !== "buildings" && data && activeResult && (
-            <section className="data-panel">
-              <div className="data-toolbar">
-                <div>
-                  <h2>{activeResource.label}</h2>
-                  <p>
-                    {activeResult.ok
-                      ? `${recordsFrom(activeResult.data).length} items ontvangen van Meldkamerspel`
-                      : "Deze gegevensbron kon niet worden geladen."}
-                  </p>
-                </div>
-                {activeResult.ok && (
-                  <input
-                    className="search-input"
-                    type="search"
-                    placeholder="Zoeken in gegevens..."
-                    aria-label={`Zoeken in ${activeResource.label}`}
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                  />
-                )}
-              </div>
-              {!activeResult.ok ? (
-                <div className="empty-state">
-                  <strong>Gegevens niet beschikbaar</strong>
-                  <p>{activeResult.error}</p>
-                </div>
-              ) : visibleRecords.length === 0 ? (
-                <div className="empty-state">
-                  <strong>Geen gegevens gevonden</strong>
-                  <p>Pas je zoekterm aan of haal de gegevens opnieuw op.</p>
-                </div>
-              ) : (
-                <div className="record-list">
-                  {visibleRecords.map((record, index) => (
-                    <details className="record-item" key={`${activeResource.key}-${index}`}>
-                      <summary>
-                        <span className="record-number">{index + 1}</span>
-                        <strong>{recordTitle(record, index)}</strong>
-                        <span className="record-toggle">Details bekijken</span>
-                      </summary>
-                      <pre>{JSON.stringify(record, null, 2)}</pre>
-                    </details>
-                  ))}
-                  {activeResult.ok && recordsFrom(activeResult.data).length > 200 && (
-                    <p className="limit-note">De eerste 200 items worden getoond. Gebruik de zoekfunctie om gegevens te filteren.</p>
-                  )}
-                </div>
-              )}
-            </section>
-          )}
+          {page === "credits" && data && <AccountPage result={data.credits} />}
+          {page === "allianceInfo" && data && <AlliancePage result={data.allianceInfo} />}
+          {page === "schoolings" && data && <SchoolingsPage result={data.schoolings} />}
+          {page === "allianceSchoolings" && data && <SchoolingsPage result={data.allianceSchoolings} alliance />}
+          {page === "specializations" && data && <BuildingDetailsPage result={data.buildings} kind="specializations" />}
+          {(page === "hospitals" || page === "cells") && data && <BuildingDetailsPage result={data.buildings} kind={page} />}
+          {(page === "teamHospitals" || page === "teamCells") && data &&
+            <BuildingDetailsPage result={data.allianceBuildings} kind={page === "teamHospitals" ? "hospitals" : "cells"} alliance />}
+          {page === "creditComparison" && <CreditsPage />}
+          {page === "suggestions" && <SuggestionsPage />}
+          {page === "awards" && <AwardsPage />}
+          {page === "missions" && data && <MissionsPage result={data.missions} />}
+          {page === "seasonalEvents" && data && <EventsPage result={data.missions} />}
+          {page === "plannedMissions" && data && <PlannedMissionsPage result={data.missions} />}
+          {page === "largeAllianceMissions" && data && <AllianceMissionsPage result={data.missions} />}
+          {page === "allianceEvents" && data && <AllianceEventsPage result={data.allianceEvents} missionsResult={data.missions} />}
+          {page === "pointsOfInterest" && data && <POIPage result={data.missions} />}
+          {page === "information" && data && <InformationPage result={data.missions} />}
+          {publicPage && page !== "awards" && page !== "creditComparison" && page !== "suggestions" && !data &&
+            <div className="empty-state">Klik op Gegevens ophalen om de openbare missiegegevens te laden. Een SessionID is hiervoor niet nodig.</div>}
         </section>
         <footer className="app-footer">
           <span>

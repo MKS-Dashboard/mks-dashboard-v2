@@ -18,6 +18,8 @@ export interface Extension {
 }
 
 export interface Building {
+  id?: number;
+  name?: string;
   type: number;
   small: boolean;
   level: number;
@@ -26,6 +28,7 @@ export interface Building {
   schoolings: number;
   extensions: Extension[];
   specialization?: string;
+  specializationActive?: boolean;
 }
 
 function object(value: unknown): Record<string, unknown> {
@@ -63,6 +66,8 @@ export function parseBuildings(value: unknown): Building[] {
       throw new Error("De API heeft een ongeldige gebouwspecialisatie teruggegeven.");
     }
     return {
+      id: record.id == null ? undefined : number(record.id, "id"),
+      name: typeof record.caption === "string" ? record.caption : undefined,
       type: number(record.building_type, "building_type"),
       small: record.small_building === true,
       level: number(record.level, "level", true),
@@ -70,6 +75,8 @@ export function parseBuildings(value: unknown): Building[] {
       prisoners: number(record.prisoner_count, "prisoner_count", true),
       schoolings: record.schoolings == null ? 0 : array(record.schoolings).length,
       specialization,
+      specializationActive: record.specialization == null ? undefined :
+        typeof object(record.specialization).active === "boolean" ? object(record.specialization).active === true : undefined,
       extensions: record.extensions == null ? [] : array(record.extensions).map((item) => {
         const extension = object(item);
         if (typeof extension.caption !== "string") {
