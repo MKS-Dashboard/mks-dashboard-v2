@@ -12,6 +12,9 @@ module.exports = {
     "out/**/*",
     "package.json",
   ],
+  extraResources: [
+    { from: "build\\icon.png", to: "icon.png" },
+  ],
   artifactName: buildTimestamp && updateChannel
     ? `MKS-Dashboard-Setup-${buildTimestamp}-${updateChannel}.\${ext}`
     : "MKS-Dashboard-Setup-${version}.${ext}",
@@ -24,6 +27,7 @@ module.exports = {
     },
   ],
   win: {
+    icon: "build\\icon.png",
     target: "nsis",
   },
   nsis: {

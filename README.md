@@ -12,6 +12,8 @@ De openbare pagina's (missies, geplande/grote teammissies, evenementen, teameven
 
 Ook de instellingen voor Infoblocks en Dev mode zelf zijn volledig verborgen in Stable.
 
+Het rode MKS-appicoon staat in `build/icon.png` en wordt gebruikt voor het appvenster, de Windows-app en de installer.
+
 **Automatisch vernieuwen** staat standaard aan en kan in Instellingen worden uitgeschakeld. Ook deze keuze wordt lokaal onthouden; handmatig ophalen blijft altijd mogelijk.
 
 **Spelersmenu > Instellingen > Gegevens vernieuwen (minuten)** bepaalt hoe vaak dashboardgegevens automatisch worden opgehaald. Standaard is dit **5 minuten**; vul een geheel getal van minimaal 1 in en klik op **Opslaan**. De keuze wordt lokaal onthouden en is beschikbaar in Dev en Stable, ook zonder aanmelding. Automatisch ophalen gebeurt alleen na succesvolle aanmelding, stopt bij uitloggen of een mislukte sessiecontrole en overlapt niet met lopende requests. Handmatig ophalen begint het interval opnieuw. Dit is geen interval voor app-updates.

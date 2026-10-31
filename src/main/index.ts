@@ -217,6 +217,7 @@ function createMainWindow(): void {
     minWidth: 880,
     minHeight: 600,
     title: "MKS Dashboard",
+    icon: app.isPackaged ? resolve(process.resourcesPath, "icon.png") : resolve(mainDirectory, "../../build/icon.png"),
     backgroundColor: "#f4f6fb",
     autoHideMenuBar: true,
     webPreferences: {
