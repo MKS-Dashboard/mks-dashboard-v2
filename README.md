@@ -77,6 +77,14 @@ npm run dist
 
 ## Releases en automatische updates
 
+### Afhankelijkheden bijwerken
+
+Dependabot controleert npm-afhankelijkheden en GitHub Actions iedere maandag rond 09:00 (Europe/Amsterdam). Versie-update-PR's richten zich op `dev`, met maximaal vijf open PR's per ecosysteem. Er is geen automatisch samenvoegen ingesteld. De bestaande PR-workflow voert tests, typecontrole en een installerbuild uit; na samenvoegen in `dev` verschijnt een Dev-release. Breng geteste wijzigingen daarna naar `main` voor Stable.
+
+De configuratie staat in [.github/dependabot.yml](.github/dependabot.yml) en moet ook op de standaardbranch `main` staan voordat GitHub deze activeert. Schakel daarnaast **Dependabot alerts** en **Dependabot security updates** in onder **Settings > Advanced Security** (of **Code security**). Beveiligingsupdates richten zich op de standaardbranch, niet op de ingestelde `target-branch` voor gewone versie-updates; breng zulke fixes ook naar `dev`.
+
+### Appreleases
+
 Er zijn twee updatekanalen:
 
 - **Stable:** publiceer een Git-tag in het formaat `vYYYY.MM.DD.HH.MM`, bijvoorbeeld `v2026.10.31.12.26`. De release en updates zijn gebaseerd op die tag van `main`.
