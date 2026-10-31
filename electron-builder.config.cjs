@@ -1,10 +1,11 @@
 const buildTimestamp = process.env.BUILD_TIMESTAMP;
 const updateChannel = process.env.UPDATE_CHANNEL;
 const publishChannel = updateChannel === "dev" ? "beta" : "latest";
+const isBeta = updateChannel === "dev";
 
 module.exports = {
-  appId: "com.mksdashboard.desktop",
-  productName: "MKS Dashboard",
+  appId: isBeta ? "com.mksdashboard.desktop.beta" : "com.mksdashboard.desktop",
+  productName: isBeta ? "MKS Dashboard Beta" : "MKS Dashboard",
   directories: {
     output: "release",
   },

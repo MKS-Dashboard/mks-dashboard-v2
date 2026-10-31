@@ -335,7 +335,7 @@ function App() {
         <div className="brand">
           <div className="brand-mark">MKS</div>
           <div>
-            <strong>MKS Dashboard</strong>
+            <strong>{appInfo?.channel === "dev" ? "MKS Dashboard Beta" : "MKS Dashboard"}</strong>
             <span>Desktop</span>
           </div>
         </div>

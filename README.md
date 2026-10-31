@@ -96,6 +96,18 @@ npm run dist
 
 ## Releases en automatische updates
 
+Stable heet **MKS Dashboard**; Dev heet **MKS Dashboard Beta** en heeft een eigen Windows-appidentiteit, installatiemap, snelkoppelingen en gegevensmap. Beide kunnen naast elkaar worden geïnstalleerd. SessionID en instellingen worden niet gedeeld. De lokale ontwikkelapp gebruikt ook de Beta-gegevensmap. Een oude Dev-installatie met de Stable-identiteit moet eenmalig worden vervangen door een nieuwe Beta-installer; verwijder de oude installatie voordat je Stable daarnaast installeert. Voer je SessionID opnieuw in voor Beta.
+
+### Kleine installer voor nieuwe gebruikers
+
+Voor Beta is er ook [MKS-Dashboard-Setup-Beta.exe](install/MKS-Dashboard-Setup-Beta.exe). Deze selecteert uitsluitend Beta-prereleases en gebruikt `beta.yml`; Stable gebruikt uitsluitend Stable-releases en `latest.yml`. Beide kleine installers staan in `install` en worden samen gebouwd met het onderstaande bouwscript. Neem bij wijzigingen beide vernieuwde executables op in de repository.
+
+Download [MKS-Dashboard-Setup-Stable.exe](install/MKS-Dashboard-Setup-Stable.exe) uit de map `install` (op GitHub via **Download raw file**). Deze kleine Windows-installer zoekt de nieuwste Stable-release, downloadt de volledige installer met voortgangsbalk, controleert de SHA-512 uit `latest.yml` en start de normale installatiewizard. Internet is vereist. Als er nog geen Stable-release is, toont hij een foutmelding met de mogelijkheid opnieuw te proberen. Dev-releases worden nooit geselecteerd.
+
+De bootstrap blijft in de repository; de volledige installers blijven in GitHub Releases. Hij zoekt bij elke start opnieuw, dus een nieuwe apprelease vereist geen nieuwe bootstrap. Downloadbestanden worden tijdelijk opgeslagen en na afloop verwijderd. Windows kan een waarschuwing tonen omdat de bootstrap niet digitaal ondertekend is.
+
+Onderhoud: na wijzigingen aan `install/Bootstrap.cs` of het logo voer je op Windows `powershell -ExecutionPolicy Bypass -File scripts\build-bootstrap.ps1` uit en neem je de vernieuwde `install/MKS-Dashboard-Setup-Stable.exe` samen met de bronwijzigingen op in de repository. De aparte bootstrap-workflow bouwt en test wijzigingen, maar publiceert geen release en commit geen bestanden automatisch.
+
 ### Afhankelijkheden bijwerken
 
 Dependabot controleert npm-afhankelijkheden en GitHub Actions iedere maandag rond 09:00 (Europe/Amsterdam). Versie-update-PR's richten zich op `dev`, met maximaal vijf open PR's per ecosysteem. Er is geen automatisch samenvoegen ingesteld. De bestaande PR-workflow voert tests, typecontrole en een installerbuild uit; na samenvoegen in `dev` verschijnt een Dev-release. Breng geteste wijzigingen daarna naar `main` voor Stable.

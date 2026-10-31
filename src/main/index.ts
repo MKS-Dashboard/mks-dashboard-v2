@@ -16,6 +16,15 @@ import {
 } from "../shared/contracts";
 
 const GAME_ORIGIN = "https://meldkamerspel.com";
+const isBetaApp = !app.isPackaged || /-beta(?:\.|$)/.test(app.getVersion());
+const productName = isBetaApp ? "MKS Dashboard Beta" : "MKS Dashboard";
+if (isBetaApp) {
+  app.setName(productName);
+  app.setPath("userData", resolve(app.getPath("appData"), productName));
+}
+if (process.platform === "win32") {
+  app.setAppUserModelId(isBetaApp ? "com.mksdashboard.desktop.beta" : "com.mksdashboard.desktop");
+}
 const mainDirectory = dirname(fileURLToPath(import.meta.url));
 const sessionIdFile = resolve(app.getPath("userData"), "session-id.enc");
 
@@ -216,7 +225,7 @@ function createMainWindow(): void {
     height: 860,
     minWidth: 880,
     minHeight: 600,
-    title: "MKS Dashboard",
+    title: productName,
     icon: app.isPackaged ? resolve(process.resourcesPath, "icon.png") : resolve(mainDirectory, "../../build/icon.png"),
     backgroundColor: "#f4f6fb",
     autoHideMenuBar: true,
@@ -279,7 +288,7 @@ ipcMain.handle("app:info", (event) => {
   const version = app.getVersion();
   return {
     version: getDisplayVersion(version),
-    channel: /-beta(?:\.|$)/.test(version) ? "dev" : "stable",
+    channel: isBetaApp ? "dev" : "stable",
   };
 });
 
