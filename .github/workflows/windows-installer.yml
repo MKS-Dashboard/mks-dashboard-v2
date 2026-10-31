@@ -74,7 +74,7 @@ jobs:
           echo "UPDATE_CHANNEL=stable" >> "$GITHUB_ENV"
 
       - name: Build Windows installer
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x800x24" npm run dist
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x800x24" npm run dist -- --publish never
 
       - name: Publish Dev prerelease
         if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
