@@ -27,7 +27,8 @@ export const navigationGroups: { label: string; pages: PageKey[] }[] = [
 
 export function pageAllowed(page: PageKey, signedIn: boolean, channel: AppInfo["channel"] | undefined,
   infoblocks: boolean, devMode: boolean): boolean {
-  if (page === "overview" || page === "settings") return true;
+  if (page === "overview") return true;
+  if (page === "settings") return true;
   if (page === "rawResponses") return channel === "dev" && devMode;
   if (isInfoblockPage(page)) return infoblocksAllowed(channel, infoblocks);
   return signedIn;

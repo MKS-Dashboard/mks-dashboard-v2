@@ -21,8 +21,21 @@ const infoblocks = await loadModule("src/renderer/src/infoblocks.ts");
 const rawPages = await loadModule("src/renderer/src/RawResponsesPage.tsx");
 const navigation = await loadModule("src/renderer/src/navigation.ts");
 const schoolings = await loadModule("src/renderer/src/schoolings.ts");
+const refreshInterval = await loadModule("src/renderer/src/refresh-interval.ts");
 const ok = (data) => ({ ok: true, data });
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
+
+test("refresh intervals default to five minutes and never refresh before the configured threshold", () => {
+  assert.equal(refreshInterval.defaultRefreshMinutes, 5);
+  assert.equal(refreshInterval.parseRefreshMinutes("5"), 5);
+  assert.equal(refreshInterval.parseRefreshMinutes("1"), 1);
+  for (const value of ["", "0", "-1", "1.5", "NaN", "Infinity", "9007199254740992"]) {
+    assert.throws(() => refreshInterval.parseRefreshMinutes(value), /minimaal 1/);
+  }
+  assert.equal(refreshInterval.refreshDue(1000, 300999, 5), false);
+  assert.equal(refreshInterval.refreshDue(1000, 301000, 5), true);
+  assert.equal(refreshInterval.refreshDue(1000, 301000, 10), false);
+});
 
 test("schoolings support API result wrappers and show actual course fields for own and team data", () => {
   const course = { id: 1, education_title: "Duikopleiding", building_id: 7, running: true,
@@ -53,9 +66,11 @@ test("navigation hides account pages when logged out and keeps Dev options indep
     assert.equal(navigation.pageAllowed(key, false, "dev", true, true), false);
     assert.equal(navigation.pageAllowed(key, true, "stable", false, false), true);
   }
-  for (const key of ["overview", "settings"]) {
-    assert.equal(navigation.pageAllowed(key, false, "stable", false, false), true);
-  }
+  assert.equal(navigation.pageAllowed("overview", false, "stable", false, false), true);
+  assert.equal(navigation.pageAllowed("settings", false, "dev", false, false), true);
+  assert.equal(navigation.pageAllowed("settings", false, "stable", false, false), true);
+  assert.equal(navigation.pageAllowed("settings", true, "stable", true, true), true);
+  assert.equal(navigation.pageAllowed("settings", false, undefined, false, false), true);
   for (const key of [...infoblocks.infoblockPages, "rawResponses"]) {
     assert.equal(navigation.pageAllowed(key, false, "dev", true, true), true);
     assert.equal(navigation.pageAllowed(key, true, "stable", true, true), false);

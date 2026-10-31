@@ -23,6 +23,7 @@ let mainWindow: BrowserWindow | null = null;
 let sessionId: string | null = null;
 let sessionIdLoaded = false;
 let updateStatus: UpdateStatus = { state: "idle" };
+let updateExecuting = false;
 
 function assertMainWindow(event: IpcMainInvokeEvent): void {
   if (!mainWindow || event.sender !== mainWindow.webContents) {
@@ -39,7 +40,7 @@ function setUpdateStatus(status: UpdateStatus): void {
 
 async function checkForUpdates(): Promise<void> {
   if (!app.isPackaged) return;
-  if (updateStatus.state === "checking" || updateStatus.state === "downloading") return;
+  if (updateExecuting || updateStatus.state === "checking" || updateStatus.state === "downloaded") return;
 
   setUpdateStatus({ state: "checking" });
   try {
@@ -60,8 +61,8 @@ function configureAutoUpdates(): void {
   autoUpdater.channel = isDevChannel ? "beta" : "latest";
   autoUpdater.allowDowngrade = false;
   autoUpdater.allowPrerelease = isDevChannel;
-  autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = false;
 
   autoUpdater.on("update-available", (info) => {
     setUpdateStatus({ state: "available", version: info.version });
@@ -69,6 +70,7 @@ function configureAutoUpdates(): void {
   autoUpdater.on("download-progress", (progress) => {
     setUpdateStatus({
       state: "downloading",
+      version: updateStatus.version,
       percent: Math.round(progress.percent),
     });
   });
@@ -79,6 +81,7 @@ function configureAutoUpdates(): void {
     setUpdateStatus({ state: "up-to-date" });
   });
   autoUpdater.on("error", (error) => {
+    updateExecuting = false;
     console.error("De automatische update is mislukt:", error);
     setUpdateStatus({ state: "error", message: error.message });
   });
@@ -289,12 +292,25 @@ ipcMain.handle("updates:check", async (event) => {
   await checkForUpdates();
 });
 
-ipcMain.handle("updates:install", (event) => {
+ipcMain.handle("updates:install", async (event) => {
   assertMainWindow(event);
-  if (updateStatus.state !== "downloaded") {
-    throw new Error("Er is geen gedownloade update klaar om te installeren.");
+  if (updateExecuting || !["available", "downloaded"].includes(updateStatus.state)) {
+    throw new Error("Er is geen update klaar om uit te voeren.");
   }
-  autoUpdater.quitAndInstall(true, true);
+  updateExecuting = true;
+  try {
+    if (updateStatus.state === "available") {
+      setUpdateStatus({ state: "downloading", version: updateStatus.version, percent: 0 });
+      await autoUpdater.downloadUpdate();
+    }
+    setUpdateStatus({ state: "installing", version: updateStatus.version });
+    autoUpdater.quitAndInstall(false, true);
+  } catch (cause) {
+    updateExecuting = false;
+    console.error("Update uitvoeren is mislukt:", cause);
+    setUpdateStatus({ state: "error", message: asErrorMessage(cause) });
+    throw cause;
+  }
 });
 
 app.whenReady().then(() => {

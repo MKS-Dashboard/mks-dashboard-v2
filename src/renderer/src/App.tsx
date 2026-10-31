@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BuildingsPage, ProgressPage, read, VehiclesPage } from "./DashboardPages";
 import { schoolingRecords } from "./schoolings";
+import { defaultRefreshMinutes, parseRefreshMinutes, refreshDue } from "./refresh-interval";
 import { accountUsername, AccountPage, AlliancePage, BuildingDetailsPage, CreditsPage, SchoolingsPage, SuggestionsPage } from "./AccountPages";
 import { AllianceEventsPage, AllianceMissionsPage, AwardsPage, EventsPage, InformationPage, MissionsPage, PlannedMissionsPage, POIPage } from "./InformationPages";
 import { infoblocksAllowed, isInfoblockPage } from "./infoblocks";
@@ -25,6 +26,7 @@ function recordsFrom(data: unknown): unknown[] {
 
 function App() {
   const userMenu = useRef<HTMLDetailsElement>(null);
+  const refreshInFlight = useRef(false);
   const [page, setPage] = useState<PageKey>("overview");
   const [data, setData] = useState<DashboardData | null>(null);
   const [hasSessionId, setHasSessionId] = useState(false);
@@ -42,6 +44,58 @@ function App() {
   const [infoblocks, setInfoblocks] = useState(false);
   const [devMode, setDevMode] = useState(false);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [refreshMinutes, setRefreshMinutes] = useState(defaultRefreshMinutes);
+  const [refreshDraft, setRefreshDraft] = useState(String(defaultRefreshMinutes));
+  const [refreshSettingError, setRefreshSettingError] = useState("");
+  const [refreshSettingsLoaded, setRefreshSettingsLoaded] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("mks-refresh-minutes");
+      const enabled = localStorage.getItem("mks-auto-refresh");
+      if (enabled !== null && enabled !== "true" && enabled !== "false") {
+        throw new Error("De opgeslagen instelling voor automatisch vernieuwen is ongeldig.");
+      }
+      const minutes = saved === null ? defaultRefreshMinutes : parseRefreshMinutes(saved);
+      setRefreshMinutes(minutes);
+      setRefreshDraft(String(minutes));
+      setAutoRefresh(enabled !== "false");
+      setRefreshSettingsLoaded(true);
+    } catch (cause) {
+      setRefreshSettingError(cause instanceof Error ? cause.message : "Het vernieuwingsinterval kon niet worden geladen.");
+    }
+  }, []);
+
+  function changeAutoRefresh(enabled: boolean): void {
+    try {
+      localStorage.setItem("mks-auto-refresh", String(enabled));
+      setAutoRefresh(enabled);
+    } catch (cause) {
+      setRefreshSettingError(cause instanceof Error ? cause.message : "Automatisch vernieuwen kon niet worden opgeslagen.");
+    }
+  }
+
+  function saveRefreshInterval(): void {
+    try {
+      const minutes = parseRefreshMinutes(refreshDraft);
+      localStorage.setItem("mks-refresh-minutes", String(minutes));
+      setRefreshMinutes(minutes);
+      setRefreshDraft(String(minutes));
+      setRefreshSettingsLoaded(true);
+      setRefreshSettingError("");
+    } catch (cause) {
+      setRefreshSettingError(cause instanceof Error ? cause.message : "Het vernieuwingsinterval kon niet worden opgeslagen.");
+    }
+  }
+
+  useEffect(() => {
+    if (updateStatus.state === "error" && updating) {
+      setUpdating(false);
+      setError(updateStatus.message ?? "Update uitvoeren is mislukt.");
+    }
+  }, [updateStatus, updating]);
 
   useEffect(() => {
     function closeUserMenu(event: PointerEvent) {
@@ -118,6 +172,8 @@ function App() {
   }, []);
 
   const refresh = useCallback(async () => {
+    if (refreshInFlight.current) return;
+    refreshInFlight.current = true;
     setLoading(true);
     setError("");
     try {
@@ -138,9 +194,18 @@ function App() {
       setError(cause instanceof Error ? cause.message : "De gegevens konden niet worden opgehaald.");
       setShowSessionForm(true);
     } finally {
+      refreshInFlight.current = false;
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!autoRefresh || !signedIn || !refreshSettingsLoaded || !lastUpdated || checkingSession || loading || loggingOut || updating) return;
+    const timer = setInterval(() => {
+      if (refreshDue(lastUpdated.getTime(), Date.now(), refreshMinutes)) void refresh();
+    }, 60_000);
+    return () => clearInterval(timer);
+  }, [autoRefresh, signedIn, refreshSettingsLoaded, lastUpdated, checkingSession, loading, loggingOut, updating, refreshMinutes, refresh]);
 
   useEffect(() => {
     let active = true;
@@ -208,6 +273,17 @@ function App() {
     });
   }
 
+  async function executeUpdate(): Promise<void> {
+    setError("");
+    setUpdating(true);
+    try {
+      await window.mksDashboard.installUpdate();
+    } catch (cause) {
+      setUpdating(false);
+      setError(cause instanceof Error ? cause.message : "Update uitvoeren is mislukt.");
+    }
+  }
+
   const activeResource = page === "overview"
     ? null
     : dashboardResources.find((resource) => resource.key === page);
@@ -229,16 +305,33 @@ function App() {
   const updateMessage = {
     idle: "",
     checking: "Controleren op updates...",
-    available: `Versie ${updateStatus.version ?? ""} gevonden. Download wordt gestart...`,
+    available: `Versie ${updateStatus.version ?? ""} is beschikbaar. Klik op Bijwerken om de update uit te voeren.`,
     downloading: `Update downloaden${updateStatus.percent === undefined ? "..." : `: ${updateStatus.percent}%`}`,
     downloaded: `Versie ${updateStatus.version ?? ""} is gedownload en klaar om te installeren.`,
+    installing: "De update wordt geinstalleerd. De app opent daarna automatisch.",
     "up-to-date": "Je gebruikt de nieuwste versie van dit kanaal.",
     error: updateStatus.message ? `Updatecontrole mislukt: ${updateStatus.message}` : "Updatecontrole mislukt.",
   }[updateStatus.state];
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      {updating && (
+        <div className="update-overlay">
+          <section className="update-dialog" role="dialog" aria-modal="true" aria-labelledby="update-title" tabIndex={-1}
+            ref={(element) => element?.focus()}>
+            <div className="brand-mark">MKS</div>
+            <h2 id="update-title">MKS Dashboard bijwerken</h2>
+            <p>{updateStatus.state === "installing" || updateStatus.state === "downloaded"
+              ? "Download voltooid. De installer neemt het over en opent de app automatisch opnieuw."
+              : "De nieuwe versie wordt gedownload. Daarna wordt de app opnieuw gestart en bijgewerkt."}</p>
+            <progress max={100} value={updateStatus.percent ?? 0} aria-label="Downloadvoortgang" />
+            <div role="status">{updateStatus.state === "installing" || updateStatus.state === "downloaded"
+              ? "Installatie voorbereiden..." : `Downloaden: ${updateStatus.percent ?? 0}%`}</div>
+            <span>Sluit de app niet af tijdens het bijwerken.</span>
+          </section>
+        </div>
+      )}
+      <aside className="sidebar" inert={updating}>
         <div className="brand">
           <div className="brand-mark">MKS</div>
           <div>
@@ -281,16 +374,16 @@ function App() {
         </div>
       </aside>
 
-      <main className="main-area">
+      <main className="main-area" inert={updating}>
         <header className="topbar">
           <div>
             <div className="eyebrow">MELDKAMERSPEL</div>
             <h1>{selectedLabel}</h1>
           </div>
           <div className="topbar-actions">
-            {updateStatus.state === "downloaded" && (
-              <button className="button button-primary" onClick={() => void window.mksDashboard.installUpdate()}>
-                Herstarten en bijwerken
+            {["available", "downloaded"].includes(updateStatus.state) && (
+              <button className="button button-primary" disabled={updating} onClick={() => void executeUpdate()}>
+                {updateStatus.state === "downloaded" ? "Herstarten en bijwerken" : "Bijwerken"}
               </button>
             )}
             <details className="user-menu" ref={userMenu}
@@ -316,14 +409,14 @@ function App() {
                     setPage("credits");
                   }}>Details</button>
                 )}
-                <button aria-current={page === "settings" ? "page" : undefined} onClick={() => {
+                {allowed("settings") && <button aria-current={page === "settings" ? "page" : undefined} onClick={() => {
                   if (userMenu.current) userMenu.current.open = false;
                   setPage("settings");
-                }}>Instellingen</button>
+                }}>Instellingen</button>}
                 <button disabled={loading || checkingSession || loggingOut} onClick={() => runUserAction(refresh)}>
                   {loading ? "Gegevens ophalen..." : "Gegevens ophalen"}
                 </button>
-                <button disabled={["checking", "available", "downloading", "downloaded"].includes(updateStatus.state)}
+                <button disabled={["checking", "downloading", "downloaded", "installing"].includes(updateStatus.state)}
                   onClick={() => runUserAction(() => window.mksDashboard.checkForUpdates())}>
                   {updateStatus.state === "downloading" ? "Update downloaden..." :
                     updateStatus.state === "checking" ? "Updates controleren..." : "Updates controleren"}
@@ -341,6 +434,7 @@ function App() {
 
         <section className="content">
           {error && <div className="notice notice-error" role="alert">{error}</div>}
+          {refreshSettingError && <div className="notice notice-error" role="alert">{refreshSettingError}</div>}
           {page === "overview" && updateStatus.state !== "idle" && (
             <div
               className={`notice notice-update ${updateStatus.state === "error" ? "notice-error" : ""}`}
@@ -350,16 +444,39 @@ function App() {
             </div>
           )}
 
-          {page === "settings" && (
+          {page === "settings" && currentPageAllowed && (
             <section className="settings-panel" aria-labelledby="settings-display">
               <div className="settings-heading">
-                <h2 id="settings-display">Weergave</h2>
-                <p>Pas aan welke onderdelen je in het dashboard ziet.</p>
+                <h2 id="settings-display">Dashboardinstellingen</h2>
+                <p>Pas het vernieuwen van gegevens en de weergave aan.</p>
               </div>
               <div className="settings-option">
                 <div className="settings-option-copy">
+                  <div className="settings-option-title"><label htmlFor="auto-refresh-toggle">Automatisch vernieuwen</label></div>
+                  <p id="auto-refresh-description">Vernieuw je gegevens automatisch tijdens het gebruik van de app. Standaard ingeschakeld.</p>
+                </div>
+                <input id="auto-refresh-toggle" className="settings-toggle" type="checkbox" checked={autoRefresh}
+                  aria-describedby="auto-refresh-description" disabled={!refreshSettingsLoaded}
+                  onChange={(event) => changeAutoRefresh(event.target.checked)} />
+              </div>
+              <form className="settings-option" onSubmit={(event) => { event.preventDefault(); saveRefreshInterval(); }}>
+                <div className="settings-option-copy">
                   <div className="settings-option-title">
-                    <label htmlFor={appInfo?.channel === "dev" ? "infoblocks-toggle" : undefined}>Infoblocks</label>
+                    <label htmlFor="refresh-minutes">Gegevens vernieuwen (minuten)</label>
+                  </div>
+                  <p id="refresh-minutes-description">Haal automatisch je dashboardgegevens op zolang je bent aangemeld. Standaard: 5 minuten.</p>
+                </div>
+                <div className="welcome-actions">
+                  <input id="refresh-minutes" className="session-input" style={{ width: 90 }} type="number" min="1" step="1"
+                    aria-describedby="refresh-minutes-description" value={refreshDraft} disabled={!autoRefresh}
+                    onChange={(event) => setRefreshDraft(event.target.value)} required />
+                  <button className="button button-secondary" type="submit" disabled={!autoRefresh}>Opslaan</button>
+                </div>
+              </form>
+              {appInfo?.channel === "dev" && <div className="settings-option">
+                <div className="settings-option-copy">
+                  <div className="settings-option-title">
+                    <label htmlFor="infoblocks-toggle">Infoblocks</label>
                     <span className="settings-badge">Alleen Dev</span>
                   </div>
                   <p id="infoblocks-description">
@@ -371,7 +488,7 @@ function App() {
                     aria-describedby="infoblocks-description" checked={infoblocks} disabled={!settingsLoaded}
                     onChange={(event) => changeSetting("infoblocks", event.target.checked)} />
                 )}
-              </div>
+              </div>}
               {appInfo?.channel === "dev" && (
                 <div className="settings-option">
                   <div className="settings-option-copy">
@@ -389,9 +506,7 @@ function App() {
                 </div>
               )}
               <div className="settings-footnote">
-                {appInfo?.channel === "dev"
-                  ? "Automatisch opgeslagen op deze pc. Standaard uitgeschakeld."
-                  : "Infoblocks zijn alleen beschikbaar in de Dev-versie."}
+                Instellingen worden op deze pc onthouden. Huidig vernieuwingsinterval: {refreshMinutes} minuten.
               </div>
             </section>
           )}
@@ -529,7 +644,7 @@ function App() {
         </section>
         <footer className="app-footer">
           <span>
-            Versie {appInfo?.version ?? "…"} · {appInfo?.channel === "dev" ? "Dev-kanaal" : "Stable-kanaal"}
+            Versie {appInfo?.version ?? "…"} · {appInfo?.channel === "dev" ? "Dev" : "Stable"}
           </span>
         </footer>
       </main>

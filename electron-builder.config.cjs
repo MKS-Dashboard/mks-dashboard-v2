@@ -27,6 +27,7 @@ module.exports = {
     target: "nsis",
   },
   nsis: {
+    include: "build\\installer.nsh",
     oneClick: false,
     allowToChangeInstallationDirectory: true,
   },
