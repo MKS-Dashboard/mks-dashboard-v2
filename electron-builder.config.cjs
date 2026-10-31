@@ -1,3 +1,5 @@
+const { resolve } = require("node:path");
+
 const buildTimestamp = process.env.BUILD_TIMESTAMP;
 const updateChannel = process.env.UPDATE_CHANNEL;
 const publishChannel = updateChannel === "dev" ? "beta" : "latest";
@@ -14,7 +16,7 @@ module.exports = {
     "package.json",
   ],
   extraResources: [
-    { from: "build\\icon.png", to: "icon.png" },
+    { from: resolve(__dirname, "build", "icon.png"), to: "icon.png" },
   ],
   artifactName: buildTimestamp && updateChannel
     ? `MKS-Dashboard-Setup-${buildTimestamp}-${updateChannel}.\${ext}`
@@ -28,11 +30,11 @@ module.exports = {
     },
   ],
   win: {
-    icon: "build\\icon.png",
+    icon: resolve(__dirname, "build", "icon.png"),
     target: "nsis",
   },
   nsis: {
-    include: "build\\installer.nsh",
+    include: resolve(__dirname, "build", "installer.nsh"),
     oneClick: false,
     allowToChangeInstallationDirectory: true,
   },
