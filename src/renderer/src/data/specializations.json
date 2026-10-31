@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Luchthaven Specialisatie",
+    "type": "airport"
+  },
+  {
+    "name": "Schuimblussing Specialisatie",
+    "type": "fire_support"
+  },
+  {
+    "name": "Waterongevallen Specialisatie",
+    "type": "water_rescue"
+  },
+  {
+    "name": "Natuurbrandbestrijding Specialisatie",
+    "type": "forestry"
+  },
+  {
+    "name": "USAR Specialisatie",
+    "type": "search_and_rescue"
+  },
+  {
+    "name": "STH Specialisatie",
+    "type": "disaster_response"
+  },
+  {
+    "name": "LE - Dienst Infrastructuur Specialisatie",
+    "type": "traffic_police"
+  }
+]

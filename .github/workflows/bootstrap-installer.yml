@@ -1,0 +1,31 @@
+name: Stable and Beta bootstrap installers
+
+on:
+  pull_request:
+    paths:
+      - "install/**"
+      - "scripts/build-bootstrap.ps1"
+      - "scripts/bootstrap.test.cs"
+      - "build/icon.png"
+      - ".github/workflows/bootstrap-installer.yml"
+  push:
+    branches: [main, dev]
+    paths:
+      - "install/**"
+      - "scripts/build-bootstrap.ps1"
+      - "scripts/bootstrap.test.cs"
+      - "build/icon.png"
+      - ".github/workflows/bootstrap-installer.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test bootstrap installer
+        shell: powershell
+        run: .\scripts\build-bootstrap.ps1

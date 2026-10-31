@@ -1,0 +1,818 @@
+[
+  {
+    "id": 0,
+    "name": "SI‐2",
+    "description": "Snel Inzetbare Eenheid (2 pers.)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 1,
+    "name": "TS 8/9",
+    "description": "Tankautospuit (8/9 personen)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 2,
+    "name": "AL",
+    "description": "Autoladder",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 3,
+    "name": "DA-OVD",
+    "description": "Officier van Dienst - Brandweer",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 4,
+    "name": "HV",
+    "description": "Hulpverleningsvoertuig",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 5,
+    "name": "AB",
+    "description": "Adembeschermingsvoertuig",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 6,
+    "name": "TST 8/9",
+    "description": "Tankautospuit Terreinvaardig (8/9 personen)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 7,
+    "name": "TST 6/7",
+    "description": "Tankautospuit Terreinvaardig (6/7 personen)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 8,
+    "name": "TST 4/5",
+    "description": "Tankautospuit Terreinvaardig (4/5 personen)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 9,
+    "name": "TS 4/5",
+    "description": "Tankautospuit (4/5 personen)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 10,
+    "name": "SL",
+    "description": "Slangenwagen",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 11,
+    "name": "DB-VEB",
+    "description": "Dienstbus Verkenningseenheid Brandweer",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 12,
+    "name": "TST-NB 8/9",
+    "description": "Tankautospuit Natuurbrandbestrijding (8/9 personen)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 14,
+    "name": "TST-NB 6/7",
+    "description": "Tankautospuit Natuurbrandbestrijding (6/7 personen)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 15,
+    "name": "TST-NB 4/5",
+    "description": "Tankautospuit Natuurbrandbestrijding (4/5 personen)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 16,
+    "name": "Ambulance",
+    "description": "Ambulance",
+    "categories": [
+      "Ambulance"
+    ]
+  },
+  {
+    "id": 17,
+    "name": "TS 6/7",
+    "description": "Tankautospuit (6/7 personen)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 18,
+    "name": "HW",
+    "description": "Hoogwerker",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 19,
+    "name": "DA-HOD",
+    "description": "Hoofd Officier van Dienst - Brandweer",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 20,
+    "name": "DA",
+    "description": "Dienstauto (4 personen)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 21,
+    "name": "DB-K",
+    "description": "Dienstbus klein (9 personen)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 22,
+    "name": "DA Noodhulp",
+    "description": "Dienstauto Noodhulp",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 23,
+    "name": "Lifeliner",
+    "description": "Lifeliner",
+    "categories": [
+      "Ambulance"
+    ]
+  },
+  {
+    "id": 24,
+    "name": "DA-AGS",
+    "description": "Adviseur Gevaarlijke Stoffen - Brandweer",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 25,
+    "name": "DB Noodhulp",
+    "description": "Dienstbus Noodhulp",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 26,
+    "name": "HA",
+    "description": "Haakarmvoertuig",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 27,
+    "name": "ABH",
+    "description": "Adembeschermingshaakarmbak",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 28,
+    "name": "Politiehelikopter",
+    "description": "Politiehelikopter",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 29,
+    "name": "WTH",
+    "description": "Watertankhaakarmbak",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 30,
+    "name": "Zorgambulance",
+    "description": "B-ambulance",
+    "categories": [
+      "Ambulance"
+    ]
+  },
+  {
+    "id": 31,
+    "name": "CO",
+    "description": "Commandovoertuig",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 32,
+    "name": "COH",
+    "description": "Commandohaakarmbak",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 33,
+    "name": "WO",
+    "description": "Waterongevallenvoertuig",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 34,
+    "name": "WT",
+    "description": "Watertankwagen",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 35,
+    "name": "OVD-P",
+    "description": "Officier van Dienst - Politie",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 36,
+    "name": "WOA",
+    "description": "Waterongevallenaanhanger",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 37,
+    "name": "MMT-Auto",
+    "description": "MMT-Auto",
+    "categories": [
+      "Ambulance"
+    ]
+  },
+  {
+    "id": 38,
+    "name": "OvD-G",
+    "description": "Officier van Dienst Geneeskunde",
+    "categories": [
+      "Ambulance"
+    ]
+  },
+  {
+    "id": 39,
+    "name": "ME Commandovoertuig",
+    "description": "ME Commandovoertuig",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 40,
+    "name": "ME Flex",
+    "description": "ME Flexbus",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 41,
+    "name": "CT (8x8)",
+    "description": "Crashtender (8x8)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 42,
+    "name": "CT (6x6)",
+    "description": "Crashtender (6x6)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 43,
+    "name": "CT (4x4)",
+    "description": "Crashtender (4x4)",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 44,
+    "name": "AFO/OSC",
+    "description": "Airport fire Officer / On Scene Commander",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 45,
+    "name": "DPH",
+    "description": "Dompelpomphaakarmbak",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 46,
+    "name": "DM-P",
+    "description": "Dienstmotor Politie",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 47,
+    "name": "DA Hondengeleider",
+    "description": "Dienstauto Hondengeleider",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 48,
+    "name": "DB Hondengeleider",
+    "description": "Dienstbus Hondengeleider",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 49,
+    "name": "PM-OR",
+    "description": "Materieelvoertuig - Oppervlakteredding",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 50,
+    "name": "TS-OR",
+    "description": "Tankautospuit - Oppervlakteredding",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 51,
+    "name": "HVH",
+    "description": "Hulpverleningshaakarmbak",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 52,
+    "name": "RR",
+    "description": "Rapid Responder",
+    "categories": [
+      "Ambulance"
+    ]
+  },
+  {
+    "id": 53,
+    "name": "AT-C",
+    "description": "AT-Commandant",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 54,
+    "name": "AT-O",
+    "description": "AT-Operator",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 55,
+    "name": "AT-M",
+    "description": "AT-Materiaalwagen",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 56,
+    "name": "DA-VL",
+    "description": "Dienstauto Voorlichter",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 57,
+    "name": "DA OVDG-RR",
+    "description": "Dienstvoertuig Officier van Dienst-Geneeskundig/Rapid Responder",
+    "categories": [
+      "Ambulance"
+    ]
+  },
+  {
+    "id": 58,
+    "name": "DB-AV",
+    "description": "Dienstbus - Arrestantenvervoer",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 59,
+    "name": "NH-O",
+    "description": "Noodhulp - Onopvallend",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 60,
+    "name": "DB-Bike",
+    "description": "Dienstbus Biketeam",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 61,
+    "name": "SLH",
+    "description": "Slangenhaakarmbak",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 62,
+    "name": "TS-HV",
+    "description": "Tankautospuit-Hulpverlening",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 63,
+    "name": "DM-RR",
+    "description": "Rapid Responder - Motor",
+    "categories": [
+      "Ambulance"
+    ]
+  },
+  {
+    "id": 64,
+    "name": "ME-AE",
+    "description": "ME - Aanhoudingseenheid",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 65,
+    "name": "DAT-RB",
+    "description": "Dienstauto Terreinwaardig - Reddingsbrigade",
+    "categories": [
+      "Kustwacht"
+    ]
+  },
+  {
+    "id": 66,
+    "name": "KHV",
+    "description": "Kusthulpverleningsvoertuig",
+    "categories": [
+      "Kustwacht"
+    ]
+  },
+  {
+    "id": 67,
+    "name": "BA-RB",
+    "description": "Bootaanhanger Reddingsbrigade",
+    "categories": [
+      "Kustwacht"
+    ]
+  },
+  {
+    "id": 68,
+    "name": "SB",
+    "description": "Schuimblusvoertuig",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 69,
+    "name": "SBH",
+    "description": "Schuimblushaakarmbak",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 70,
+    "name": "SBA",
+    "description": "Schuimblusaanhanger",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 71,
+    "name": "MSA",
+    "description": "Motorspuitaanhanger",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 72,
+    "name": "DPA",
+    "description": "Dompelpompaanhangwagen",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 73,
+    "name": "VW-BB",
+    "description": "Vrachtwagen – Bereden Brigade",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 74,
+    "name": "BB-A",
+    "description": "Bereden Brigade Aanhanger",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 75,
+    "name": "DAT-NH",
+    "description": "Dienstauto terreinvaardig - Noodhulp",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 76,
+    "name": "Quad",
+    "description": "Quad Reddingsbrigade",
+    "categories": [
+      "Kustwacht"
+    ]
+  },
+  {
+    "id": 77,
+    "name": "KW-Boot",
+    "description": "Kustwacht boot",
+    "categories": [
+      "Kustwacht"
+    ]
+  },
+  {
+    "id": 78,
+    "name": "RB-K",
+    "description": "Reddingsboot klein",
+    "categories": [
+      "Kustwacht"
+    ]
+  },
+  {
+    "id": 79,
+    "name": "RB-G",
+    "description": "Reddingsboot groot",
+    "categories": [
+      "Kustwacht"
+    ]
+  },
+  {
+    "id": 80,
+    "name": "SAR-Heli",
+    "description": "SAR helikopter",
+    "categories": [
+      "Kustwacht"
+    ]
+  },
+  {
+    "id": 81,
+    "name": "DA-RWS",
+    "description": "Dienstvoertuig weginspecteur Rijkswaterstaat",
+    "categories": [
+      "RWS"
+    ]
+  },
+  {
+    "id": 82,
+    "name": "DM-RWS",
+    "description": "Dienstmotor weginspecteur Rijkswaterstaat",
+    "categories": [
+      "RWS"
+    ]
+  },
+  {
+    "id": 83,
+    "name": "DA-SIG",
+    "description": "Signalisatievoertuig",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 84,
+    "name": "Waterwerper",
+    "description": "Waterwerper",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 85,
+    "name": "FBO-Heli",
+    "description": "Fire Bucket Operations - Helikopter",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 86,
+    "name": "DB-Handcrew",
+    "description": "Dienstbus – Handcrew",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 87,
+    "name": "DA-LA-NB",
+    "description": "Dienstauto – Landelijk adviseur Natuurbranden",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 88,
+    "name": "VW-NB",
+    "description": "Vrachtwagen – Natuurbrandbestrijding",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 89,
+    "name": "NBH",
+    "description": "Natuurbrandbestrijdingshaakarmbak",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 90,
+    "name": "TS-STH",
+    "description": "Tankautospuit – Specialisme Technische Hulpverlening",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 91,
+    "name": "HVH-STH",
+    "description": "Hulpverleningshaakarmbak-Specialisme Technische Hulpverlening",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 92,
+    "name": "DB-USAR",
+    "description": "Dienstbus – Urban Search and Rescue",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 93,
+    "name": "TS-USAR",
+    "description": "Tankautospuit – Urban Search and Rescue",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 94,
+    "name": "VW-USAR",
+    "description": "Vrachtwagen – Urban Search and Rescue",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 95,
+    "name": "DM-USAR",
+    "description": "Dienstmotor – Urban Search and Rescue",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 96,
+    "name": "Quad-USAR",
+    "description": "Quad – Urban Search and Rescue",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 97,
+    "name": "DB–Speurhonden",
+    "description": "Dienstbus – Speurhonden",
+    "categories": [
+      "Brandweer"
+    ]
+  },
+  {
+    "id": 98,
+    "name": "SIV-P",
+    "description": "Snelle Interventievoertuig Politie",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 99,
+    "name": "DB-VOA",
+    "description": "Dienstbus - Verkeersongevalleanalyse",
+    "categories": [
+      "Politie"
+    ]
+  },
+  {
+    "id": 100,
+    "name": "GGB",
+    "description": "Calamiteitenvoertuig GGB",
+    "categories": [
+      "Ambulance"
+    ]
+  },
+  {
+    "id": 101,
+    "name": "NHT",
+    "description": "Noodhulpteam Rode Kruis",
+    "categories": [
+      "Ambulance"
+    ]
+  },
+  {
+    "id": 102,
+    "name": "MC-Ambulance",
+    "description": "Medium Care Ambulance",
+    "categories": [
+      "Ambulance"
+    ]
+  }
+]

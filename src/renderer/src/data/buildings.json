@@ -1,0 +1,247 @@
+[
+  {
+    "id": 0,
+    "name": "Brandweer, Kazerne",
+    "smallId": 17,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 1,
+    "name": "Meldkamer",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 2,
+    "name": "Ziekenhuis",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 3,
+    "name": "Ambulance, Standplaats",
+    "smallId": 13,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 4,
+    "name": "Brandweer, Academie",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 5,
+    "name": "Politie, Opkomstbureau",
+    "smallId": 18,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 6,
+    "name": "MMT, Standplaats",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 7,
+    "name": "Universiteit Faculteit Geneeskunde",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 8,
+    "name": "Politie, Academie",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 9,
+    "name": "Politiehelikoper standplaats",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": true,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 10,
+    "name": "Uitgangstelling (UGS)",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 11,
+    "name": "Politie, Hoofdbureau",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 12,
+    "name": "Politie, Cellencomplex voor teams",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 13,
+    "name": "Ambulance, VWS-post",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 14,
+    "name": "Groot gebouwencomplex",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 15,
+    "name": "Klein gebouwencomplex",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 16,
+    "name": "Waterreddingspost",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 17,
+    "name": "Brandweer, Kazerne (Klein)",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 18,
+    "name": "Politie, Opkomstbureau (Klein)",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 19,
+    "name": "Kustwacht haven",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 20,
+    "name": "SAR academie",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 21,
+    "name": "SAR Helikopter platform",
+    "smallId": null,
+    "countBuilding": false,
+    "countLevels": false,
+    "countExtensions": true,
+    "extensionBuildings": [
+      21
+    ],
+    "extensionNames": [
+      "SAR Helikopter Hangar",
+      "Extra SAR Helikopter Hangar"
+    ]
+  },
+  {
+    "id": 22,
+    "name": "Steunpunt Rijkswaterstaat",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 23,
+    "name": "Militaire hangar",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  }
+]
