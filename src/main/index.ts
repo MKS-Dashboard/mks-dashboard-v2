@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, safeStorage, type IpcMainInvokeEvent } from "electron";
+import { autoUpdater } from "electron-updater";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
@@ -9,6 +10,7 @@ import {
   type DashboardData,
   type DashboardResourceKey,
   type DashboardResourceResult,
+  type UpdateStatus,
 } from "../shared/contracts";
 
 const GAME_ORIGIN = "https://meldkamerspel.com";
@@ -18,11 +20,78 @@ const sessionIdFile = resolve(app.getPath("userData"), "session-id.enc");
 let mainWindow: BrowserWindow | null = null;
 let sessionId: string | null = null;
 let sessionIdLoaded = false;
+let updateStatus: UpdateStatus = { state: "idle" };
 
 function assertMainWindow(event: IpcMainInvokeEvent): void {
   if (!mainWindow || event.sender !== mainWindow.webContents) {
     throw new Error("Dit verzoek is niet afkomstig van het app-venster.");
   }
+}
+
+function setUpdateStatus(status: UpdateStatus): void {
+  updateStatus = status;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("updates:status-changed", status);
+  }
+}
+
+async function checkForUpdates(): Promise<void> {
+  if (!app.isPackaged) return;
+  if (updateStatus.state === "checking" || updateStatus.state === "downloading") return;
+
+  setUpdateStatus({ state: "checking" });
+  try {
+    await autoUpdater.checkForUpdates();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Controleren op updates is mislukt.";
+    console.error("Controleren op updates is mislukt:", error);
+    setUpdateStatus({ state: "error", message });
+  }
+}
+
+function configureAutoUpdates(): void {
+  if (!app.isPackaged) return;
+
+  const isDevChannel = app.getVersion().includes("-beta.");
+  autoUpdater.channel = isDevChannel ? "beta" : "latest";
+  autoUpdater.allowPrerelease = isDevChannel;
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on("update-available", (info) => {
+    setUpdateStatus({ state: "available", version: info.version });
+  });
+  autoUpdater.on("download-progress", (progress) => {
+    setUpdateStatus({
+      state: "downloading",
+      percent: Math.round(progress.percent),
+    });
+  });
+  autoUpdater.on("update-downloaded", (info) => {
+    setUpdateStatus({ state: "downloaded", version: info.version });
+  });
+  autoUpdater.on("update-not-available", () => {
+    setUpdateStatus({ state: "up-to-date" });
+  });
+  autoUpdater.on("error", (error) => {
+    console.error("De automatische update is mislukt:", error);
+    setUpdateStatus({ state: "error", message: error.message });
+  });
+
+  setTimeout(() => {
+    void checkForUpdates();
+  }, 8_000);
+  setInterval(() => {
+    void checkForUpdates();
+  }, 4 * 60 * 60 * 1_000);
+}
+
+function getDisplayVersion(version: string): string {
+  const match = /^(\d{4})\.(\d{2})(\d{2})\.(\d{2})(\d{2})(?:-|$)/.exec(version);
+  if (!match) return version;
+
+  const [, year, month, day, hour, minute] = match;
+  return `${year}.${month}.${day}.${hour}.${minute}`;
 }
 
 async function loadSessionId(): Promise<string | null> {
@@ -184,8 +253,36 @@ ipcMain.handle("dashboard:load", async (event) => {
   return loadDashboard();
 });
 
+ipcMain.handle("app:info", (event) => {
+  assertMainWindow(event);
+  const version = app.getVersion();
+  return {
+    version: getDisplayVersion(version),
+    channel: version.includes("-beta.") ? "dev" : "stable",
+  };
+});
+
+ipcMain.handle("updates:status", (event) => {
+  assertMainWindow(event);
+  return updateStatus;
+});
+
+ipcMain.handle("updates:check", async (event) => {
+  assertMainWindow(event);
+  await checkForUpdates();
+});
+
+ipcMain.handle("updates:install", (event) => {
+  assertMainWindow(event);
+  if (updateStatus.state !== "downloaded") {
+    throw new Error("Er is geen gedownloade update klaar om te installeren.");
+  }
+  autoUpdater.quitAndInstall();
+});
+
 app.whenReady().then(() => {
   createMainWindow();
+  configureAutoUpdates();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow();

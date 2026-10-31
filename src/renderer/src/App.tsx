@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   dashboardResources,
+  type AppInfo,
   type DashboardData,
   type DashboardResourceKey,
+  type UpdateStatus,
 } from "../../shared/contracts";
 
 type PageKey = "overview" | DashboardResourceKey;
@@ -37,6 +39,8 @@ function App() {
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: "idle" });
 
   const updateSessionStatus = useCallback(async () => {
     setCheckingSession(true);
@@ -53,6 +57,31 @@ function App() {
   useEffect(() => {
     void updateSessionStatus();
   }, [updateSessionStatus]);
+
+  useEffect(() => {
+    let active = true;
+    const unsubscribe = window.mksDashboard.onUpdateStatus(setUpdateStatus);
+
+    void Promise.all([
+      window.mksDashboard.getAppInfo(),
+      window.mksDashboard.getUpdateStatus(),
+    ]).then(([info, status]) => {
+      if (!active) return;
+      setAppInfo(info);
+      setUpdateStatus(status);
+    }).catch((cause: unknown) => {
+      if (!active) return;
+      setUpdateStatus({
+        state: "error",
+        message: cause instanceof Error ? cause.message : "Controleren op updates is mislukt.",
+      });
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -120,6 +149,15 @@ function App() {
   }, [activeResource, data, search]);
 
   const selectedLabel = activeResource?.label ?? "Overzicht";
+  const updateMessage = {
+    idle: "",
+    checking: "Controleren op updates...",
+    available: `Versie ${updateStatus.version ?? ""} gevonden. Download wordt gestart...`,
+    downloading: `Update downloaden${updateStatus.percent === undefined ? "..." : `: ${updateStatus.percent}%`}`,
+    downloaded: `Versie ${updateStatus.version ?? ""} is gedownload en klaar om te installeren.`,
+    "up-to-date": "Je gebruikt de nieuwste versie van dit kanaal.",
+    error: updateStatus.message ? `Updatecontrole mislukt: ${updateStatus.message}` : "Updatecontrole mislukt.",
+  }[updateStatus.state];
 
   return (
     <div className="app-shell">
@@ -165,6 +203,23 @@ function App() {
             <h1>{selectedLabel}</h1>
           </div>
           <div className="topbar-actions">
+            {updateStatus.state === "downloaded" ? (
+              <button className="button button-primary" onClick={() => void window.mksDashboard.installUpdate()}>
+                Herstarten en bijwerken
+              </button>
+            ) : (
+              <button
+                className="button button-secondary"
+                disabled={
+                  updateStatus.state === "checking" ||
+                  updateStatus.state === "available" ||
+                  updateStatus.state === "downloading"
+                }
+                onClick={() => void window.mksDashboard.checkForUpdates()}
+              >
+                {updateStatus.state === "downloading" ? "Update downloaden..." : "Updates controleren"}
+              </button>
+            )}
             <button className="button button-primary" disabled={loading} onClick={() => void refresh()}>
               {loading ? <><span className="spinner" /> Ophalen...</> : "Gegevens ophalen"}
             </button>
@@ -186,6 +241,14 @@ function App() {
 
         <section className="content">
           {error && <div className="notice notice-error" role="alert">{error}</div>}
+          {updateStatus.state !== "idle" && (
+            <div
+              className={`notice notice-update ${updateStatus.state === "error" ? "notice-error" : ""}`}
+              role="status"
+            >
+              {updateMessage}
+            </div>
+          )}
 
           {(!data || showSessionForm) && (
             <section className="welcome-panel">
@@ -337,7 +400,9 @@ function App() {
           )}
         </section>
         <footer className="app-footer">
-          <span>De game-API wordt rechtstreeks vanaf deze pc aangeroepen.</span>
+          <span>
+            Versie {appInfo?.version ?? "…"} · {appInfo?.channel === "dev" ? "Dev-kanaal" : "Stable-kanaal"} · Game-API rechtstreeks vanaf deze pc
+          </span>
         </footer>
       </main>
     </div>

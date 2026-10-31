@@ -39,11 +39,16 @@ npm run dist
 
 `npm run dist` maakt een Windows-installatiebestand in de map `release`.
 
-## Windows-installatie via GitHub Actions
+## Releases en automatische updates
 
-De workflow in `.github/workflows/windows-installer.yml` bouwt de Windows-installer op een Linux-runner met Wine. De workflow start automatisch bij een push naar `main`, een pull request naar `main` of een tag die met `v` begint. Je kunt hem ook handmatig starten via **Actions → Windows installer → Run workflow** op GitHub.
+Er zijn twee updatekanalen:
 
-Na een geslaagde run kun je de installer downloaden onder **Artifacts** bij de workflowrun. Het artifact blijft 14 dagen beschikbaar. Voor deze build is geen code signing ingesteld; Windows kan daarom een waarschuwing tonen wanneer je de installer start.
+- **Stable:** publiceer een Git-tag in het formaat `vYYYY.MM.DD.HH.MM`, bijvoorbeeld `v2026.10.31.12.26`. De release en updates zijn gebaseerd op die tag van `main`.
+- **Dev:** iedere push naar `dev` publiceert automatisch een nieuwe pre-release. Gebruik de Dev-installer om deze updates te ontvangen.
+
+Beide installers controleren bij het starten en daarna periodiek op updates voor hun eigen kanaal. Updates worden automatisch gedownload en bij het afsluiten geïnstalleerd; de app biedt ook een knop om direct opnieuw te starten en bij te werken. De installernaam bevat de UTC-tijd in het formaat `YYYY.MM.DD.HH.MM` en het kanaal. De interne appversie gebruikt een SemVer-compatibele, compacte datum/tijd-versie, zodat de Electron-updater versies goed kan vergelijken.
+
+Je kunt de workflow ook handmatig starten via **Actions → Windows installer → Run workflow** op GitHub; dit maakt een testartifact maar publiceert geen release. Installatieartifacts blijven 14 dagen beschikbaar. Voor releases is geen code signing ingesteld; Windows kan daarom een waarschuwing tonen wanneer je een installer start.
 
 ## Huidige gegevensbronnen
 

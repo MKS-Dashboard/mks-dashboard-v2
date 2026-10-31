@@ -23,9 +23,35 @@ export interface AuthStatus {
   hasSessionId: boolean;
 }
 
+export type UpdateState =
+  | "idle"
+  | "checking"
+  | "available"
+  | "downloading"
+  | "downloaded"
+  | "up-to-date"
+  | "error";
+
+export interface UpdateStatus {
+  state: UpdateState;
+  version?: string;
+  percent?: number;
+  message?: string;
+}
+
+export interface AppInfo {
+  version: string;
+  channel: "stable" | "dev";
+}
+
 export interface MksDashboardApi {
   getAuthStatus: () => Promise<AuthStatus>;
   setSessionId: (sessionId: string, remember: boolean) => Promise<void>;
   logout: () => Promise<void>;
   loadDashboard: () => Promise<DashboardData>;
+  getAppInfo: () => Promise<AppInfo>;
+  getUpdateStatus: () => Promise<UpdateStatus>;
+  checkForUpdates: () => Promise<void>;
+  installUpdate: () => Promise<void>;
+  onUpdateStatus: (listener: (status: UpdateStatus) => void) => () => void;
 }

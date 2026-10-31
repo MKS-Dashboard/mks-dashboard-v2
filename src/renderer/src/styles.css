@@ -294,6 +294,12 @@ input:focus-visible {
   font-size: 12px;
 }
 
+.notice-update {
+  border-color: #c9d8f3;
+  color: #355785;
+  background: #f0f5ff;
+}
+
 .welcome-panel {
   display: flex;
   min-height: 285px;
