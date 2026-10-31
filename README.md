@@ -1,33 +1,55 @@
 # MKS Dashboard Desktop
 
-Een desktop-app voor pc, bedoeld als lokale variant van het [MKS Dashboard](https://github.com/MKS-Dashboard/mks-dashboard.github.io/). Het doel is om de functies van het webdashboard beschikbaar te maken in een gewone pc-app, waarbij de app en de API-aanroepen vanaf de eigen computer worden uitgevoerd.
+Een desktop-app voor Windows die de belangrijkste overzichten van het [MKS Dashboard](https://github.com/MKS-Dashboard/mks-dashboard.github.io/tree/dev) naar je pc brengt.
 
-> **Status: in ontwikkeling**
->
-> Dit project staat nog aan het begin. Er is momenteel nog geen werkende applicatie of installatieprocedure. De desktoptechnologie en de definitieve functies worden tijdens de ontwikkeling bepaald.
+## Status
 
-## Doel
+De eerste desktopbasis is in ontwikkeling. De app gebruikt Electron, React en TypeScript. De bestaande webapp is de functionele referentie; nog niet alle onderdelen daarvan zijn overgezet.
 
-De bestaande webapp is de functionele referentie. De desktopvariant is bedoeld om dezelfde informatie en hulpmiddelen te bieden, met onder andere:
+## Privacy en verbinding
 
-- aanmelden en accountgegevens gebruiken;
-- voertuigen en gebouwen bekijken;
-- eigen en alliantiegebouwen, waaronder ziekenhuizen en cellen, bekijken;
-- alliantiegegevens en voortgangsinformatie raadplegen;
-- informatie over missies, evenementen, punten van interesse en onderscheidingen bekijken.
+- De app en de API-aanroepen draaien op je eigen pc.
+- Je voert zelf je Meldkamerspel-SessionID in, zoals in de bestaande webapp.
+- De app voegt de SessionID toe aan de `_session_id`-queryparameter en vraagt de game-API rechtstreeks om gegevens. Je sessie wordt niet naar de MKS-proxy van de webapp gestuurd.
+- De live gamegegevens vereisen een internetverbinding. Lokaal draaien is dus niet hetzelfde als volledig offline werken.
+- Als je **Bewaar de SessionID versleuteld op deze pc** aanvinkt, slaat de app deze versleuteld op met de Windows-beveiliging. Je kunt de opgeslagen SessionID wissen met **Verwijder SessionID**.
+- API-verzoeken zijn alleen-lezen en gaan naar de officiële game-API.
 
-De exacte functies kunnen veranderen als de bestaande webapp of de beschikbare game-API verandert.
+De API is afhankelijk van de beschikbaarheid en voorwaarden van Meldkamerspel en kan veranderen. Behandel je SessionID als een wachtwoord en deel deze nooit met anderen.
 
-## Lokaal gebruik en API
+## Benodigdheden
 
-De applicatie is bedoeld om lokaal op de pc te draaien. API-aanroepen worden vanuit de desktopapp gedaan; het doel is niet om de webapp op een externe server te hosten of een eigen centrale backend nodig te hebben.
+- Windows 10 of nieuwer
+- [Node.js LTS](https://nodejs.org/) met npm
 
-**Lokaal draaien betekent niet automatisch offline werken.** Als gegevens via de API van de game worden opgehaald, is een internetverbinding nodig en gelden de beschikbaarheid en voorwaarden van die API. Welke gegevens lokaal worden opgeslagen en hoe aanmeldgegevens worden beveiligd, wordt uitgewerkt bij de implementatie.
+## Ontwikkelen
 
-## Ontwikkeling
+```powershell
+npm install
+npm run dev
+```
 
-Er zijn nog geen ontwikkel- of buildcommando's beschikbaar. Zodra de apptechnologie en de projectstructuur zijn ingericht, worden hier de installatie-, start-, test- en buildinstructies toegevoegd.
+## Controleren en bouwen
+
+```powershell
+npm run typecheck
+npm run build
+npm run dist
+```
+
+`npm run dist` maakt een Windows-installatiebestand in de map `release`.
+
+## Windows-installatie via GitHub Actions
+
+De workflow in `.github/workflows/windows-installer.yml` bouwt de Windows-installer op een Linux-runner met Wine. De workflow start automatisch bij een push naar `main`, een pull request naar `main` of een tag die met `v` begint. Je kunt hem ook handmatig starten via **Actions → Windows installer → Run workflow** op GitHub.
+
+Na een geslaagde run kun je de installer downloaden onder **Artifacts** bij de workflowrun. Het artifact blijft 14 dagen beschikbaar. Voor deze build is geen code signing ingesteld; Windows kan daarom een waarschuwing tonen wanneer je de installer start.
+
+## Huidige gegevensbronnen
+
+De app haalt gegevens op via de officiële lees-API van Meldkamerspel, waaronder voertuigen, gebouwen, teamgebouwen, accountgegevens, teaminformatie, opleidingen, POI's en missiegegevens. Niet elk onderdeel van het webdashboard is al onderdeel van deze eerste desktopversie.
 
 ## Referentie
 
-- [MKS Dashboard voor het web](https://github.com/MKS-Dashboard/mks-dashboard.github.io/)
+- [MKS Dashboard voor het web](https://github.com/MKS-Dashboard/mks-dashboard.github.io/tree/dev)
+- [Officiële API-informatie van Meldkamerspel](https://www.meldkamerspel.com/api-infos)
