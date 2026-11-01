@@ -39,6 +39,36 @@ const reportInput = (data = null) => ({
 const ok = (data) => ({ ok: true, data });
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
 
+test("overview welcomes players, preserves zero balances and exposes refresh status and shortcuts", () => {
+  const props = {
+    data: { vehicles: ok([{}, {}]), buildings: ok([{}]),
+      credits: ok({ credits_user_current: "123456", coins_user_current: 0 }) },
+    username: "<Speler>", lastUpdated: new Date("2026-11-01T14:00:00Z"),
+    loading: false, autoRefresh: true, refreshMinutes: 5, onNavigate() {}, onRefresh() {},
+  };
+  const html = render(app.OverviewSummary, props);
+  assert.match(html, /Welkom terug, &lt;Speler&gt;/);
+  assert.match(html, /123\.456/);
+  assert.match(html, /<strong>0<\/strong>/);
+  assert.match(html, /<strong>2<\/strong>/);
+  assert.match(html, /Laatst opgehaald:/);
+  assert.match(html, /elke 5 minuten/);
+  for (const text of ["Mijn team", "Capaciteit", "Opleidingen", "Instellingen"]) assert.ok(html.includes(text));
+  const loading = render(app.OverviewSummary, { ...props, loading: true, autoRefresh: false });
+  assert.match(loading, /disabled=""/);
+  assert.match(loading, /Automatisch vernieuwen staat uit/);
+  assert.match(loading, /Je gegevens worden vernieuwd/);
+  const invalid = render(app.OverviewSummary, { ...props,
+    data: { ...props.data, credits: ok({ credits_user_current: "broken" }) } });
+  assert.match(invalid, /role="alert"/);
+  assert.match(invalid, /ongeldig formaat/);
+  const failed = render(app.OverviewSummary, { ...props, username: null,
+    data: { ...props.data, vehicles: { ok: false, error: "HTTP 503" },
+      credits: { ok: false, error: "HTTP 401" } } });
+  assert.match(failed, /HTTP 401/);
+  assert.match(failed, /Niet beschikbaar/);
+});
+
 test("about page presents version and usage privacy and remains available without signing in", () => {
   for (const channel of ["stable", "dev"]) {
     assert.equal(navigation.pageAllowed("about", false, channel, false, false), true);

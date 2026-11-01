@@ -9,7 +9,7 @@
     "dev": "electron-vite dev",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "build": "npm run typecheck && electron-vite build",
-    "test": "node --test scripts/update-feed.test.mjs scripts/prepare-release.test.mjs scripts/cleanup-releases.test.mjs scripts/dashboard-model.test.mjs scripts/desktop-pages.test.mjs scripts/information-pages.test.mjs",
+    "test": "node --test scripts/update-feed.test.mjs scripts/prepare-release.test.mjs scripts/cleanup-releases.test.mjs scripts/dashboard-model.test.mjs scripts/desktop-pages.test.mjs scripts/information-pages.test.mjs scripts/update-buildings.test.mjs scripts/update-extra-catalogs.test.mjs",
     "dist": "npm run build && electron-builder --win nsis --config electron-builder.config.cjs"
   },
   "dependencies": {

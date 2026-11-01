@@ -1,0 +1,85 @@
+name: Update vehicle and equipment catalogs
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-extra-catalogs
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Propose ${{ matrix.catalog }} updates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        catalog: [vehicles, equipments]
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+    steps:
+      - name: Check out dev
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Test catalog updater
+        run: node --test scripts/update-extra-catalogs.test.mjs
+
+      - name: Update catalog
+        run: node scripts/update-extra-catalogs.mjs "${{ matrix.catalog }}"
+
+      - name: Detect changes
+        id: changes
+        run: |
+          if git diff --quiet -- "src/renderer/src/data/${{ matrix.catalog }}.json"; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        if: steps.changes.outputs.changed == 'true'
+        run: npm ci
+
+      - name: Validate updated catalog
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          npm test
+          npm run typecheck
+
+      - name: Create or update proposal
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: dev
+          branch: automation/update-${{ matrix.catalog }}
+          add-paths: src/renderer/src/data/${{ matrix.catalog }}.json
+          commit-message: |
+            Update ${{ matrix.catalog }} catalog from lss-information
+
+            Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+          title: "Update ${{ matrix.catalog }} names and missing types"
+          body: |
+            Daily catalog proposal from:
+            https://github.com/lss-information/lss-information.github.io/tree/main/gameversions/nl_NL/nl_NL-Data
+
+            - Updates existing names and adds missing IDs. Never removes existing records.
+            - Vehicle descriptions and categories are preserved. New vehicles have empty descriptions and categories: review and fill these before merging.
+            - Equipment imports only ID and name. It is a data catalog, not yet a user-facing page.
+            - Tests and TypeScript checks run before creating the updated proposal.
+
+            No automatic merge. Each catalog has its own proposal branch and PR.

@@ -48,6 +48,8 @@ Na een succesvolle aanmelding verschijnen de accountgebonden overzichten. Rechts
 
 ### Overzichten
 
+Het overzicht begroet je met je spelersnaam en toont voertuigen, gebouwen, credits en coins. Via de statistiekkaarten en snelle acties open je direct de bijbehorende pagina's. Je ziet ook wanneer gegevens voor het laatst zijn opgehaald en of automatisch vernieuwen aanstaat.
+
 - **Voertuigen:** aantallen per hulpdienst, voertuigtype en groep, inclusief extra waarden zoals watercapaciteit.
 - **Gebouwen:** gebouwtypen, uitbreidingen, specialisaties en opleidingen.
 - **Capaciteit:** bezette en vrije ziekenhuisbedden, cellen en klaslokalen.

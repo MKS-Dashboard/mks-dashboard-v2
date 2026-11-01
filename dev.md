@@ -90,6 +90,39 @@ De uitgangsgegevens komen uit de [webapp op commit 8ec5374](https://github.com/M
 
 Openbare missiegegevens komen uit [Missionfiles-All-Versions](https://github.com/Piet2001/Missionfiles-All-Versions); suggesties uit de issues van de webapp.
 
+### Dagelijks voorstel voor gebouwgegevens
+
+De [gebouwcatalogusworkflow](.github/workflows/update-buildings.yml) vergelijkt dagelijks om **06:00 UTC** de catalogus op `dev` met de [Nederlandse gebouwgegevens van lss-information](https://github.com/lss-information/lss-information.github.io/blob/main/gameversions/nl_NL/nl_NL-Data/buildings.json). Ook handmatig starten via GitHub Actions is mogelijk.
+
+Bij verschillen opent of vernieuwt de workflow één PR vanaf `automation/update-buildings` naar `dev`. Alleen namen en ontbrekende gebouw-ID's worden bijgewerkt. Bestaande telregels en verwijzingen blijven behouden; gebouwen worden nooit verwijderd. Nieuwe typen tellen standaard alleen fysieke gebouwen. Controleer hun telregels en eventuele kleine varianten voordat je de PR samenvoegt. De namen in de bron worden letterlijk overgenomen, dus ook bestaande naamverschillen worden voorgesteld.
+
+Ongeldige brongegevens laten de workflow expliciet mislukken. Bij wijzigingen worden tests en de typecontrole uitgevoerd. Er wordt niet automatisch samengevoegd. Gebruikers krijgen de bijgewerkte catalogus bij een volgende apprelease.
+
+Voor de dagelijkse planning moet deze workflow op de **default branch** van GitHub staan; alleen toevoegen aan `dev` activeert de planning niet als `main` de default branch is. Schakel onder **Settings > Actions > General > Workflow permissions** ook **Allow GitHub Actions to create and approve pull requests** in. De workflow gebruikt `GITHUB_TOKEN`: hierdoor starten andere workflows op de automatisch gemaakte PR niet vanzelf. De updateworkflow voert daarom zelf tests en typecontrole uit; voor aanvullende PR-checks is eventueel een apart GitHub App-token nodig.
+
+Lokaal vergelijken zonder bestanden te wijzigen:
+
+```powershell
+node scripts\update-buildings.mjs --dry-run
+```
+
+Zonder `--dry-run` schrijft het script voorgestelde wijzigingen naar de lokale gebouwcatalogus.
+
+### Voertuigen en equipment
+
+De [aanvullende catalogusworkflow](.github/workflows/update-extra-catalogs.yml) draait eveneens dagelijks om **06:00 UTC** en maakt aparte PR's naar `dev` voor `vehicles` en `equipments`, vanaf `automation/update-vehicles` en `automation/update-equipments`. Dezelfde default-branchvereiste en GitHub Actions-permissies als voor gebouwen gelden.
+
+Bronnen zijn [Vehicles.json](https://raw.githubusercontent.com/lss-information/lss-information.github.io/refs/heads/main/gameversions/nl_NL/nl_NL-Data/Vehicles.json) en [equipments.json](https://raw.githubusercontent.com/lss-information/lss-information.github.io/refs/heads/main/gameversions/nl_NL/nl_NL-Data/equipments.json). Alleen ontbrekende ID's en gewijzigde namen worden voorgesteld; bestaande records worden niet verwijderd. Voertuigomschrijvingen en categorieën blijven behouden. Nieuwe voertuigen krijgen lege omschrijvingen en categorieën, die je vóór samenvoegen handmatig beoordeelt en aanvult.
+
+De nieuwe [equipmentcatalogus](src/renderer/src/data/equipments.json) begint leeg. De eerste update-PR stelt alle bron-ID's en namen voor; overige bronvelden worden niet geïmporteerd. Deze catalogus heeft nog geen pagina of rekenregels in de app.
+
+Lokaal controleren zonder wijzigingen:
+
+```powershell
+node scripts\update-extra-catalogs.mjs vehicles --dry-run
+node scripts\update-extra-catalogs.mjs equipments --dry-run
+```
+
 ## Releases
 
 Na een geslaagde releasepublicatie worden automatisch de nieuwste **10 Stable-releases en 10 Beta-releases** bewaard, op basis van het versienummer. Oudere releases, hun downloadbestanden en bijbehorende Git-tags worden verwijderd. Conceptreleases en releases met onbekende tagformaten worden niet opgeruimd.

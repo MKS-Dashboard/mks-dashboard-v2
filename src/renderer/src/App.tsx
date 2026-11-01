@@ -26,6 +26,75 @@ function recordsFrom(data: unknown): unknown[] {
   return data === null || data === undefined ? [] : [data];
 }
 
+export function OverviewSummary({ data, username, lastUpdated, loading, autoRefresh, refreshMinutes, onNavigate, onRefresh }: {
+  data: DashboardData; username: string | null; lastUpdated: Date | null; loading: boolean;
+  autoRefresh: boolean; refreshMinutes: number; onNavigate: (page: PageKey) => void; onRefresh: () => void;
+}) {
+  const balances = read(data.credits, (value) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error("De accountgegevens hebben een ongeldig formaat.");
+    }
+    function amount(input: unknown): string {
+      if (input === undefined || input === null) return "Niet beschikbaar";
+      const number = typeof input === "number" ? input :
+        typeof input === "string" && /^-?\d+(?:\.\d+)?$/.test(input.trim()) ? Number(input) : NaN;
+      if (!Number.isFinite(number)) throw new Error("Het accountsaldo heeft een ongeldig formaat.");
+      return number.toLocaleString("nl-NL", { maximumFractionDigits: 2 });
+    }
+    const account = value as Record<string, unknown>;
+    return {
+      credits: amount(account.credits_user_current ?? account.credits),
+      coins: amount(account.coins_user_current ?? account.coins),
+    };
+  });
+  const cards = [
+    { label: "Voertuigen", value: resourceCount(data, "vehicles"), hint: "klaar voor jouw inzetten", page: "vehicles" },
+    { label: "Gebouwen", value: resourceCount(data, "buildings"), hint: "jouw netwerk van locaties", page: "buildings" },
+    { label: "Credits", value: balances.ok ? balances.value.credits : "Niet beschikbaar", hint: "beschikbaar saldo", page: "credits" },
+    { label: "Coins", value: balances.ok ? balances.value.coins : "Niet beschikbaar", hint: "beschikbaar saldo", page: "credits" },
+  ] as const;
+  return (
+    <div className="overview-summary">
+      <section className="overview-welcome" aria-labelledby="overview-welcome-title">
+        <div>
+          <span className="eyebrow">JOUW MELDKAMER IN BEELD</span>
+          <h2 id="overview-welcome-title">{username ? `Welkom terug, ${username}` : "Welkom terug"}</h2>
+          <p>Je voertuigen, locaties en team. Alles op één plek.</p>
+        </div>
+        <button className="button button-primary" disabled={loading} onClick={onRefresh}>
+          {loading ? "Gegevens ophalen..." : "Gegevens vernieuwen"}
+        </button>
+      </section>
+      <div className="overview-refresh" role="status">
+        <span>{loading ? "Je gegevens worden vernieuwd..." : lastUpdated
+          ? `Laatst opgehaald: ${lastUpdated.toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" })}`
+          : "Nog geen gegevens opgehaald"}</span>
+        <span>{autoRefresh ? `Automatisch vernieuwen: elke ${refreshMinutes} ${refreshMinutes === 1 ? "minuut" : "minuten"}` : "Automatisch vernieuwen staat uit"}</span>
+      </div>
+      {!balances.ok && <div className="notice notice-error" role="alert">{balances.error}</div>}
+      <section className="summary-row" aria-label="Jouw statistieken">
+        {cards.map((card) => (
+          <button className="summary-card overview-stat" key={card.label} onClick={() => onNavigate(card.page)}>
+            <span className="overview-stat-heading">
+              <span className="summary-label">{card.label}</span>
+              <span className="overview-stat-icon" aria-hidden="true">{card.label.slice(0, 1)}</span>
+            </span>
+            <strong>{card.value}</strong>
+            <span className="summary-hint">{card.hint}</span>
+          </button>
+        ))}
+      </section>
+      <nav className="overview-shortcuts" aria-label="Snelle acties">
+        <span>Direct naar</span>
+        <button className="button button-secondary" onClick={() => onNavigate("allianceInfo")}>Mijn team</button>
+        <button className="button button-secondary" onClick={() => onNavigate("progressdata")}>Capaciteit</button>
+        <button className="button button-secondary" onClick={() => onNavigate("schoolings")}>Opleidingen</button>
+        <button className="button button-secondary" onClick={() => onNavigate("settings")}>Instellingen</button>
+      </nav>
+    </div>
+  );
+}
+
 export function UsageRegistrationNotice() {
   return (
     <div className="session-help">
@@ -741,28 +810,9 @@ function App() {
 
           {page === "overview" && data && (
             <>
-              {signedIn && <section className="summary-row">
-                <div className="summary-card">
-                  <span className="summary-label">Voertuigen</span>
-                  <strong>{resourceCount(data, "vehicles")}</strong>
-                  <span className="summary-hint">in je account</span>
-                </div>
-                <div className="summary-card">
-                  <span className="summary-label">Gebouwen</span>
-                  <strong>{resourceCount(data, "buildings")}</strong>
-                  <span className="summary-hint">in je account</span>
-                </div>
-                <div className="summary-card">
-                  <span className="summary-label">Teamgebouwen</span>
-                  <strong>{resourceCount(data, "allianceBuildings")}</strong>
-                  <span className="summary-hint">gedeelde locaties</span>
-                </div>
-                <div className="summary-card">
-                  <span className="summary-label">Gegevens bijgewerkt</span>
-                  <strong className="summary-time">{lastUpdated ? lastUpdated.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" }) : "—"}</strong>
-                  <span className="summary-hint">{lastUpdated ? lastUpdated.toLocaleDateString("nl-NL") : "nog niet opgehaald"}</span>
-                </div>
-              </section>}
+              {signedIn && <OverviewSummary data={data} username={username} lastUpdated={lastUpdated}
+                loading={loading} autoRefresh={autoRefresh} refreshMinutes={refreshMinutes}
+                onNavigate={setPage} onRefresh={() => void refresh()} />}
               <div className="section-heading">
                 <div>
                   <h2>Gegevensbronnen</h2>
