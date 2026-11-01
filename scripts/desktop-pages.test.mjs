@@ -159,6 +159,80 @@ test("native report save writes the exact text and handles cancel, invalid sende
   }
 });
 
+test("game requests use cookie authentication only for account endpoints and never fall back to URLs", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "mks-cookie-test-"));
+  const previousFetch = globalThis.fetch;
+  try {
+    const handlers = new Map();
+    const sender = { setWindowOpenHandler() {}, on() {} };
+    const owner = { webContents: sender, loadFile: async () => {}, loadURL: async () => {} };
+    const app = {
+      isPackaged: false, getVersion: () => "0.1.0", getPath: () => folder,
+      setName() {}, setPath() {}, setAppUserModelId() {}, on() {},
+      whenReady: () => ({ then: (callback) => callback() }),
+    };
+    await loadModule("src/main/index.ts", {
+      electron: { app, BrowserWindow: function () { return owner; },
+        ipcMain: { handle: (key, handler) => handlers.set(key, handler) } },
+      "electron-updater": { autoUpdater: {} },
+    });
+    const event = { sender };
+    const setSession = handlers.get("auth:set-session-id");
+    const load = handlers.get("dashboard:load");
+    const accountPaths = new Set([
+      "/api/vehicles", "/api/buildings", "/api/alliance_buildings", "/api/userinfo",
+      "/api/allianceinfo", "/api/schoolings", "/api/alliance_schoolings",
+    ]);
+    let status = 200;
+    let hasSession = false;
+    const requests = [];
+    globalThis.fetch = async (url, options) => {
+      const parsed = new URL(url);
+      requests.push(parsed.pathname);
+      assert.equal(parsed.origin, "https://meldkamerspel.com");
+      assert.equal(parsed.search, "");
+      assert.equal(options.redirect, "manual");
+      assert.equal(options.headers.Accept, "application/json");
+      assert.equal(options.headers.Cookie,
+        hasSession && accountPaths.has(parsed.pathname) ? "_session_id=TEST%2Fsession==" : undefined);
+      return status === 200 ? Response.json([]) : new Response(null, { status });
+    };
+    for (const invalid of ["", " ", "a;b", "a\r\nCookie: evil", 'a"b', "a,b", "a b", "a\\b", "é", "a".repeat(513), null]) {
+      await assert.rejects(setSession(event, invalid, false), /geldige SessionID/);
+    }
+    const anonymous = await load(event);
+    assert.equal(requests.length, 3);
+    assert.equal(anonymous.vehicles.ok, false);
+    assert.match(anonymous.vehicles.error, /Voer eerst/);
+    await setSession(event, " TEST%2Fsession== ", false);
+    hasSession = true;
+    requests.length = 0;
+    const data = await load(event);
+    assert.equal(requests.length, 10);
+    assert.deepEqual(new Set(requests.filter((path) => accountPaths.has(path))), accountPaths);
+    for (const result of Object.values(data)) {
+      assert.equal(result.ok, true);
+      assert.doesNotMatch(result.requestUrl, /session|afgeschermd/);
+    }
+    for (status of [401, 302]) {
+      requests.length = 0;
+      const failed = await load(event);
+      assert.equal(requests.length, 10);
+      assert.equal(failed.credits.ok, false);
+      assert.doesNotMatch(JSON.stringify(failed), /TEST%2Fsession|_session_id/);
+    }
+    await handlers.get("auth:logout")(event);
+    hasSession = false;
+    status = 200;
+    requests.length = 0;
+    await load(event);
+    assert.equal(requests.length, 3);
+  } finally {
+    globalThis.fetch = previousFetch;
+    await rm(folder, { recursive: true, force: true });
+  }
+});
+
 test("refresh intervals default to five minutes and never refresh before the configured threshold", () => {
   assert.equal(refreshInterval.defaultRefreshMinutes, 5);
   assert.equal(refreshInterval.parseRefreshMinutes("5"), 5);

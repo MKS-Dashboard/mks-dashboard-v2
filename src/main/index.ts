@@ -123,20 +123,27 @@ async function loadSessionId(): Promise<string | null> {
   }
 
   const encryptedSessionId = await readFile(sessionIdFile);
-  sessionId = safeStorage.decryptString(encryptedSessionId);
+  sessionId = validatedSessionId(safeStorage.decryptString(encryptedSessionId));
   sessionIdLoaded = true;
   return sessionId;
 }
 
-async function setSessionId(value: unknown, remember: unknown): Promise<void> {
-  if (typeof value !== "string" || value.trim().length === 0 || value.length > 512) {
+function validatedSessionId(value: unknown): string {
+  if (
+    typeof value !== "string" || value.length > 512 ||
+    !/^[\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]+$/.test(value.trim())
+  ) {
     throw new Error("Voer een geldige SessionID in.");
   }
+  return value.trim();
+}
+
+async function setSessionId(value: unknown, remember: unknown): Promise<void> {
+  const cleanedSessionId = validatedSessionId(value);
   if (typeof remember !== "boolean") {
     throw new Error("De instelling voor lokaal bewaren is ongeldig.");
   }
 
-  const cleanedSessionId = value.trim();
   if (remember) {
     if (!safeStorage.isEncryptionAvailable()) {
       throw new Error("Versleutelde opslag is niet beschikbaar. De SessionID is niet opgeslagen.");
@@ -172,22 +179,19 @@ async function requestGameResource(
   endpoint: string,
   sessionRequired: boolean,
 ): Promise<[DashboardResourceKey, DashboardResourceResult]> {
-  let diagnosticUrl = new URL(endpoint, GAME_ORIGIN).href;
+  const diagnosticUrl = new URL(endpoint, GAME_ORIGIN).href;
   try {
-    const currentSessionId = await loadSessionId();
+    const currentSessionId = sessionRequired ? await loadSessionId() : null;
     if (sessionRequired && !currentSessionId) {
       throw new Error("Voer eerst je Meldkamerspel-SessionID in.");
     }
 
-    const requestUrl = new URL(endpoint, GAME_ORIGIN);
+    const headers: Record<string, string> = { Accept: "application/json" };
     if (sessionRequired && currentSessionId) {
-      requestUrl.searchParams.set("_session_id", currentSessionId);
-      diagnosticUrl = `${diagnosticUrl}?_session_id=[afgeschermd]`;
+      headers.Cookie = `_session_id=${currentSessionId}`;
     }
-    const response = await fetch(requestUrl, {
-      headers: {
-        Accept: "application/json",
-      },
+    const response = await fetch(diagnosticUrl, {
+      headers,
       redirect: "manual",
       signal: AbortSignal.timeout(20_000),
     });

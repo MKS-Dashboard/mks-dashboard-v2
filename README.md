@@ -84,7 +84,7 @@ Stable ontvangt uitsluitend Stable-updates; Beta uitsluitend Beta-updates. Er wo
 ## Privacy en verbinding
 
 - Game-API-verzoeken worden lokaal uitgevoerd en zijn alleen-lezen.
-- Je SessionID wordt uitsluitend bij gameverzoeken naar Meldkamerspel gestuurd, niet naar de MKS-proxy of GitHub.
+- Je SessionID wordt uitsluitend bij accountgebonden gameverzoeken naar Meldkamerspel gestuurd via de `Cookie`-header (`_session_id`), niet via de URL en niet naar de MKS-proxy of GitHub. Openbare gameverzoeken bevatten geen SessionID. Bij een fout wordt niet teruggevallen op een URL-parameter.
 - Optioneel wordt je SessionID versleuteld opgeslagen met de Windows-beveiliging.
 - GitHub wordt gebruikt voor app-updates en, bij de aanvullende Beta-pagina's, openbare gegevens en suggesties. Deze verzoeken bevatten geen SessionID.
 - Voor actuele gamegegevens, downloads en openbare gegevens is internet nodig. Lokaal draaien betekent niet volledig offline werken.
@@ -96,9 +96,9 @@ Stable ontvangt uitsluitend Stable-updates; Beta uitsluitend Beta-updates. Er wo
 Beta gebruikt intern het **Dev**-kanaal. De volgende opties staan standaard uit en zijn niet beschikbaar in Stable:
 
 - **Instellingen > Infoblocks:** aanvullende openbare pagina's voor missies, geplande en grote teammissies, evenementen, teamevents, POI's, onderscheidingen, informatie, credits per spelversie en suggesties.
-- **Instellingen > Dev mode:** de pagina **Raw API-responses** voor probleemonderzoek. Deze toont de laatst opgehaalde responses zonder extra verzoeken of opslag op schijf. De SessionID in de getoonde verzoek-URL is afgeschermd.
+- **Instellingen > Dev mode:** de pagina **Raw API-responses** voor probleemonderzoek. Deze toont de laatst opgehaalde responses zonder extra verzoeken of opslag op schijf.
 
-Raw responses kunnen account- en teamgegevens bevatten. Controleer de inhoud voordat je deze deelt.
+Raw responses kunnen account- en teamgegevens bevatten. Controleer de inhoud voordat je deze deelt. Verzoek-URL's bevatten geen SessionID; de authenticatieheader wordt niet getoond.
 
 ## Hulp en problemen melden
 
