@@ -72,6 +72,8 @@ Ook als automatisch vernieuwen uitstaat, kun je altijd **Gegevens ophalen** gebr
 
 Dit interval geldt voor gamegegevens, niet voor app-updates.
 
+Na aanmelding toont de linkeronderhoek een countdown tot de volgende automatische refresh. Tijdens ophalen verschijnt de ophaalstatus; als automatisch vernieuwen uitstaat, wordt dat aangegeven. Handmatig ophalen reset de countdown.
+
 ### Een foutrapport maken
 
 Werkt iets niet goed? Kies **Instellingen > Genereer error rapport**. Het rapport verzamelt informatie over fouten en ontbrekende spelgegevens, zodat we het probleem beter kunnen onderzoeken.

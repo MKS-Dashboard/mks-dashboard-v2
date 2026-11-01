@@ -527,6 +527,12 @@ test("refresh intervals default to five minutes and never refresh before the con
   }
   assert.equal(refreshInterval.refreshDue(1000, 300999, 5), false);
   assert.equal(refreshInterval.refreshDue(1000, 301000, 5), true);
+  assert.equal(refreshInterval.refreshCountdown(1000, 1000, 5), "05:00");
+  assert.equal(refreshInterval.refreshCountdown(1000, 2000, 5), "04:59");
+  assert.equal(refreshInterval.refreshCountdown(1000, 300999, 5), "00:01");
+  assert.equal(refreshInterval.refreshCountdown(1000, 301000, 5), "00:00");
+  assert.equal(refreshInterval.refreshCountdown(1000, 400000, 5), "00:00");
+  assert.equal(refreshInterval.refreshCountdown(1000, 1000, 1), "01:00");
   assert.equal(refreshInterval.refreshDue(1000, 301000, 10), false);
 });
 

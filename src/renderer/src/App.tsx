@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BuildingsPage, ProgressPage, read, VehiclesPage, VehicleDetailsPage } from "./DashboardPages";
 import { schoolingRecords } from "./schoolings";
-import { defaultRefreshMinutes, parseRefreshMinutes, refreshDue } from "./refresh-interval";
+import { defaultRefreshMinutes, parseRefreshMinutes, refreshCountdown, refreshDue } from "./refresh-interval";
 import { accountUsername, AccountPage, AlliancePage, BuildingDetailsPage, CreditsPage, SchoolingsPage, SuggestionsPage } from "./AccountPages";
 import { AllianceEventsPage, AllianceMissionsPage, AwardsPage, EventsPage, InformationPage, MissionsPage, PlannedMissionsPage, POIPage } from "./InformationPages";
 import { infoblocksAllowed, isInfoblockPage } from "./infoblocks";
@@ -27,6 +27,16 @@ function recordsFrom(data: unknown): unknown[] {
     if (nestedArray) return nestedArray;
   }
   return data === null || data === undefined ? [] : [data];
+}
+
+export function RefreshCountdown({ lastUpdated, minutes }: { lastUpdated: Date; minutes: number }) {
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [lastUpdated, minutes]);
+  return <span>Vernieuwen over {refreshCountdown(lastUpdated.getTime(), now, minutes)}</span>;
 }
 
 export function OverviewSummary({ data, username, lastUpdated, loading, autoRefresh, refreshMinutes, onNavigate, onRefresh }: {
@@ -432,7 +442,7 @@ function App() {
     if (!autoRefresh || !signedIn || !refreshSettingsLoaded || !lastUpdated || checkingSession || loading || loggingOut || updating) return;
     const timer = setInterval(() => {
       if (refreshDue(lastUpdated.getTime(), Date.now(), refreshMinutes)) void refresh();
-    }, 60_000);
+    }, 1000);
     return () => clearInterval(timer);
   }, [autoRefresh, signedIn, refreshSettingsLoaded, lastUpdated, checkingSession, loading, loggingOut, updating, refreshMinutes, refresh]);
 
@@ -602,8 +612,14 @@ function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <span className={`status-dot ${hasSessionId ? "connected" : ""}`} />
-          <span>{checkingSession ? "SessionID controleren" : hasSessionId ? "SessionID ingesteld" : "Geen SessionID ingesteld"}</span>
+          <span className={`status-dot ${signedIn ? "connected" : ""}`} />
+          {checkingSession ? <span>SessionID controleren</span>
+            : signedIn ? loading ? <span>Gegevens ophalen...</span>
+              : loggingOut ? <span>Uitloggen...</span>
+                : !autoRefresh ? <span>Automatisch vernieuwen uit</span>
+                  : updating || !refreshSettingsLoaded || !lastUpdated ? <span>Vernieuwen gepauzeerd</span>
+                    : <RefreshCountdown lastUpdated={lastUpdated} minutes={refreshMinutes} />
+              : <span>{hasSessionId ? "SessionID ingesteld" : "Geen SessionID ingesteld"}</span>}
         </div>
       </aside>
 
