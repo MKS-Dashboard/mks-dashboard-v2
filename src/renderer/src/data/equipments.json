@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "id": "bomb_disposal_robot",
+    "name": "RC-Explosievenrobot"
+  },
+  {
+    "id": "care_service",
+    "name": "RC-Verzorging"
+  },
+  {
+    "id": "clean_service",
+    "name": "RC-Arbeidshygiëne"
+  },
+  {
+    "id": "fire_breathing_protection",
+    "name": "RC-Adembescherming"
+  },
+  {
+    "id": "fire_pump_and_water_carrier",
+    "name": "RC-Pomp"
+  },
+  {
+    "id": "fire_water_carrier",
+    "name": "RC-Slangen"
+  },
+  {
+    "id": "fire_water_carrier_2",
+    "name": "RC-Slangen-Klein"
+  },
+  {
+    "id": "hazard_response_material_equipment",
+    "name": "RC-Gevaarlijke Stoffen"
+  },
+  {
+    "id": "hazard_response_suits_equipment",
+    "name": "RC-Gaspakken"
+  },
+  {
+    "id": "railway_electric_equipment",
+    "name": "BU-VTHS"
+  }
+]
