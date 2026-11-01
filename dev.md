@@ -92,7 +92,7 @@ Openbare missiegegevens komen uit [Missionfiles-All-Versions](https://github.com
 
 ### Dagelijks voorstel voor gebouwgegevens
 
-De [gebouwcatalogusworkflow](.github/workflows/update-buildings.yml) vergelijkt dagelijks om **06:00 UTC** de catalogus op `dev` met de [Nederlandse gebouwgegevens van lss-information](https://github.com/lss-information/lss-information.github.io/blob/main/gameversions/nl_NL/nl_NL-Data/buildings.json). Ook handmatig starten via GitHub Actions is mogelijk.
+De automatische planning van de [gebouwcatalogusworkflow](.github/workflows/update-buildings.yml) is tijdelijk uitgeschakeld. De workflow vergelijkt bij handmatig starten de catalogus op `dev` met de [Nederlandse gebouwgegevens van lss-information](https://github.com/lss-information/lss-information.github.io/blob/main/gameversions/nl_NL/nl_NL-Data/buildings.json). Een in GitHub uitgeschakelde workflow moet eerst weer worden ingeschakeld voordat handmatig starten mogelijk is.
 
 Bij verschillen opent of vernieuwt de workflow één PR vanaf `automation/update-buildings` naar `dev`. Alleen namen en ontbrekende gebouw-ID's worden bijgewerkt. Bestaande telregels en verwijzingen blijven behouden; gebouwen worden nooit verwijderd. Nieuwe typen tellen standaard alleen fysieke gebouwen. Controleer hun telregels en eventuele kleine varianten voordat je de PR samenvoegt. De namen in de bron worden letterlijk overgenomen, dus ook bestaande naamverschillen worden voorgesteld.
 
@@ -110,9 +110,11 @@ Zonder `--dry-run` schrijft het script voorgestelde wijzigingen naar de lokale g
 
 ### Voertuigen en equipment
 
-De [aanvullende catalogusworkflow](.github/workflows/update-extra-catalogs.yml) draait eveneens dagelijks om **06:00 UTC** en maakt aparte PR's naar `dev` voor `vehicles` en `equipments`, vanaf `automation/update-vehicles` en `automation/update-equipments`. Dezelfde default-branchvereiste en GitHub Actions-permissies als voor gebouwen gelden.
+De automatische planning van de [aanvullende catalogusworkflow](.github/workflows/update-extra-catalogs.yml) is eveneens tijdelijk uitgeschakeld. Bij handmatig starten maakt deze aparte PR's naar `dev` voor `vehicles` en `equipments`, vanaf `automation/update-vehicles` en `automation/update-equipments`. Dezelfde GitHub Actions-permissies als voor gebouwen gelden. Om de dagelijkse planning te herstellen, voeg je aan beide workflows weer `schedule` met cron `0 6 * * *` toe op de default branch en schakel je ze zo nodig weer in op GitHub.
 
 Bronnen zijn [Vehicles.json](https://raw.githubusercontent.com/lss-information/lss-information.github.io/refs/heads/main/gameversions/nl_NL/nl_NL-Data/Vehicles.json) en [equipments.json](https://raw.githubusercontent.com/lss-information/lss-information.github.io/refs/heads/main/gameversions/nl_NL/nl_NL-Data/equipments.json). Alleen ontbrekende ID's en gewijzigde namen worden voorgesteld; bestaande records worden niet verwijderd. Voertuigomschrijvingen en categorieën blijven behouden. Nieuwe voertuigen krijgen lege omschrijvingen en categorieën, die je vóór samenvoegen handmatig beoordeelt en aanvult.
+
+Lege voertuigomschrijvingen worden daarna aangevuld uit het [kostenoverzicht van MeldkamerspelGameTeam](https://github.com/MeldkamerspelGameTeam/Blog/blob/main/Kostenoverzichtv2/Scripts/Data/voertuigen.json), uitsluitend wanneer de bijgewerkte voertuignaam exact overeenkomt met `afkorting`. Bestaande niet-lege omschrijvingen blijven behouden. Er wordt niet op vergelijkbare namen gekoppeld; equipmentrecords uit deze bron worden niet als voertuigen toegevoegd. Als een van de bronnen ongeldig of onbereikbaar is, wordt geen gedeeltelijke catalogusupdate geschreven.
 
 De nieuwe [equipmentcatalogus](src/renderer/src/data/equipments.json) begint leeg. De eerste update-PR stelt alle bron-ID's en namen voor; overige bronvelden worden niet geïmporteerd. Deze catalogus heeft nog geen pagina of rekenregels in de app.
 

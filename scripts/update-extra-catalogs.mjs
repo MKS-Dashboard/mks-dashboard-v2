@@ -3,6 +3,29 @@ import { pathToFileURL } from "node:url";
 
 const sourceRoot = "https://raw.githubusercontent.com/lss-information/lss-information.github.io/refs/heads/main/gameversions/nl_NL/nl_NL-Data/";
 export const catalogSources = { vehicles: `${sourceRoot}Vehicles.json`, equipments: `${sourceRoot}equipments.json` };
+export const vehicleDescriptionsSource = "https://raw.githubusercontent.com/MeldkamerspelGameTeam/Blog/refs/heads/main/Kostenoverzichtv2/Scripts/Data/voertuigen.json";
+
+export function enrichVehicleDescriptions(records, source) {
+  if (!Array.isArray(source) || source.length === 0) throw new Error("Ongeldige of lege voertuigomschrijvingbron.");
+  const descriptions = new Map();
+  for (const entry of source) {
+    if (!entry || typeof entry.afkorting !== "string" || !entry.afkorting.trim() ||
+      typeof entry.omschrijving !== "string" || entry.omschrijving.length > 1000 ||
+      /[\x00-\x1F\x7F]/.test(entry.afkorting + entry.omschrijving) || descriptions.has(entry.afkorting)) {
+      throw new Error("Ongeldige of dubbele voertuigomschrijvingen.");
+    }
+    descriptions.set(entry.afkorting, entry.omschrijving.trim());
+  }
+  const changes = [];
+  const enriched = records.map((record) => {
+    if (typeof record.description !== "string") throw new Error("Ongeldige lokale voertuigomschrijving.");
+    const description = descriptions.get(record.name);
+    if (record.description.trim() || !description) return { ...record };
+    changes.push({ id: record.id, name: record.name, description });
+    return { ...record, description };
+  });
+  return { records: enriched, changes };
+}
 
 export function updateCatalog(kind, local, source) {
   if (!Object.hasOwn(catalogSources, kind)) throw new Error("Onbekende catalogus.");
@@ -59,7 +82,15 @@ export async function refreshCatalog(kind, { dryRun = false, request = fetch } =
     headers: { Accept: "application/json" }, redirect: "error", signal: AbortSignal.timeout(30_000),
   });
   if (!response.ok) throw new Error(`Catalogus ophalen is mislukt (HTTP ${response.status}).`);
-  const result = updateCatalog(kind, local, await response.json());
+  let result = updateCatalog(kind, local, await response.json());
+  if (kind === "vehicles") {
+    const descriptions = await request(vehicleDescriptionsSource, {
+      headers: { Accept: "application/json" }, redirect: "error", signal: AbortSignal.timeout(30_000),
+    });
+    if (!descriptions.ok) throw new Error(`Voertuigomschrijvingen ophalen is mislukt (HTTP ${descriptions.status}).`);
+    const enriched = enrichVehicleDescriptions(result.records, await descriptions.json());
+    result = { records: enriched.records, changes: [...result.changes, ...enriched.changes] };
+  }
   if (!dryRun && result.changes.length) await writeFile(path, `${JSON.stringify(result.records, null, 2)}\n`, "utf8");
   return result.changes;
 }

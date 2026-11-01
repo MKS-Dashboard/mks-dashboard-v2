@@ -6,8 +6,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 1,
@@ -16,8 +16,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 2,
@@ -26,8 +26,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 3,
@@ -36,8 +36,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 4,
@@ -46,8 +46,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 5,
@@ -56,8 +56,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 6,
@@ -66,8 +66,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 7,
@@ -76,8 +76,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 8,
@@ -86,8 +86,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 9,
@@ -96,8 +96,8 @@
     "countBuilding": true,
     "countLevels": true,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 10,
@@ -106,8 +106,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 11,
@@ -116,8 +116,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 12,
@@ -126,8 +126,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 13,
@@ -136,8 +136,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 14,
@@ -146,8 +146,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 15,
@@ -156,8 +156,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 16,
@@ -166,8 +166,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 17,
@@ -176,8 +176,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 18,
@@ -186,8 +186,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 19,
@@ -196,8 +196,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 20,
@@ -206,8 +206,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 21,
@@ -231,8 +231,8 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   },
   {
     "id": 23,
@@ -241,7 +241,47 @@
     "countBuilding": true,
     "countLevels": false,
     "countExtensions": false,
-    "extensionBuildings": [],
-    "extensionNames": []
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
+  },
+  {
+    "id": 24,
+    "name": "Berger Standplaats",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
+  },
+  {
+    "id": 25,
+    "name": "Kazerne defensie",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
+  },
+  {
+    "id": 26,
+    "name": "Militaire academie",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
+  },
+  {
+    "id": 27,
+    "name": "Standplaats Incidentenbestrijding spoor",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [ ],
+    "extensionNames": [ ]
   }
 ]
