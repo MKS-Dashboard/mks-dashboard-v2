@@ -1,0 +1,80 @@
+name: Update building catalog
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-building-catalog
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Propose building updates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+    steps:
+      - name: Check out dev
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Test catalog updater
+        run: node --test scripts/update-buildings.test.mjs
+
+      - name: Update building names and missing types
+        run: node scripts/update-buildings.mjs
+
+      - name: Detect changes
+        id: changes
+        run: |
+          if git diff --quiet -- src/renderer/src/data/buildings.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        if: steps.changes.outputs.changed == 'true'
+        run: npm ci
+
+      - name: Validate updated catalog
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          npm test
+          npm run typecheck
+
+      - name: Create or update proposal
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: dev
+          branch: automation/update-buildings
+          add-paths: src/renderer/src/data/buildings.json
+          commit-message: |
+            Update building catalog from lss-information
+
+            Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+          title: "Update building names and missing types"
+          body: |
+            Daily building catalog proposal from:
+            https://github.com/lss-information/lss-information.github.io/blob/main/gameversions/nl_NL/nl_NL-Data/buildings.json
+
+            - Updates existing building names and adds missing IDs.
+            - Preserves existing counting rules, small-building mappings and extension mappings.
+            - Never removes existing buildings or imports other upstream fields.
+            - New types default to counting physical buildings only. Review their counting rules and small-building mappings before merging.
+            - Catalog tests and TypeScript checks run before creating an updated proposal.
+
+            No automatic merge. Changes become available to users through a subsequent app release.

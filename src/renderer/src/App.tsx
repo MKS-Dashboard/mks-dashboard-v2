@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BuildingsPage, ProgressPage, read, VehiclesPage } from "./DashboardPages";
+import { BuildingsPage, ProgressPage, read, VehiclesPage, VehicleDetailsPage } from "./DashboardPages";
 import { schoolingRecords } from "./schoolings";
 import { defaultRefreshMinutes, parseRefreshMinutes, refreshDue } from "./refresh-interval";
 import { accountUsername, AccountPage, AlliancePage, BuildingDetailsPage, CreditsPage, SchoolingsPage, SuggestionsPage } from "./AccountPages";
 import { AllianceEventsPage, AllianceMissionsPage, AwardsPage, EventsPage, InformationPage, MissionsPage, PlannedMissionsPage, POIPage } from "./InformationPages";
 import { infoblocksAllowed, isInfoblockPage } from "./infoblocks";
 import { RawResponsesPage } from "./RawResponsesPage";
+import { ErrorReportPanel } from "./ErrorReportPanel";
+import { EquipmentsPage } from "./EquipmentsPage";
+import { clearReportIssues, recordAppIssue } from "./error-report";
 import { extraPages, navigationGroups, navigationPages, pageAllowed, type PageKey } from "./navigation";
 import {
   dashboardResources,
@@ -15,6 +18,8 @@ import {
   type UpdateStatus,
 } from "../../shared/contracts";
 
+declare const __PROJECT_STATS__: { files: number; lines: number };
+
 function recordsFrom(data: unknown): unknown[] {
   if (Array.isArray(data)) return data;
   if (data && typeof data === "object") {
@@ -22,6 +27,187 @@ function recordsFrom(data: unknown): unknown[] {
     if (nestedArray) return nestedArray;
   }
   return data === null || data === undefined ? [] : [data];
+}
+
+export function OverviewSummary({ data, username, lastUpdated, loading, autoRefresh, refreshMinutes, onNavigate, onRefresh }: {
+  data: DashboardData; username: string | null; lastUpdated: Date | null; loading: boolean;
+  autoRefresh: boolean; refreshMinutes: number; onNavigate: (page: PageKey) => void; onRefresh: () => void;
+}) {
+  const balances = read(data.credits, (value) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error("De accountgegevens hebben een ongeldig formaat.");
+    }
+    function amount(input: unknown): string {
+      if (input === undefined || input === null) return "Niet beschikbaar";
+      const number = typeof input === "number" ? input :
+        typeof input === "string" && /^-?\d+(?:\.\d+)?$/.test(input.trim()) ? Number(input) : NaN;
+      if (!Number.isFinite(number)) throw new Error("Het accountsaldo heeft een ongeldig formaat.");
+      return number.toLocaleString("nl-NL", { maximumFractionDigits: 2 });
+    }
+    const account = value as Record<string, unknown>;
+    return {
+      credits: amount(account.credits_user_current ?? account.credits),
+      coins: amount(account.coins_user_current ?? account.coins),
+    };
+  });
+  const cards = [
+    { label: "Voertuigen", value: resourceCount(data, "vehicles"), hint: "klaar voor jouw inzetten", page: "vehicles" },
+    { label: "Gebouwen", value: resourceCount(data, "buildings"), hint: "jouw netwerk van locaties", page: "buildings" },
+    { label: "Credits", value: balances.ok ? balances.value.credits : "Niet beschikbaar", hint: "beschikbaar saldo", page: "credits" },
+    { label: "Coins", value: balances.ok ? balances.value.coins : "Niet beschikbaar", hint: "beschikbaar saldo", page: "credits" },
+  ] as const;
+  return (
+    <div className="overview-summary">
+      <section className="overview-welcome" aria-labelledby="overview-welcome-title">
+        <div>
+          <span className="eyebrow">JOUW MELDKAMER IN BEELD</span>
+          <h2 id="overview-welcome-title">{username ? `Welkom terug, ${username}` : "Welkom terug"}</h2>
+          <p>Je voertuigen, locaties en team. Alles op één plek.</p>
+        </div>
+        <button className="button button-primary" disabled={loading} onClick={onRefresh}>
+          {loading ? "Gegevens ophalen..." : "Gegevens vernieuwen"}
+        </button>
+      </section>
+      <div className="overview-refresh" role="status">
+        <span>{loading ? "Je gegevens worden vernieuwd..." : lastUpdated
+          ? `Laatst opgehaald: ${lastUpdated.toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" })}`
+          : "Nog geen gegevens opgehaald"}</span>
+        <span>{autoRefresh ? `Automatisch vernieuwen: elke ${refreshMinutes} ${refreshMinutes === 1 ? "minuut" : "minuten"}` : "Automatisch vernieuwen staat uit"}</span>
+      </div>
+      {!balances.ok && <div className="notice notice-error" role="alert">{balances.error}</div>}
+      <section className="summary-row" aria-label="Jouw statistieken">
+        {cards.map((card) => (
+          <button className="summary-card overview-stat" key={card.label} onClick={() => onNavigate(card.page)}>
+            <span className="overview-stat-heading">
+              <span className="summary-label">{card.label}</span>
+              <span className="overview-stat-icon" aria-hidden="true">{card.label.slice(0, 1)}</span>
+            </span>
+            <strong>{card.value}</strong>
+            <span className="summary-hint">{card.hint}</span>
+          </button>
+        ))}
+      </section>
+      <nav className="overview-shortcuts" aria-label="Snelle acties">
+        <span>Direct naar</span>
+        <button className="button button-secondary" onClick={() => onNavigate("allianceInfo")}>Mijn team</button>
+        <button className="button button-secondary" onClick={() => onNavigate("progressdata")}>Capaciteit</button>
+        <button className="button button-secondary" onClick={() => onNavigate("schoolings")}>Opleidingen</button>
+        <button className="button button-secondary" onClick={() => onNavigate("settings")}>Instellingen</button>
+      </nav>
+    </div>
+  );
+}
+
+export function UsageRegistrationNotice() {
+  return (
+    <div className="session-help">
+      <p>De app verzamelt gebruiksgegevens.</p>
+      <details>
+        <summary>Meer details</summary>
+        <p>
+          Bij aanmelden sturen we je speler-ID, spelersnaam, appversie en of je Beta gebruikt naar de
+          developer om eerste en laatste gebruik bij te houden.
+          Maximaal eenmaal succesvol per kalenderdag (Nederlandse tijd) per account op deze installatie.
+          Je SessionID en overige spelgegevens worden niet meegestuurd.
+          Bij een fout kan de app het bij een volgende gegevensverversing opnieuw proberen.
+        </p>
+      </details>
+    </div>
+  );
+}
+
+export function AboutPage({ appInfo }: { appInfo: AppInfo | null }) {
+  const [linkError, setLinkError] = useState("");
+  const links = [
+    ["Project op GitHub", "https://github.com/MKS-Dashboard/mks-dashboard-v2"],
+    ["Releaseopmerkingen", "https://github.com/MKS-Dashboard/mks-dashboard-v2/releases"],
+    ["Probleem melden of suggestie doen", "https://github.com/MKS-Dashboard/mks-dashboard-v2/issues/new"],
+    ["Bijdragers", "https://github.com/MKS-Dashboard/mks-dashboard-v2/graphs/contributors"],
+    ["Oorspronkelijke webapp", "https://github.com/MKS-Dashboard/mks-dashboard.github.io"],
+    ["Meldkamerspel", "https://meldkamerspel.com"],
+    ["Openbare missiegegevens", "https://github.com/Piet2001/Missionfiles-All-Versions"],
+  ] as const;
+  async function openLink(url: string): Promise<void> {
+    setLinkError("");
+    try {
+      await window.mksDashboard.openExternal(url);
+    } catch (cause) {
+      setLinkError(cause instanceof Error ? cause.message : "De link kon niet worden geopend.");
+    }
+  }
+  return (
+    <section className="settings-panel" aria-labelledby="about-title">
+      <div className="settings-heading">
+        <h2 id="about-title">Over de app</h2>
+        <p>{appInfo ? `Versie ${appInfo.version} — ${appInfo.channel === "dev" ? "Beta" : "Stable"}` : "Versie laden..."}</p>
+      </div>
+      <div className="settings-option">
+        <div className="settings-option-copy">
+          <h3>Over MKS Dashboard</h3>
+          <p>Een Windows-app met overzicht over je Meldkamerspel-account, voertuigen, gebouwen en team.</p>
+          <p>Een project van MKS Dashboard, gebaseerd op de oorspronkelijke webapp en onderhouden met hulp van bijdragers.</p>
+          <p>Dit is een onafhankelijk project, geen officiële app van Meldkamerspel.</p>
+          <h4>Het project in cijfers</h4>
+          <p>{__PROJECT_STATS__.files.toLocaleString("nl-NL")} broncodebestanden en
+            {" "}{__PROJECT_STATS__.lines.toLocaleString("nl-NL")} niet-lege regels broncode.</p>
+          <p>Inclusief tests en buildscripts; exclusief databestanden, documentatie, dependencies en
+            gegenereerde bestanden. Commentaarregels tellen mee. Gemeten bij het starten of bouwen van deze versie.</p>
+        </div>
+      </div>
+      <div className="settings-option">
+        <div className="settings-option-copy">
+          <h3>Privacy</h3>
+          <p>De app leest je spelgegevens rechtstreeks bij Meldkamerspel en wijzigt niets in je spelaccount.</p>
+          <p>Je SessionID wordt alleen naar Meldkamerspel gestuurd. Je kunt deze versleuteld op je pc bewaren.
+            Behandel je SessionID als een wachtwoord en deel deze nooit.</p>
+          <h4>Gebruiksregistratie</h4>
+          <UsageRegistrationNotice />
+        </div>
+      </div>
+      <div className="settings-option">
+        <div className="settings-option-copy">
+          <h3>Links &amp; credits</h3>
+          <p>Spelgegevens komen van Meldkamerspel. De vaste spelcatalogi zijn gebaseerd op de oorspronkelijke
+            webapp; aanvullende openbare missiegegevens komen uit Missionfiles-All-Versions.</p>
+          <p>Gebouwd met Electron, React en TypeScript. Met dank aan de makers van de gebruikte software,
+            gegevensbronnen en alle projectbijdragers.</p>
+          {linkError && <div className="notice notice-error" role="alert">{linkError}</div>}
+          <ul>
+            {links.map(([label, url]) => (
+              <li key={url}>
+                <a href={url} onClick={(event) => {
+                  event.preventDefault();
+                  void openLink(url);
+                }}>{label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function SessionIdInstructions() {
+  return (
+    <details className="session-help">
+      <summary>Hoe vind ik mijn SessionID?</summary>
+      <ol>
+        <li>Open <code>https://meldkamerspel.com</code> in je browser en log in op je spelaccount.</li>
+        <li>Druk op <kbd>F12</kbd> om de ontwikkelaarstools van die browser te openen, niet die van de dashboardapp.</li>
+        <li>
+          <strong>Chrome / Edge:</strong> kies <strong>Application (Applicatie)</strong>, open
+          {" "}<strong>Cookies</strong> onder <strong>Storage (Opslag)</strong> en selecteer de Meldkamerspel-website.
+          <br />
+          <strong>Firefox:</strong> kies <strong>Storage (Opslag)</strong>, open <strong>Cookies</strong> en
+          selecteer de Meldkamerspel-website.
+        </li>
+        <li>Zoek de cookie <code>_session_id</code> en kopieer alleen de <strong>Value (Waarde)</strong>, niet de cookienaam.</li>
+        <li>Plak deze waarde in het SessionID-veld hierboven en klik op <strong>SessionID opslaan en ophalen</strong>.</li>
+      </ol>
+      <p>Behandel je SessionID als een wachtwoord: deel deze nooit, ook niet in screenshots of foutrapporten.</p>
+    </details>
+  );
 }
 
 function App() {
@@ -38,6 +224,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState("");
+  const [usageError, setUsageError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: "idle" });
@@ -50,11 +237,32 @@ function App() {
   const [refreshSettingError, setRefreshSettingError] = useState("");
   const [refreshSettingsLoaded, setRefreshSettingsLoaded] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [selectedVehicleTypeId, setSelectedVehicleTypeId] = useState<number | null>(null);
+  const [selectedEquipmentType, setSelectedEquipmentType] = useState<string | null>(null);
+  const [gameVersion, setGameVersion] = useState<"brandweer" | "politie">("brandweer");
+
+  useEffect(() => {
+    if (error) recordAppIssue("App", error);
+    if (usageError) recordAppIssue("Gebruiksregistratie", usageError);
+    if (refreshSettingError) recordAppIssue("Instellingen", refreshSettingError);
+  }, [error, usageError, refreshSettingError]);
+
+  useEffect(() => {
+    const onError = (event: ErrorEvent) => recordAppIssue("Runtime", event.message);
+    const onRejection = (event: PromiseRejectionEvent) => recordAppIssue("Onverwerkte promise", event.reason);
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onRejection);
+    return () => {
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onRejection);
+    };
+  }, []);
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem("mks-refresh-minutes");
       const enabled = localStorage.getItem("mks-auto-refresh");
+      const version = localStorage.getItem("mks-game-version");
       if (enabled !== null && enabled !== "true" && enabled !== "false") {
         throw new Error("De opgeslagen instelling voor automatisch vernieuwen is ongeldig.");
       }
@@ -62,6 +270,9 @@ function App() {
       setRefreshMinutes(minutes);
       setRefreshDraft(String(minutes));
       setAutoRefresh(enabled !== "false");
+      if (version === "politie" || version === "brandweer") {
+        setGameVersion(version);
+      }
       setRefreshSettingsLoaded(true);
     } catch (cause) {
       setRefreshSettingError(cause instanceof Error ? cause.message : "Het vernieuwingsinterval kon niet worden geladen.");
@@ -87,6 +298,15 @@ function App() {
       setRefreshSettingError("");
     } catch (cause) {
       setRefreshSettingError(cause instanceof Error ? cause.message : "Het vernieuwingsinterval kon niet worden opgeslagen.");
+    }
+  }
+
+  function changeGameVersion(version: "brandweer" | "politie"): void {
+    try {
+      localStorage.setItem("mks-game-version", version);
+      setGameVersion(version);
+    } catch (cause) {
+      setRefreshSettingError(cause instanceof Error ? cause.message : "De spelversie kon niet worden opgeslagen.");
     }
   }
 
@@ -185,6 +405,15 @@ function App() {
       );
       setSignedIn(sessionAccepted);
       setShowSessionForm(!sessionAccepted);
+      if (result.credits.ok) {
+        try {
+          await window.mksDashboard.logUserUsage();
+          setUsageError("");
+        } catch (cause) {
+          setUsageError(cause instanceof Error
+            ? `Gebruiksregistratie: ${cause.message}` : "Gebruiksregistratie is mislukt. Je kunt het dashboard blijven gebruiken.");
+        }
+      }
       if (!sessionAccepted) {
         const auth = await window.mksDashboard.getAuthStatus();
         if (auth.hasSessionId) setError("De gamegegevens zijn niet opgehaald. Controleer je SessionID en internetverbinding.");
@@ -232,6 +461,7 @@ function App() {
 
   const saveAndRefresh = useCallback(async () => {
     setError("");
+    setUsageError("");
     try {
       if (sessionDraft.trim()) {
         await window.mksDashboard.setSessionId(sessionDraft, rememberSession);
@@ -255,10 +485,13 @@ function App() {
       setSignedIn(false);
       setSessionDraft("");
       setData(null);
+      setSelectedEquipmentType(null);
+      clearReportIssues();
       setLastUpdated(null);
       setShowSessionForm(true);
       setPage("overview");
       setError("");
+      setUsageError("");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Uitloggen is mislukt.");
     } finally {
@@ -287,7 +520,7 @@ function App() {
   const activeResource = page === "overview"
     ? null
     : dashboardResources.find((resource) => resource.key === page);
-  const selectedLabel = page === "settings" ? "Instellingen" : page === "rawResponses" ? "Raw API-responses" :
+  const selectedLabel = page === "about" ? "Over de app" : page === "settings" ? "Instellingen" : page === "rawResponses" ? "Raw API-responses" :
     extraPages.find((item) => item.key === page)?.label ?? activeResource?.label ?? "Overzicht";
   const publicPage = isInfoblockPage(page);
   const username = hasSessionId ? accountUsername(data?.credits) : null;
@@ -345,7 +578,7 @@ function App() {
           <button className={`nav-item ${page === "overview" ? "active" : ""}`} onClick={() => setPage("overview")}>
             <span className="nav-icon">O</span> Overzicht
           </button>
-          {visiblePages.filter((item) => item.key === "vehicles").map(navigationButton)}
+          {visiblePages.filter((item) => item.key === "vehicles" || item.key === "equipments").map(navigationButton)}
           {navigationGroups.map((group) => {
             const items = group.pages.flatMap((key) => visiblePages.filter((item) => item.key === key));
             if (!items.length) return null;
@@ -359,7 +592,7 @@ function App() {
               </details>
             );
           })}
-          {visiblePages.filter((item) => item.key !== "vehicles" &&
+          {visiblePages.filter((item) => item.key !== "vehicles" && item.key !== "equipments" &&
             !navigationGroups.some((group) => group.pages.includes(item.key))).map(navigationButton)}
           {showDevMode && (
             <button className={`nav-item ${page === "rawResponses" ? "active" : ""}`} onClick={() => setPage("rawResponses")}>
@@ -413,6 +646,10 @@ function App() {
                   if (userMenu.current) userMenu.current.open = false;
                   setPage("settings");
                 }}>Instellingen</button>}
+                <button aria-current={page === "about" ? "page" : undefined} onClick={() => {
+                  if (userMenu.current) userMenu.current.open = false;
+                  setPage("about");
+                }}>Over de app</button>
                 <button disabled={loading || checkingSession || loggingOut} onClick={() => runUserAction(refresh)}>
                   {loading ? "Gegevens ophalen..." : "Gegevens ophalen"}
                 </button>
@@ -434,6 +671,8 @@ function App() {
 
         <section className="content">
           {error && <div className="notice notice-error" role="alert">{error}</div>}
+          {usageError && <div className="notice notice-error" role="alert">{usageError}</div>}
+          {page === "about" && <AboutPage appInfo={appInfo} />}
           {refreshSettingError && <div className="notice notice-error" role="alert">{refreshSettingError}</div>}
           {page === "overview" && updateStatus.state !== "idle" && (
             <div
@@ -445,6 +684,7 @@ function App() {
           )}
 
           {page === "settings" && currentPageAllowed && (
+            <div className="report-page">
             <section className="settings-panel" aria-labelledby="settings-display">
               <div className="settings-heading">
                 <h2 id="settings-display">Dashboardinstellingen</h2>
@@ -473,6 +713,20 @@ function App() {
                   <button className="button button-secondary" type="submit" disabled={!autoRefresh}>Opslaan</button>
                 </div>
               </form>
+              <div className="settings-option">
+                <div className="settings-option-copy">
+                  <div className="settings-option-title">
+                    <label htmlFor="game-version-select">Spelversie</label>
+                  </div>
+                  <p id="game-version-description">Kies welke spelversie je gebruikt. Dit bepaalt naar welke server gegevens worden opgehaald.</p>
+                </div>
+                <select id="game-version-select" className="settings-select" value={gameVersion}
+                  aria-describedby="game-version-description" disabled={!refreshSettingsLoaded}
+                  onChange={(event) => changeGameVersion(event.target.value as "brandweer" | "politie")}>
+                  <option value="brandweer">Brandweer (meldkamerspel.com)</option>
+                  <option value="politie">Politie (politie.meldkamerspel.com)</option>
+                </select>
+              </div>
               {appInfo?.channel === "dev" && <div className="settings-option">
                 <div className="settings-option-copy">
                   <div className="settings-option-title">
@@ -509,21 +763,24 @@ function App() {
                 Instellingen worden op deze pc onthouden. Huidig vernieuwingsinterval: {refreshMinutes} minuten.
               </div>
             </section>
+            <ErrorReportPanel data={data} appInfo={appInfo} lastUpdated={lastUpdated} updateStatus={updateStatus}
+              errors={[error, usageError, refreshSettingError]} />
+            </div>
           )}
           {showDevMode && page === "rawResponses" && <RawResponsesPage data={data} />}
-          {checkingSession && !publicPage && page !== "settings" && page !== "rawResponses" && (
+          {checkingSession && !publicPage && page !== "settings" && page !== "about" && page !== "rawResponses" && (
             <div className="notice" role="status">Opgeslagen SessionID controleren en gegevens ophalen...</div>
           )}
-          {(!data || showSessionForm) && !checkingSession && !publicPage && page !== "settings" && page !== "rawResponses" && (
+          {(!data || showSessionForm) && !checkingSession && !publicPage && page !== "settings" && page !== "about" && page !== "rawResponses" && (
             <section className="welcome-panel">
               <div className="welcome-icon">M</div>
               <div className="welcome-copy">
                 <span className="eyebrow">{data ? "ACCOUNTINSTELLINGEN" : "JOUW LOKALE DASHBOARD"}</span>
                 <h2>{data ? "SessionID aanpassen" : "Welkom bij MKS Dashboard Desktop"}</h2>
                 <p>
-                  Voer de SessionID van Meldkamerspel in. De app stuurt deze rechtstreeks
-                  naar de game-API.
+                  Voer de SessionID van Meldkamerspel in.
                 </p>
+                <UsageRegistrationNotice />
                 <label className="field-label" htmlFor="session-id">Meldkamerspel-SessionID</label>
                 <input
                   id="session-id"
@@ -535,6 +792,7 @@ function App() {
                   value={sessionDraft}
                   onChange={(event) => setSessionDraft(event.target.value)}
                 />
+                <SessionIdInstructions />
                 <label className="remember-option">
                   <input
                     type="checkbox"
@@ -562,28 +820,9 @@ function App() {
 
           {page === "overview" && data && (
             <>
-              {signedIn && <section className="summary-row">
-                <div className="summary-card">
-                  <span className="summary-label">Voertuigen</span>
-                  <strong>{resourceCount(data, "vehicles")}</strong>
-                  <span className="summary-hint">in je account</span>
-                </div>
-                <div className="summary-card">
-                  <span className="summary-label">Gebouwen</span>
-                  <strong>{resourceCount(data, "buildings")}</strong>
-                  <span className="summary-hint">in je account</span>
-                </div>
-                <div className="summary-card">
-                  <span className="summary-label">Teamgebouwen</span>
-                  <strong>{resourceCount(data, "allianceBuildings")}</strong>
-                  <span className="summary-hint">gedeelde locaties</span>
-                </div>
-                <div className="summary-card">
-                  <span className="summary-label">Gegevens bijgewerkt</span>
-                  <strong className="summary-time">{lastUpdated ? lastUpdated.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" }) : "—"}</strong>
-                  <span className="summary-hint">{lastUpdated ? lastUpdated.toLocaleDateString("nl-NL") : "nog niet opgehaald"}</span>
-                </div>
-              </section>}
+              {signedIn && <OverviewSummary data={data} username={username} lastUpdated={lastUpdated}
+                loading={loading} autoRefresh={autoRefresh} refreshMinutes={refreshMinutes}
+                onNavigate={setPage} onRefresh={() => void refresh()} />}
               <div className="section-heading">
                 <div>
                   <h2>Gegevensbronnen</h2>
@@ -614,7 +853,11 @@ function App() {
           )}
 
           {signedIn && currentPageAllowed && <>
-          {page === "vehicles" && data && <VehiclesPage result={data.vehicles} />}
+          {page === "equipments" && data && <EquipmentsPage result={data.equipments}
+            buildingsResult={data.buildings} vehiclesResult={data.vehicles} selectedType={selectedEquipmentType}
+            onShowDetails={setSelectedEquipmentType} onBack={() => setSelectedEquipmentType(null)} />}
+          {page === "vehicles" && data && selectedVehicleTypeId === null && <VehiclesPage result={data.vehicles} onShowDetails={(id) => setSelectedVehicleTypeId(id)} />}
+          {page === "vehicles" && data && selectedVehicleTypeId !== null && <VehicleDetailsPage result={data.vehicles} buildingsResult={data.buildings} vehicleTypeId={selectedVehicleTypeId} gameVersion={gameVersion} onBack={() => setSelectedVehicleTypeId(null)} />}
           {page === "buildings" && data && <BuildingsPage result={data.buildings} />}
           {page === "allianceBuildings" && data && <BuildingsPage result={data.allianceBuildings} alliance />}
           {page === "progressdata" && data && <ProgressPage data={data} />}

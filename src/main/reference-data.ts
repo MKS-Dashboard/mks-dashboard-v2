@@ -41,7 +41,7 @@ export function allowedExternalUrl(value: unknown): string {
   const url = new URL(value);
   if (
     url.protocol !== "https:" || url.username || url.password ||
-    !["github.com", "meldkamerspel.com"].includes(url.hostname)
+    !["github.com", "meldkamerspel.com", "politie.meldkamerspel.com"].includes(url.hostname)
   ) {
     throw new Error("Deze externe link is niet toegestaan.");
   }

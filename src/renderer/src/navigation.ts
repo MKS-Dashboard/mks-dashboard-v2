@@ -17,7 +17,7 @@ export const extraPages = [
   { key: "information", label: "Informatie" },
 ] as const;
 
-export type PageKey = "overview" | "settings" | "rawResponses" | typeof extraPages[number]["key"] | DashboardResourceKey;
+export type PageKey = "overview" | "settings" | "about" | "rawResponses" | typeof extraPages[number]["key"] | DashboardResourceKey;
 
 export const navigationGroups: { label: string; pages: PageKey[] }[] = [
   { label: "Gebouwen", pages: ["buildings", "specializations", "hospitals", "cells", "schoolings"] },
@@ -28,7 +28,7 @@ export const navigationGroups: { label: string; pages: PageKey[] }[] = [
 export function pageAllowed(page: PageKey, signedIn: boolean, channel: AppInfo["channel"] | undefined,
   infoblocks: boolean, devMode: boolean): boolean {
   if (page === "overview") return true;
-  if (page === "settings") return true;
+  if (page === "settings" || page === "about") return true;
   if (page === "rawResponses") return channel === "dev" && devMode;
   if (isInfoblockPage(page)) return infoblocksAllowed(channel, infoblocks);
   return signedIn;

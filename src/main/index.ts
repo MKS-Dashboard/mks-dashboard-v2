@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, safeStorage, shell, type IpcMainInvokeEvent } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, safeStorage, shell, type IpcMainInvokeEvent } from "electron";
 import { autoUpdater } from "electron-updater";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
@@ -6,6 +6,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getUpdateFeed } from "./update-feed";
 import { allowedExternalUrl, loadReference } from "./reference-data";
+import { createUserUsageLogger } from "./user-usage";
 import {
   dashboardResources,
   type AuthStatus,
@@ -27,6 +28,10 @@ if (process.platform === "win32") {
 }
 const mainDirectory = dirname(fileURLToPath(import.meta.url));
 const sessionIdFile = resolve(app.getPath("userData"), "session-id.enc");
+const logUserUsage = createUserUsageLogger(resolve(app.getPath("userData"), "user-usage-days.json"), {
+  versie: getDisplayVersion(app.getVersion()), beta: isBetaApp,
+});
+let usageAccount: unknown = null;
 
 let mainWindow: BrowserWindow | null = null;
 let sessionId: string | null = null;
@@ -123,20 +128,27 @@ async function loadSessionId(): Promise<string | null> {
   }
 
   const encryptedSessionId = await readFile(sessionIdFile);
-  sessionId = safeStorage.decryptString(encryptedSessionId);
+  sessionId = validatedSessionId(safeStorage.decryptString(encryptedSessionId));
   sessionIdLoaded = true;
   return sessionId;
 }
 
-async function setSessionId(value: unknown, remember: unknown): Promise<void> {
-  if (typeof value !== "string" || value.trim().length === 0 || value.length > 512) {
+function validatedSessionId(value: unknown): string {
+  if (
+    typeof value !== "string" || value.length > 512 ||
+    !/^[\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]+$/.test(value.trim())
+  ) {
     throw new Error("Voer een geldige SessionID in.");
   }
+  return value.trim();
+}
+
+async function setSessionId(value: unknown, remember: unknown): Promise<void> {
+  const cleanedSessionId = validatedSessionId(value);
   if (typeof remember !== "boolean") {
     throw new Error("De instelling voor lokaal bewaren is ongeldig.");
   }
 
-  const cleanedSessionId = value.trim();
   if (remember) {
     if (!safeStorage.isEncryptionAvailable()) {
       throw new Error("Versleutelde opslag is niet beschikbaar. De SessionID is niet opgeslagen.");
@@ -156,6 +168,7 @@ async function setSessionId(value: unknown, remember: unknown): Promise<void> {
   }
 
   sessionId = cleanedSessionId;
+  usageAccount = null;
   sessionIdLoaded = true;
 }
 
@@ -172,22 +185,19 @@ async function requestGameResource(
   endpoint: string,
   sessionRequired: boolean,
 ): Promise<[DashboardResourceKey, DashboardResourceResult]> {
-  let diagnosticUrl = new URL(endpoint, GAME_ORIGIN).href;
+  const diagnosticUrl = new URL(endpoint, GAME_ORIGIN).href;
   try {
-    const currentSessionId = await loadSessionId();
+    const currentSessionId = sessionRequired ? await loadSessionId() : null;
     if (sessionRequired && !currentSessionId) {
       throw new Error("Voer eerst je Meldkamerspel-SessionID in.");
     }
 
-    const requestUrl = new URL(endpoint, GAME_ORIGIN);
+    const headers: Record<string, string> = { Accept: "application/json" };
     if (sessionRequired && currentSessionId) {
-      requestUrl.searchParams.set("_session_id", currentSessionId);
-      diagnosticUrl = `${diagnosticUrl}?_session_id=[afgeschermd]`;
+      headers.Cookie = `_session_id=${currentSessionId}`;
     }
-    const response = await fetch(requestUrl, {
-      headers: {
-        Accept: "application/json",
-      },
+    const response = await fetch(diagnosticUrl, {
+      headers,
       redirect: "manual",
       signal: AbortSignal.timeout(20_000),
     });
@@ -216,7 +226,9 @@ async function loadDashboard(): Promise<DashboardData> {
       requestGameResource(key, endpoint, sessionRequired),
     ),
   );
-  return Object.fromEntries(results) as DashboardData;
+  const data = Object.fromEntries(results) as DashboardData;
+  usageAccount = data.credits.ok ? data.credits.data : null;
+  return data;
 }
 
 function createMainWindow(): void {
@@ -266,6 +278,24 @@ ipcMain.handle("external:open", async (event, value: unknown) => {
   await shell.openExternal(allowedExternalUrl(value));
 });
 
+ipcMain.handle("report:save", async (event, report: unknown) => {
+  assertMainWindow(event);
+  if (typeof report !== "string" || !report.trim()) {
+    throw new Error("Het errorrapport bevat geen geldige tekst.");
+  }
+  const owner = BrowserWindow.fromWebContents(event.sender);
+  if (!owner) throw new Error("Het app-venster is niet beschikbaar.");
+  const result = await dialog.showSaveDialog(owner, {
+    title: "Errorrapport opslaan",
+    defaultPath: resolve(app.getPath("downloads"), `MKS-Dashboard-errorrapport-${Date.now()}.txt`),
+    filters: [{ name: "Tekstbestand", extensions: ["txt"] }],
+  });
+  if (result.canceled) return false;
+  if (!result.filePath) throw new Error("Er is geen bestandslocatie gekozen voor het errorrapport.");
+  await writeFile(result.filePath, report, "utf8");
+  return true;
+});
+
 ipcMain.handle("auth:set-session-id", async (event, value: unknown, remember: unknown) => {
   assertMainWindow(event);
   await setSessionId(value, remember);
@@ -276,6 +306,12 @@ ipcMain.handle("auth:logout", async (event) => {
   await rm(sessionIdFile, { force: true });
   sessionId = null;
   sessionIdLoaded = true;
+  usageAccount = null;
+});
+
+ipcMain.handle("usage:log", async (event) => {
+  assertMainWindow(event);
+  await logUserUsage(usageAccount);
 });
 
 ipcMain.handle("dashboard:load", async (event) => {

@@ -6,17 +6,23 @@ import { Failure, read, Table } from "./DashboardPages";
 import { parseBuildings, capacityOverview, type Building } from "./dashboard-model";
 import specializations from "./data/specializations.json";
 import { schoolingRecords } from "./schoolings";
+import { loadReportedReference } from "./error-report";
 
 type Scalar = string | number;
-type Row = { cells: Scalar[]; url?: string };
+type Row = { cells: Scalar[]; url?: string; onDetails?: () => void };
 const format = (value: Scalar) => typeof value === "number" ? value.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) : value;
 
-export function DataTable({ title, headers, rows, linkColumn, initialColumn = 0, initialDescending = false }: {
+export function DataTable({ title, headers, rows, linkColumn, initialColumn = 0, initialDescending = false, tone = "",
+  separateLinkButton = false, rawColumns = [] }: {
   title: string; headers: string[]; rows: Row[]; linkColumn?: number; initialColumn?: number; initialDescending?: boolean;
+  tone?: string;
+  separateLinkButton?: boolean;
+  rawColumns?: number[];
 }) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState({ column: initialColumn, descending: initialDescending });
   const [linkError, setLinkError] = useState("");
+  const hasDetails = rows.some((row) => row.onDetails);
   const visible = rows.filter((row) => row.cells.some((cell) =>
     String(cell).toLocaleLowerCase("nl").includes(search.trim().toLocaleLowerCase("nl"))))
     .sort((a, b) => {
@@ -31,7 +37,7 @@ export function DataTable({ title, headers, rows, linkColumn, initialColumn = 0,
     try { await window.mksDashboard.openExternal(url); }
     catch (cause) { setLinkError(cause instanceof Error ? cause.message : "De link kon niet worden geopend."); }
   }
-  return <section className="data-panel report-table">
+  return <section className={`data-panel report-table${tone ? ` ${tone}` : ""}`}>
     <div className="data-toolbar"><div><h2>{title}</h2><p>{visible.length.toLocaleString("nl-NL")} resultaten</p></div>
       <input type="search" className="search-input" aria-label={`Zoeken in ${title}`} placeholder="Zoeken..."
         value={search} onChange={(event) => setSearch(event.target.value)} /></div>
@@ -42,12 +48,17 @@ export function DataTable({ title, headers, rows, linkColumn, initialColumn = 0,
           <button className="table-sort" onClick={() => setSort({
             column, descending: sort.column === column ? !sort.descending : false,
           })}>{header}{sort.column === column ? sort.descending ? " ↓" : " ↑" : ""}</button>
-        </th>)}</tr></thead><tbody>{visible.map((row, index) =>
+        </th>)}{hasDetails && <th>Details</th>}</tr></thead><tbody>{visible.map((row, index) =>
           <tr key={index}>{row.cells.map((cell, column) => <td key={column}>
-            {column === linkColumn && row.url ? <button className="text-link" onClick={() => {
+            {column === linkColumn && row.url && separateLinkButton ? <div className="vehicle-id-cell">
+              <span>{String(cell)}</span>
+              <button className="vehicle-open-button" title="Open in browser" aria-label={`Open voertuig ${cell} in browser`}
+                onClick={() => { if (row.url) void open(row.url); }}>↗</button>
+            </div> : column === linkColumn && row.url ? <button className="text-link" onClick={() => {
               if (row.url) void open(row.url);
-            }}>{format(cell)}</button> : format(cell)}
-          </td>)}</tr>)}</tbody></table></div>}
+            }}>{format(cell)}</button> : rawColumns.includes(column) ? String(cell) : format(cell)}
+          </td>)}{hasDetails && <td>{row.onDetails && <button className="detail-button" onClick={row.onDetails}
+            aria-label={`Details van ${row.cells[0]}`}>Details ›</button>}</td>}</tr>)}</tbody></table></div>}
   </section>;
 }
 
@@ -169,7 +180,7 @@ function useReference(key: ReferenceKey) {
   useEffect(() => {
     let active = true;
     setResult(null);
-    void window.mksDashboard.loadReference(key).then((data) => { if (active) setResult(data); })
+    void loadReportedReference(key).then((data) => { if (active) setResult(data); })
       .catch((cause: unknown) => { if (active) setResult({ ok: false, error: cause instanceof Error ? cause.message : "Gegevens ophalen is mislukt." }); });
     return () => { active = false; };
   }, [key, reload]);
@@ -236,7 +247,7 @@ export function CreditsPage() {
     void (async () => {
       const results: Row[] = [];
       const failures: string[] = [];
-      const updated = await window.mksDashboard.loadReference("missionUpdate");
+      const updated = await loadReportedReference("missionUpdate");
       if (updated.ok) {
         const parsed = read(updated, (data) => scalar(record(record(record(record(data).commit).commit).author).date));
         if (parsed.ok && active) setTimestamp(String(parsed.value));
@@ -245,7 +256,7 @@ export function CreditsPage() {
       for (let index = 0; index < gameLocales.length; index += 4) {
         if (!active) return;
         await Promise.all(gameLocales.slice(index, index + 4).map(async (locale) => {
-          const result = await window.mksDashboard.loadReference(`missions:${locale}`);
+          const result = await loadReportedReference(`missions:${locale}`);
           const parsed = read(result, creditStatistics);
           if (parsed.ok) results.push({ cells: [locale, ...parsed.value] });
           else failures.push(`${locale}: ${parsed.error}`);

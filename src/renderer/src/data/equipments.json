@@ -1,0 +1,72 @@
+[
+    {
+        "id": "bomb_disposal_robot",
+        "name": "RC-Explosievenrobot",
+        "categories": [
+            "Militair"
+        ]
+    },
+    {
+        "id": "fire_breathing_protection",
+        "name": "RC-Adembescherming",
+        "categories": [
+            "Brandweer"
+        ]
+    },
+    {
+        "id": "fire_water_carrier",
+        "name": "RC-Slangen",
+        "categories": [
+            "Brandweer"
+        ]
+    },
+    {
+        "id": "fire_water_carrier_2",
+        "name": "RC-Slangen-Klein",
+        "categories": [
+            "Brandweer"
+        ]
+    },
+    {
+        "id": "fire_pump_and_water_carrier",
+        "name": "RC-Pomp",
+        "categories": [
+            "Brandweer"
+        ]
+    },
+    {
+        "id": "care_service",
+        "name": "RC-Verzorging",
+        "categories": [
+            "Brandweer"
+        ]
+    },
+    {
+        "id": "clean_service",
+        "name": "RC-Arbeidshygiëne",
+        "categories": [
+            "Brandweer"
+        ]
+    },
+    {
+        "id": "hazard_response_suits_equipment",
+        "name": "RC-Gaspakken",
+        "categories": [
+            "Brandweer"
+        ]
+    },
+    {
+        "id": "hazard_response_material_equipment",
+        "name": "RC-Gevaarlijke Stoffen",
+        "categories": [
+            "Brandweer"
+        ]
+    },
+    {
+        "id": "railway_electric_equipment",
+        "name": "BU-VTHS",
+        "categories": [
+            "Brandweer"
+        ]
+    }
+]

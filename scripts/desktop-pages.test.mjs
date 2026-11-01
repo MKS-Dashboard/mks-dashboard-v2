@@ -4,15 +4,24 @@ import { build } from "esbuild";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const require = createRequire(import.meta.url);
-async function loadModule(path) {
+async function loadModule(path, mocks = {}) {
   const result = await build({
     entryPoints: [path], bundle: true, write: false, platform: "node",
-    format: "cjs", jsx: "automatic", external: ["react", "react-dom"],
+    format: "cjs", jsx: "automatic", external: ["react", "react-dom", "electron", "electron-updater"],
+    define: {
+      "import.meta.url": JSON.stringify(new URL(`../${path}`, import.meta.url).href),
+      __PROJECT_STATS__: JSON.stringify({ files: 42, lines: 12345 }),
+    },
   });
   const module = { exports: {} };
-  new Function("module", "exports", "require", result.outputFiles[0].text)(module, module.exports, require);
+  new Function("module", "exports", "require", result.outputFiles[0].text)(
+    module, module.exports, (name) => Object.hasOwn(mocks, name) ? mocks[name] : require(name),
+  );
   return module.exports;
 }
 const reference = await loadModule("src/main/reference-data.ts");
@@ -22,8 +31,475 @@ const rawPages = await loadModule("src/renderer/src/RawResponsesPage.tsx");
 const navigation = await loadModule("src/renderer/src/navigation.ts");
 const schoolings = await loadModule("src/renderer/src/schoolings.ts");
 const refreshInterval = await loadModule("src/renderer/src/refresh-interval.ts");
+const reports = await loadModule("src/renderer/src/error-report.ts");
+const reportPanel = await loadModule("src/renderer/src/ErrorReportPanel.tsx");
+const app = await loadModule("src/renderer/src/App.tsx");
+const usage = await loadModule("src/main/user-usage.ts");
+const equipmentPages = await loadModule("src/renderer/src/EquipmentsPage.tsx");
+const dashboardPages = await loadModule("src/renderer/src/DashboardPages.tsx");
+const equipmentModel = await loadModule("src/renderer/src/dashboard-model.ts");
+const stats = await loadModule("scripts/project-stats.ts");
+const reportInput = (data = null) => ({
+  data, appInfo: { version: "2026.1031.1400", channel: "stable" },
+  lastUpdated: null, updateStatus: { state: "idle" }, now: new Date("2026-10-31T12:00:00Z"),
+});
 const ok = (data) => ({ ok: true, data });
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
+
+test("project statistics exclude data, dependencies, outputs and blank lines", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "mks-stats-test-"));
+  const { mkdir, writeFile } = await import("node:fs/promises");
+  try {
+    for (const directory of ["src", "scripts", "install", "build", "node_modules", "out"]) {
+      await mkdir(join(folder, directory));
+    }
+    await writeFile(join(folder, "src", "example.ts"), "const value = 1;\r\n\r\n// comment\r\n");
+    await writeFile(join(folder, "src", "data.json"), "{}");
+    await writeFile(join(folder, "scripts", "test.mjs"), "test();\n");
+    await writeFile(join(folder, "node_modules", "dependency.js"), "excluded();");
+    await writeFile(join(folder, "out", "output.js"), "excluded();");
+    await writeFile(join(folder, "README.md"), "# Excluded");
+    assert.deepEqual(stats.projectStats(folder), { files: 2, lines: 3 });
+    const html = render(app.AboutPage, { appInfo: { version: "0.1.0", channel: "stable" } });
+    assert.match(html, /42 broncodebestanden/);
+    assert.match(html, /12\.345 niet-lege regels broncode/);
+  } finally { await rm(folder, { recursive: true, force: true }); }
+});
+
+test("vehicle details use the same back button text as equipment for populated and empty types", () => {
+  for (const vehicles of [[], [{ id: 1, vehicle_type: 0 }]]) {
+    const html = render(dashboardPages.VehicleDetailsPage, {
+      result: ok(vehicles), buildingsResult: ok([]), vehicleTypeId: 0, onBack() {},
+    });
+    assert.match(html, /<button class="back-button">Terug naar overzicht<\/button>/);
+  }
+});
+
+const equipmentItem = (id, fields = {}) => ({
+  id, building_id: 7, vehicle_id: null, assigned_vehicle_id: null,
+  equipment_type: "bomb_disposal_robot", size: 20, caption: "Robot", ...fields,
+});
+
+test("equipment overview counts types and size, resolves names and keeps both vehicle links distinct", () => {
+  const props = {
+    result: ok([equipmentItem(43), equipmentItem(86, { vehicle_id: 10, assigned_vehicle_id: 11 })]),
+    buildingsResult: ok([{ id: 7, caption: "Opslaglocatie", building_type: 0 }]),
+    vehiclesResult: ok([{ id: 10, caption: "Transportvoertuig", vehicle_type: 0 },
+      { id: 11, caption: "Toegewezen voertuig", vehicle_type: 0 }]),
+  };
+  const html = render(equipmentPages.EquipmentsPage, props);
+  assert.match(html, /2 equipmentitems in totaal/);
+  assert.match(html, /RC-Explosievenrobot/);
+  assert.match(html, /<td>2<\/td><td>1<\/td><td>1<\/td><td>40<\/td>/);
+  assert.match(html, /Militair \(2\)/);
+  assert.doesNotMatch(html, /Equipmentitems/);
+  const details = render(equipmentPages.EquipmentsPage, { ...props, selectedType: "bomb_disposal_robot" });
+  assert.match(details, /Opslaglocatie/);
+  assert.match(details, /Transportvoertuig/);
+  assert.match(details, /Niet gekoppeld/);
+  assert.equal(navigation.pageAllowed("equipments", false, "stable", false, false), false);
+  assert.equal(navigation.pageAllowed("equipments", true, "stable", false, false), true);
+  const unknown = render(equipmentPages.EquipmentsPage, { ...props,
+    result: ok([equipmentItem(1, { equipment_type: "new_type" })]),
+    buildingsResult: { ok: false, error: "HTTP 503" }, vehiclesResult: ok([]) });
+  assert.match(unknown, /Onbekend type \(new_type\)/);
+  assert.match(unknown, /Overige \(1\)/);
+  const unknownDetails = render(equipmentPages.EquipmentsPage, { ...props, selectedType: "new_type",
+    result: ok([equipmentItem(1, { equipment_type: "new_type" })]),
+    buildingsResult: { ok: false, error: "HTTP 503" } });
+  assert.match(unknownDetails, /Gebouw 7/);
+  assert.match(unknownDetails, /HTTP 503/);
+  assert.match(render(equipmentPages.EquipmentsPage, { ...props, result: ok([]) }), /0 equipmentitems/);
+  assert.match(render(equipmentPages.EquipmentsPage, { ...props,
+    result: { ok: false, error: "HTTP 401" } }), /HTTP 401/);
+});
+
+test("equipment parsing rejects malformed responses and error reports include unknown equipment without account values", () => {
+  for (const value of [{}, [equipmentItem(1, { size: -1 })], [equipmentItem(1, { equipment_type: null })],
+    [equipmentItem(1, { vehicle_id: "10" })], [equipmentItem(1), equipmentItem(1)]]) {
+    assert.throws(() => equipmentModel.parseEquipments(value));
+  }
+  const report = reports.generateErrorReport(reportInput({ equipments: ok([
+    equipmentItem(1, { equipment_type: "new_type", caption: "PRIVATE" }), null,
+  ]) }));
+  assert.match(report, /onbekend equipmenttype new_type/);
+  assert.match(report, /verwerkingsfout/);
+  assert.doesNotMatch(report, /PRIVATE/);
+});
+
+test("equipment type details list only matching items and provide a back action", () => {
+  const props = {
+    result: ok([equipmentItem(43), equipmentItem(86, { equipment_type: "care_service", caption: "Other item" })]),
+    buildingsResult: ok([]), vehiclesResult: ok([]), onShowDetails() {}, onBack() {},
+  };
+  assert.match(render(equipmentPages.EquipmentsPage, props), /Details van RC-Explosievenrobot/);
+  assert.match(render(equipmentPages.EquipmentsPage, props), /Brandweer \(1\)/);
+  const html = render(equipmentPages.EquipmentsPage, { ...props, selectedType: "bomb_disposal_robot" });
+  assert.match(html, /1 equipmentitems van dit type/);
+  assert.match(html, /Terug naar overzicht/);
+  assert.match(html, /<td>43<\/td>/);
+  assert.doesNotMatch(html, /Other item|Equipment per type/);
+  assert.match(render(equipmentPages.EquipmentsPage, { ...props, selectedType: "missing" }), /0 equipmentitems van dit type/);
+});
+
+test("vehicle details offer searchable sortable rows, names, fallback locations and browser links", () => {
+  const html = render(dashboardPages.VehicleDetailsPage, {
+    result: ok([{ id: 123, caption: "Mijn voertuig", vehicle_type: 0, building_id: 7 },
+      { id: 456, caption: "Ander type", vehicle_type: 1 }]),
+    buildingsResult: ok([]), vehicleTypeId: 0, gameVersion: "politie", onBack() {},
+  });
+  assert.match(html, /Zoeken in Voertuigen/);
+  assert.match(html, /aria-sort=/);
+  assert.match(html, /Mijn voertuig/);
+  assert.match(html, /Gebouw 7/);
+  assert.doesNotMatch(html, /Ander type/);
+  assert.equal(reference.allowedExternalUrl("https://politie.meldkamerspel.com/vehicles/123"),
+    "https://politie.meldkamerspel.com/vehicles/123");
+});
+
+test("vehicle IDs are unformatted text with a separate browser button", () => {
+  const html = render(dashboardPages.VehicleDetailsPage, {
+    result: ok([{ id: 1234567, caption: "Mijn voertuig", vehicle_type: 0 }]),
+    buildingsResult: ok([]), vehicleTypeId: 0,
+  });
+  assert.match(html, /<span>1234567<\/span>/);
+  assert.match(html, /class="vehicle-open-button"/);
+  assert.match(html, /Open voertuig 1234567 in browser/);
+  assert.doesNotMatch(html, /1\.234\.567|class="text-link"/);
+});
+
+test("overview welcomes players, preserves zero balances and exposes refresh status and shortcuts", () => {
+  const props = {
+    data: { vehicles: ok([{}, {}]), buildings: ok([{}]),
+      credits: ok({ credits_user_current: "123456", coins_user_current: 0 }) },
+    username: "<Speler>", lastUpdated: new Date("2026-11-01T14:00:00Z"),
+    loading: false, autoRefresh: true, refreshMinutes: 5, onNavigate() {}, onRefresh() {},
+  };
+  const html = render(app.OverviewSummary, props);
+  assert.match(html, /Welkom terug, &lt;Speler&gt;/);
+  assert.match(html, /123\.456/);
+  assert.match(html, /<strong>0<\/strong>/);
+  assert.match(html, /<strong>2<\/strong>/);
+  assert.match(html, /Laatst opgehaald:/);
+  assert.match(html, /elke 5 minuten/);
+  for (const text of ["Mijn team", "Capaciteit", "Opleidingen", "Instellingen"]) assert.ok(html.includes(text));
+  const loading = render(app.OverviewSummary, { ...props, loading: true, autoRefresh: false });
+  assert.match(loading, /disabled=""/);
+  assert.match(loading, /Automatisch vernieuwen staat uit/);
+  assert.match(loading, /Je gegevens worden vernieuwd/);
+  const invalid = render(app.OverviewSummary, { ...props,
+    data: { ...props.data, credits: ok({ credits_user_current: "broken" }) } });
+  assert.match(invalid, /role="alert"/);
+  assert.match(invalid, /ongeldig formaat/);
+  const failed = render(app.OverviewSummary, { ...props, username: null,
+    data: { ...props.data, vehicles: { ok: false, error: "HTTP 503" },
+      credits: { ok: false, error: "HTTP 401" } } });
+  assert.match(failed, /HTTP 401/);
+  assert.match(failed, /Niet beschikbaar/);
+});
+
+test("about page presents version and usage privacy and remains available without signing in", () => {
+  for (const channel of ["stable", "dev"]) {
+    assert.equal(navigation.pageAllowed("about", false, channel, false, false), true);
+    const html = render(app.AboutPage, { appInfo: { version: "2026.11.01.15.40", channel } });
+    assert.match(html, /Over de app/);
+    assert.match(html, /Versie 2026.11.01.15.40/);
+    assert.match(html, /Gebruiksregistratie/);
+    assert.match(html, /Over MKS Dashboard/);
+    assert.match(html, /Privacy/);
+    assert.match(html, /Links &amp; credits/);
+    assert.match(html, /onafhankelijk project/);
+    assert.match(html, new RegExp(channel === "dev" ? "Beta" : "Stable"));
+    assert.match(html, /href="https:\/\/github.com\/MKS-Dashboard\/mks-dashboard-v2\/releases"/);
+    assert.match(html, /Bijdragers/);
+    assert.match(html, /Missionfiles-All-Versions/);
+    assert.match(html, /Je SessionID en overige spelgegevens worden niet meegestuurd/);
+  }
+});
+
+test("usage notice discloses collected fields under more details without claiming consent", () => {
+  const html = render(app.UsageRegistrationNotice);
+  assert.match(html, /De app verzamelt gebruiksgegevens/);
+  assert.match(html, /<summary>Meer details<\/summary>/);
+  for (const field of ["speler-ID", "spelersnaam", "appversie", "Beta", "developer", "eerste en laatste gebruik"]) {
+    assert.ok(html.includes(field));
+  }
+  assert.doesNotMatch(html, /Hugging Face|akkoord|toestemming|<details[^>]* open/i);
+});
+
+test("usage registration persists successful Amsterdam days, serializes calls and sends only identity fields", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "mks-usage-test-"));
+  try {
+    const file = join(folder, "days.json");
+    let date = new Date("2026-11-01T22:59:00Z");
+    const calls = [];
+    const request = async (url, options) => {
+      calls.push(JSON.parse(options.body));
+      assert.equal(url, "https://piet2001-mks.hf.space/users/log");
+      assert.equal(options.method, "POST");
+      assert.equal(options.redirect, "manual");
+      assert.equal(options.credentials, "omit");
+      assert.deepEqual(Object.keys(options.headers).sort(), ["Accept", "Content-Type"]);
+      return new Response(null, { status: 204 });
+    };
+    const account = { user_id: "12345", user_name: " ExampleUser ", sessionid: "SECRET", coins: 10 };
+    const metadata = { versie: "2026.11.01.15.40", beta: true };
+    const log = usage.createUserUsageLogger(file, metadata, request, () => date);
+    await Promise.all([log(account), log(account), log(account)]);
+    assert.deepEqual(calls, [{ userid: 12345, username: "ExampleUser", ...metadata }]);
+    const restarted = usage.createUserUsageLogger(file, metadata, request, () => date);
+    await restarted(account);
+    assert.equal(calls.length, 1);
+    await restarted({ user_id: 99, user_name: "OtherUser" });
+    assert.equal(calls.length, 2);
+    date = new Date("2026-11-01T23:00:00Z");
+    await restarted(account);
+    assert.equal(calls.length, 3);
+    assert.equal(usage.usageDay(date), "2026-11-02");
+    assert.equal(usage.usageDay(new Date("2026-07-01T22:00:00Z")), "2026-07-02");
+    assert.doesNotMatch(await readFile(file, "utf8"), /SECRET|ExampleUser|OtherUser/);
+  } finally { await rm(folder, { recursive: true, force: true }); }
+});
+
+test("usage failures allow retries, reject invalid identities and never ignore corrupt day storage", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "mks-usage-test-"));
+  try {
+    const file = join(folder, "days.json");
+    let calls = 0;
+    const log = usage.createUserUsageLogger(file, { versie: "0.1.0", beta: false }, async (_url, options) => {
+      calls++;
+      assert.equal(JSON.parse(options.body).beta, false);
+      assert.equal(JSON.parse(options.body).versie, "0.1.0");
+      if (calls === 1) throw new Error("Network unavailable");
+      return new Response(null, { status: calls === 2 ? 503 : 200 });
+    });
+    const account = { user_id: 12345, user_name: "ExampleUser" };
+    await assert.rejects(log(account), /Network unavailable/);
+    await assert.rejects(log(account), /HTTP 503/);
+    await log(account);
+    await log(account);
+    assert.equal(calls, 3);
+    for (const invalid of [null, {}, { user_id: -1, user_name: "User" }, { user_id: 1.5, user_name: "User" },
+      { user_id: 1, user_name: " " }, { user_id: 1, user_name: "x".repeat(201) }]) {
+      await assert.rejects(log(invalid), /accountgegevens|ongeldig/);
+    }
+    const { writeFile } = await import("node:fs/promises");
+    await writeFile(file, "invalid json");
+    const corrupt = usage.createUserUsageLogger(file, { versie: "0.1.0", beta: false },
+      async () => { throw new Error("Should not send"); });
+    await assert.rejects(corrupt(account), SyntaxError);
+    await assert.rejects(corrupt(account), SyntaxError);
+  } finally { await rm(folder, { recursive: true, force: true }); }
+});
+
+test("login help explains how to copy the SessionID in Chrome, Edge and Firefox without exposing it", () => {
+  const html = render(app.SessionIdInstructions);
+  assert.match(html, /<details class="session-help"><summary>Hoe vind ik mijn SessionID\?/);
+  assert.match(html, /https:\/\/meldkamerspel\.com/);
+  assert.match(html, /log in op je spelaccount/);
+  assert.match(html, /<kbd>F12<\/kbd>/);
+  assert.match(html, /Chrome \/ Edge:.*Application \(Applicatie\)/);
+  assert.match(html, /Firefox:.*Storage \(Opslag\)/);
+  assert.match(html, /Cookies/);
+  assert.match(html, /<code>_session_id<\/code>.*Value \(Waarde\)/);
+  assert.match(html, /niet de cookienaam/);
+  assert.match(html, /SessionID opslaan en ophalen/);
+  assert.match(html, /deel deze nooit/);
+  assert.doesNotMatch(html, /<details[^>]* open/);
+});
+
+test("error reports aggregate unknown types, all failed sources and malformed records without raw account data", () => {
+  reports.clearReportIssues();
+  const result = reports.generateErrorReport({
+    ...reportInput({
+      vehicles: ok([{ vehicle_type: 9999, caption: "PRIVATE VEHICLE" }, { vehicle_type: 9999 }, null, { vehicle_type: 0 }]),
+      buildings: ok([{ building_type: 8888, caption: "PRIVATE BUILDING" }]),
+      allianceBuildings: ok([{ building_type: 8888, specialization: { type: "new_type" } }]),
+      schoolings: ok({ result: null }),
+      credits: ok({ user_name: "PRIVATE PLAYER" }),
+      missions: { ok: false, error: "HTTP 503 https://meldkamerspel.com?_session_id=SECRET&x=1" },
+      allianceEvents: { ok: false, error: "HTTP 401" },
+    }),
+    updateStatus: { state: "error", message: "Update HTTP 502" },
+    errors: ["Instelling ongeldig"],
+  });
+  assert.match(result, /onbekend voertuigtype 9999 \(2 keer\)/);
+  assert.match(result, /Gebouwen .*onbekend gebouwtype 8888/);
+  assert.match(result, /Teamgebouwen .*onbekend gebouwtype 8888/);
+  assert.match(result, /onbekende specialisatie new_type/);
+  assert.match(result, /record 3: verwerkingsfout/);
+  assert.match(result, /Opleidingen .*verwerkingsfout/);
+  assert.match(result, /HTTP 503/);
+  assert.match(result, /HTTP 401/);
+  assert.match(result, /Update HTTP 502/);
+  assert.match(result, /Instelling ongeldig/);
+  assert.match(result, /31-10-2026, 13:00:00/);
+  assert.doesNotMatch(result, /PRIVATE|SECRET|onbekend voertuigtype 0/);
+});
+
+test("error reports distinguish unavailable snapshots from valid empty data and expose the settings action", () => {
+  reports.clearReportIssues();
+  assert.match(reports.generateErrorReport(reportInput()), /nog geen dashboardgegevens/i);
+  const report = reports.generateErrorReport(reportInput({ vehicles: ok([]), buildings: ok([]), schoolings: ok({ result: [] }) }));
+  assert.match(report, /Huidige bevindingen \(0\)/);
+  assert.match(report, /Geen problemen gevonden/);
+  assert.match(render(reportPanel.ErrorReportPanel, { ...reportInput(), errors: [] }), /Genereer error rapport/);
+});
+
+test("reported reference failures clear on recovery and session errors clear on logout", async () => {
+  reports.clearReportIssues();
+  const previousWindow = globalThis.window;
+  try {
+    globalThis.window = { mksDashboard: { loadReference: async () => ({ ok: false, error: "Reference HTTP 503" }) } };
+    await reports.loadReportedReference("missions:nl_NL");
+    reports.recordAppIssue("Runtime", new Error("Runtime issue"));
+    assert.match(reports.generateErrorReport(reportInput()), /missions:nl_NL: Reference HTTP 503/);
+    assert.match(reports.generateErrorReport(reportInput()), /Runtime issue/);
+    globalThis.window.mksDashboard.loadReference = async () => ok([]);
+    await reports.loadReportedReference("missions:nl_NL");
+    assert.doesNotMatch(reports.generateErrorReport(reportInput()), /Reference HTTP 503/);
+    globalThis.window.mksDashboard.loadReference = async () => { throw new Error("IPC failed"); };
+    await assert.rejects(reports.loadReportedReference("suggestions"), /IPC failed/);
+    assert.match(reports.generateErrorReport(reportInput()), /suggestions: IPC failed/);
+    reports.clearReportIssues();
+    assert.doesNotMatch(reports.generateErrorReport(reportInput()), /Runtime issue|IPC failed/);
+  } finally {
+    globalThis.window = previousWindow;
+    reports.clearReportIssues();
+  }
+});
+
+test("report redaction handles query, encoded separator and JSON-style SessionID fields", () => {
+  for (const message of ['?_session_id=SECRET&x=1', 'sessionid: SECRET', '"session_id":"SECRET"', '_session_id%3DSECRET']) {
+    assert.doesNotMatch(reports.reportMessage(message), /SECRET/);
+    assert.match(reports.reportMessage(message), /afgeschermd/);
+  }
+});
+
+test("native report save writes the exact text and handles cancel, invalid sender and filesystem errors", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "mks-report-test-"));
+  try {
+    const handlers = new Map();
+    const sender = { setWindowOpenHandler() {}, on() {} };
+    const owner = { webContents: sender, loadFile: async () => {}, loadURL: async () => {} };
+    let selection = { canceled: false, filePath: join(folder, "report.txt") };
+    const BrowserWindow = function () { return owner; };
+    BrowserWindow.fromWebContents = () => owner;
+    const app = {
+      isPackaged: false, getVersion: () => "0.1.0", getPath: () => folder,
+      setName() {}, setPath() {}, setAppUserModelId() {}, on() {},
+      whenReady: () => ({ then: (callback) => callback() }),
+    };
+    await loadModule("src/main/index.ts", {
+      electron: { app, BrowserWindow, ipcMain: { handle: (key, handler) => handlers.set(key, handler) },
+        dialog: { showSaveDialog: async () => selection } },
+      "electron-updater": { autoUpdater: {} },
+    });
+    const save = handlers.get("report:save");
+    const report = "MKS Dashboard - errorrapport\nOnbekend voertuigtype 9999\n";
+    assert.equal(await save({ sender }, report), true);
+    assert.equal(await readFile(selection.filePath, "utf8"), report);
+    selection = { canceled: true };
+    assert.equal(await save({ sender }, report), false);
+    await assert.rejects(save({ sender: {} }, report), /niet afkomstig/);
+    await assert.rejects(save({ sender }, ""), /geldige tekst/);
+    await assert.rejects(save({ sender }, {}), /geldige tekst/);
+    selection = { canceled: false };
+    await assert.rejects(save({ sender }, report), /bestandslocatie/);
+    selection = { canceled: false, filePath: join(folder, "missing", "report.txt") };
+    await assert.rejects(save({ sender }, report), /ENOENT/);
+  } finally {
+    await rm(folder, { recursive: true, force: true });
+  }
+});
+
+test("game requests use cookie authentication only for account endpoints and never fall back to URLs", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "mks-cookie-test-"));
+  const previousFetch = globalThis.fetch;
+  try {
+    const handlers = new Map();
+    const sender = { setWindowOpenHandler() {}, on() {} };
+    const owner = { webContents: sender, loadFile: async () => {}, loadURL: async () => {} };
+    const app = {
+      isPackaged: false, getVersion: () => "0.1.0", getPath: () => folder,
+      setName() {}, setPath() {}, setAppUserModelId() {}, on() {},
+      whenReady: () => ({ then: (callback) => callback() }),
+    };
+    await loadModule("src/main/index.ts", {
+      electron: { app, BrowserWindow: function () { return owner; },
+        ipcMain: { handle: (key, handler) => handlers.set(key, handler) } },
+      "electron-updater": { autoUpdater: {} },
+    });
+    const event = { sender };
+    const setSession = handlers.get("auth:set-session-id");
+    const load = handlers.get("dashboard:load");
+    const accountPaths = new Set([
+      "/api/vehicles", "/api/equipments", "/api/buildings", "/api/alliance_buildings", "/api/userinfo",
+      "/api/allianceinfo", "/api/schoolings", "/api/alliance_schoolings",
+    ]);
+    let status = 200;
+    let hasSession = false;
+    const requests = [];
+    let registrations = 0;
+    globalThis.fetch = async (url, options) => {
+      const parsed = new URL(url);
+      if (parsed.hostname === "piet2001-mks.hf.space") {
+        registrations++;
+        assert.equal(options.headers.Cookie, undefined);
+        assert.deepEqual(JSON.parse(options.body), { userid: 12345, username: "ExampleUser", versie: "0.1.0", beta: true });
+        return new Response(null, { status: 204 });
+      }
+      requests.push(parsed.pathname);
+      assert.equal(parsed.origin, "https://meldkamerspel.com");
+      assert.equal(parsed.search, "");
+      assert.equal(options.redirect, "manual");
+      assert.equal(options.headers.Accept, "application/json");
+      assert.equal(options.headers.Cookie,
+        hasSession && accountPaths.has(parsed.pathname) ? "_session_id=TEST%2Fsession==" : undefined);
+      return status === 200
+        ? Response.json(parsed.pathname === "/api/userinfo" ? { user_id: 12345, user_name: "ExampleUser" } : [])
+        : new Response(null, { status });
+    };
+    for (const invalid of ["", " ", "a;b", "a\r\nCookie: evil", 'a"b', "a,b", "a b", "a\\b", "é", "a".repeat(513), null]) {
+      await assert.rejects(setSession(event, invalid, false), /geldige SessionID/);
+    }
+    const anonymous = await load(event);
+    assert.equal(requests.length, 3);
+    assert.equal(anonymous.vehicles.ok, false);
+    assert.match(anonymous.vehicles.error, /Voer eerst/);
+    await setSession(event, " TEST%2Fsession== ", false);
+    hasSession = true;
+    requests.length = 0;
+    const data = await load(event);
+    assert.equal(requests.length, 11);
+    assert.deepEqual(new Set(requests.filter((path) => accountPaths.has(path))), accountPaths);
+    for (const result of Object.values(data)) {
+      assert.equal(result.ok, true);
+      assert.doesNotMatch(result.requestUrl, /session|afgeschermd/);
+    }
+    await assert.rejects(handlers.get("usage:log")({ sender: {} }), /niet afkomstig/);
+    await handlers.get("usage:log")(event);
+    await handlers.get("usage:log")(event);
+    assert.equal(registrations, 1);
+    for (status of [401, 302]) {
+      requests.length = 0;
+      const failed = await load(event);
+      assert.equal(requests.length, 11);
+      assert.equal(failed.credits.ok, false);
+      assert.doesNotMatch(JSON.stringify(failed), /TEST%2Fsession|_session_id/);
+    }
+    await handlers.get("auth:logout")(event);
+    await assert.rejects(handlers.get("usage:log")(event), /accountgegevens/);
+    hasSession = false;
+    status = 200;
+    requests.length = 0;
+    await load(event);
+    assert.equal(requests.length, 3);
+  } finally {
+    globalThis.fetch = previousFetch;
+    await rm(folder, { recursive: true, force: true });
+  }
+});
 
 test("refresh intervals default to five minutes and never refresh before the configured threshold", () => {
   assert.equal(refreshInterval.defaultRefreshMinutes, 5);

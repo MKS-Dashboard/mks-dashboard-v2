@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { recordAppIssue } from "./error-report";
 import type { DashboardResourceResult } from "../../shared/contracts";
 import {
   informationCatalog as catalog, informationSource, parseMissions, parseMissionEvents, filterMissions,
@@ -18,6 +19,7 @@ function read<T>(result: DashboardResourceResult, parser: (value: unknown) => T)
   }
 }
 function Failure({ error }: { error: string }) {
+  useEffect(() => { recordAppIssue("Informatiepagina", error); }, [error]);
   return <div className="notice notice-error" role="alert">{error}</div>;
 }
 function Search({ value, onChange, label }: { value: string; onChange: (value: string) => void; label: string }) {

@@ -1,8 +1,11 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { recordAppIssue } from "./error-report";
+import { DataTable } from "./AccountPages";
 import type { DashboardData, DashboardResourceResult } from "../../shared/contracts";
 import {
-  buildingOverview, capacityOverview, parseBuildings, parseVehicles, vehicleOverview,
+  buildingOverview, capacityOverview, parseBuildings, parseVehicles, vehicleOverview, getVehicleTypeInfo,
   type Capacity,
+  type Vehicle,
 } from "./dashboard-model";
 
 const count = (value: number) => value.toLocaleString("nl-NL");
@@ -18,6 +21,7 @@ export function read<T>(result: DashboardResourceResult, parse: (data: unknown) 
 }
 
 export function Failure({ message }: { message: string }) {
+  useEffect(() => { recordAppIssue("Dashboardpagina", message); }, [message]);
   return <div className="notice notice-error" role="alert">{message}</div>;
 }
 
@@ -38,7 +42,7 @@ export function Table({ title, headers, rows, tone = "", empty = "Geen gegevens 
   );
 }
 
-export function VehiclesPage({ result }: { result: DashboardResourceResult }) {
+export function VehiclesPage({ result, onShowDetails }: { result: DashboardResourceResult; onShowDetails?: (vehicleTypeId: number) => void }) {
   const [search, setSearch] = useState("");
   const parsed = read(result, parseVehicles);
   if (!parsed.ok) return <Failure message={parsed.error} />;
@@ -61,17 +65,74 @@ export function VehiclesPage({ result }: { result: DashboardResourceResult }) {
       </div>
       {sections.map((category) => <div className="report-category" key={category.category}>
         <Table title={`${category.name} (${count(category.total)})`}
-          tone={category.tone} headers={["Afkorting", "Omschrijving", "Aantal"]}
-          rows={category.types.map((type) => [type.name, type.description, count(type.count)])} />
+          tone={category.tone} headers={["Afkorting", "Omschrijving", "Aantal", ""]}
+          rows={category.types.map((type) => [type.name, type.description, count(type.count), 
+            <button key={`details-${type.id}`} className="detail-button" onClick={() => onShowDetails?.(type.id)} 
+              title={`Details van ${type.name}`}>Details ›</button>])} />
         {category.groups.length > 0 && <Table title={`${category.name} - voertuiggroepen`} tone={category.tone}
-          headers={["Groep", "Voertuigen", "Aantal"]}
-          rows={category.groups.map((group) => [group.name, group.description, count(group.count)])} />}
+          headers={["Groep", "Voertuigen", "Aantal", ""]}
+          rows={category.groups.map((group) => [group.name, group.description, count(group.count), ""])} />}
         {category.values.length > 0 && <Table title={`${category.name} - extra waarden`} tone={category.tone}
           headers={["Waarde", "Aantal"]} rows={category.values.map((value) => [value.name, count(value.count)])} />}
       </div>)}
       {unknown.length > 0 && <Table title="Overige voertuigtypen" headers={["Type", "Aantal"]}
         rows={unknown.map((type) => [type.name, count(type.count)])} />}
       {sections.length === 0 && unknown.length === 0 && <div className="empty-state">Geen voertuigen gevonden.</div>}
+    </div>
+  );
+}
+
+export function VehicleDetailsPage({ result, buildingsResult, vehicleTypeId, gameVersion = "brandweer", onBack }: { 
+  result: DashboardResourceResult; 
+  buildingsResult: DashboardResourceResult;
+  vehicleTypeId: number;
+  gameVersion?: "brandweer" | "politie";
+  onBack?: () => void;
+}) {
+  const parsed = read(result, parseVehicles);
+  const buildingsParsed = read(buildingsResult, parseBuildings);
+  
+  if (!parsed.ok) return <Failure message={parsed.error} />;
+  
+  const vehicles = parsed.value.filter((v) => v.type === vehicleTypeId);
+  const vehicleInfo = getVehicleTypeInfo(vehicleTypeId);
+  
+  const buildingMap = new Map<number, string>();
+  if (buildingsParsed.ok) {
+    buildingsParsed.value.forEach((building) => {
+      if (building.id !== undefined && building.name) {
+        buildingMap.set(building.id, building.name);
+      }
+    });
+  }
+
+  const getVehicleUrl = (vehicleId: number | undefined) => {
+    if (vehicleId === undefined) return undefined;
+    const baseUrl = gameVersion === "politie" ? "https://politie.meldkamerspel.com" : "https://meldkamerspel.com";
+    return `${baseUrl}/vehicles/${vehicleId}`;
+  };
+
+  return (
+    <div className="report-page">
+      <div className="section-heading">
+        <div>
+          <h2>{vehicleInfo?.name || `Voertuigen van type ${vehicleTypeId}`}</h2>
+          <p>Je hebt {count(vehicles.length)} voertuigen van dit type.</p>
+        </div>
+        {onBack && <button className="back-button" onClick={onBack}>Terug naar overzicht</button>}
+      </div>
+      {!buildingsParsed.ok && <Failure message={`Gebouwlocaties konden niet worden geladen: ${buildingsParsed.error}`} />}
+      <DataTable title="Voertuigen"
+        headers={["ID", "Naam", "Type", "Gebouw"]} linkColumn={0} separateLinkButton rawColumns={[0]}
+        rows={vehicles.map((vehicle) => {
+          return { url: getVehicleUrl(vehicle.id), cells: [
+            vehicle.id ?? "—",
+            vehicle.name || vehicleInfo?.name || `Type ${vehicle.type}`,
+            vehicleInfo?.name || `Type ${vehicle.type}`,
+            vehicle.buildingId === undefined ? "Niet beschikbaar" :
+              buildingMap.get(vehicle.buildingId) || `Gebouw ${vehicle.buildingId}`,
+          ] };
+        })} />
     </div>
   );
 }
