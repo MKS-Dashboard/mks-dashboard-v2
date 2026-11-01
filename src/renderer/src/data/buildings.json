@@ -1,7 +1,7 @@
 [
   {
     "id": 0,
-    "name": "Brandweer, Kazerne",
+    "name": "Brandweer kazerne",
     "smallId": 17,
     "countBuilding": true,
     "countLevels": false,
@@ -31,7 +31,7 @@
   },
   {
     "id": 3,
-    "name": "Ambulance, Standplaats",
+    "name": "Ambulancestandplaats",
     "smallId": 13,
     "countBuilding": true,
     "countLevels": false,
@@ -41,7 +41,7 @@
   },
   {
     "id": 4,
-    "name": "Brandweer, Academie",
+    "name": "Brandweer academie",
     "smallId": null,
     "countBuilding": true,
     "countLevels": false,
@@ -51,7 +51,7 @@
   },
   {
     "id": 5,
-    "name": "Politie, Opkomstbureau",
+    "name": "Politie opkomstbureau",
     "smallId": 18,
     "countBuilding": true,
     "countLevels": false,
@@ -61,7 +61,7 @@
   },
   {
     "id": 6,
-    "name": "MMT, Standplaats",
+    "name": "MMT Standplaats",
     "smallId": null,
     "countBuilding": true,
     "countLevels": false,
@@ -71,7 +71,7 @@
   },
   {
     "id": 7,
-    "name": "Universiteit Faculteit Geneeskunde",
+    "name": "Universiteit Geneeskunde",
     "smallId": null,
     "countBuilding": true,
     "countLevels": false,
@@ -81,7 +81,7 @@
   },
   {
     "id": 8,
-    "name": "Politie, Academie",
+    "name": "Politie academie",
     "smallId": null,
     "countBuilding": true,
     "countLevels": false,
@@ -91,7 +91,7 @@
   },
   {
     "id": 9,
-    "name": "Politiehelikoper standplaats",
+    "name": "Politiehelikopter standplaats",
     "smallId": null,
     "countBuilding": true,
     "countLevels": true,
@@ -101,7 +101,7 @@
   },
   {
     "id": 10,
-    "name": "Uitgangstelling (UGS)",
+    "name": "Uitgangsstelling (UGS)",
     "smallId": null,
     "countBuilding": true,
     "countLevels": false,
@@ -111,7 +111,7 @@
   },
   {
     "id": 11,
-    "name": "Politie, Hoofdbureau",
+    "name": "Politie Hoofdbureau",
     "smallId": null,
     "countBuilding": true,
     "countLevels": false,
@@ -121,7 +121,7 @@
   },
   {
     "id": 12,
-    "name": "Politie, Cellencomplex voor teams",
+    "name": "Cellencomplex",
     "smallId": null,
     "countBuilding": true,
     "countLevels": false,
@@ -131,7 +131,7 @@
   },
   {
     "id": 13,
-    "name": "Ambulance, VWS-post",
+    "name": "Ambulance VWS-post",
     "smallId": null,
     "countBuilding": true,
     "countLevels": false,
@@ -171,7 +171,7 @@
   },
   {
     "id": 17,
-    "name": "Brandweer, Kazerne (Klein)",
+    "name": "Brandweer, Kazerne (klein)",
     "smallId": null,
     "countBuilding": true,
     "countLevels": false,
@@ -181,7 +181,7 @@
   },
   {
     "id": 18,
-    "name": "Politie, Opkomstbureau (Klein)",
+    "name": "Politie opkomstbureau (klein)",
     "smallId": null,
     "countBuilding": true,
     "countLevels": false,
@@ -237,6 +237,46 @@
   {
     "id": 23,
     "name": "Militaire hangar",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 24,
+    "name": "Berger Standplaats",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 25,
+    "name": "Kazerne defensie",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 26,
+    "name": "Militaire academie",
+    "smallId": null,
+    "countBuilding": true,
+    "countLevels": false,
+    "countExtensions": false,
+    "extensionBuildings": [],
+    "extensionNames": []
+  },
+  {
+    "id": 27,
+    "name": "Standplaats Incidentenbestrijding spoor",
     "smallId": null,
     "countBuilding": true,
     "countLevels": false,
