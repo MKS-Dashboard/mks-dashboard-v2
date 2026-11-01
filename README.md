@@ -56,8 +56,11 @@ Het overzicht begroet je met je spelersnaam en toont voertuigen, gebouwen, credi
 - Voertuigdetails en equipmentdetails hebben dezelfde zoekbare en sorteerbare opzet, met de terugknop naast de paginakop. Voertuig-ID's worden zonder duizendtalscheiding getoond; met het knopje naast het ID open je het voertuig in je browser.
 - **Gebouwen:** gebouwtypen, uitbreidingen, specialisaties en opleidingen.
 - **Capaciteit:** bezette en vrije ziekenhuisbedden, cellen en klaslokalen.
+
 - **Team:** teamgegevens, teamkas, leden, gebouwen en teamopleidingen.
 - **Account:** spelersnaam, credits, coins, rang en ranglijstpositie.
+
+Progressdata heeft bovenaan een toggle voor **Normaal** (de bestaande voortgangsbalken) en **Compact** (cirkeldiagrammen met eigen en teamcapaciteit). Je keuze wordt lokaal onthouden, ook na het herstarten van de app; standaard is Normaal. Compact toont op brede schermen vier kaarten naast elkaar, inclusief bezetting, vrije plaatsen en totalen. Op kleinere schermen worden de kaarten over minder kolommen verdeeld.
 
 Welke gegevens je ziet, hangt af van je account en de gegevens die Meldkamerspel beschikbaar stelt.
 

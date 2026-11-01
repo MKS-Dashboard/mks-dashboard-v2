@@ -37,6 +37,23 @@ const app = await loadModule("src/renderer/src/App.tsx");
 const usage = await loadModule("src/main/user-usage.ts");
 const equipmentPages = await loadModule("src/renderer/src/EquipmentsPage.tsx");
 const dashboardPages = await loadModule("src/renderer/src/DashboardPages.tsx");
+
+test("compact capacity circles preserve counts, zero capacity and overflow warnings", () => {
+  const render = (component, props) => renderToStaticMarkup(createElement(component, props));
+  const normal = render(dashboardPages.CapacityCircle, { label: "Eigen", capacity: { total: 20, used: 5 } });
+  assert.match(normal, /25%/);
+  assert.match(normal, /Vrij: <b>15<\/b>/);
+  assert.match(normal, /Totaal: <b>20<\/b>/);
+  assert.match(normal, /aria-valuenow="5"/);
+  const empty = render(dashboardPages.CapacityCircle, { label: "Team", capacity: { total: 0, used: 0 } });
+  assert.match(empty, /Geen capaciteit/);
+  assert.doesNotMatch(empty, /NaN|Infinity/);
+  const overflow = render(dashboardPages.CapacityCircle, { label: "Eigen", capacity: { total: 10, used: 15 } });
+  assert.match(overflow, /150%/);
+  assert.match(overflow, /aria-valuenow="10"/);
+  assert.match(overflow, /meer bezetting/);
+  assert.match(overflow, /Vrij: <b>0<\/b>/);
+});
 const equipmentModel = await loadModule("src/renderer/src/dashboard-model.ts");
 const stats = await loadModule("scripts/project-stats.ts");
 const reportInput = (data = null) => ({

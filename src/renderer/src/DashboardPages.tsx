@@ -177,14 +177,58 @@ function CapacityBar({ label, capacity }: { label: string; capacity: Capacity })
 }
 
 export function ProgressPage({ data }: { data: DashboardData }) {
+  const [compact, setCompact] = useState(false);
+  const [viewError, setViewError] = useState("");
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("mks-progress-view");
+      if (saved !== null && saved !== "normal" && saved !== "compact") {
+        throw new Error("De opgeslagen Progressdata-weergave is ongeldig.");
+      }
+      setCompact(saved === "compact");
+    } catch (cause) {
+      setViewError(cause instanceof Error ? cause.message : "De Progressdata-weergave kon niet worden geladen.");
+    }
+  }, []);
+
+  function changeView(value: boolean): void {
+    try {
+      localStorage.setItem("mks-progress-view", value ? "compact" : "normal");
+      setCompact(value);
+      setViewError("");
+    } catch (cause) {
+      setViewError(cause instanceof Error ? cause.message : "De Progressdata-weergave kon niet worden opgeslagen.");
+    }
+  }
   const own = read(data.buildings, parseBuildings);
   const alliance = read(data.allianceBuildings, parseBuildings);
   const ownCapacity = own.ok ? capacityOverview(own.value) : null;
   const teamCapacity = alliance.ok ? capacityOverview(alliance.value, true) : null;
   return <div className="report-page">
-    <div className="section-heading"><div><h2>Progressdata</h2><p>Bezetting van ziekenhuisbedden, cellen en klaslokalen.</p></div></div>
+    <div className="section-heading"><div><h2>Progressdata</h2><p>Bezetting van ziekenhuisbedden, cellen en klaslokalen.</p></div>
+      <div className="progress-view-toggle" role="group" aria-label="Progressdata weergave">
+        <button type="button" aria-pressed={!compact} onClick={() => changeView(false)}>Normaal</button>
+        <button type="button" aria-pressed={compact} onClick={() => changeView(true)}>Compact</button>
+      </div>
+      {viewError && <Failure message={viewError} />}
+    </div>
     {!own.ok && <Failure message={`Eigen gebouwen: ${own.error}`} />}
     {!alliance.ok && <Failure message={`Teamgebouwen: ${alliance.error}`} />}
+    {compact ? <div className="compact-capacity-grid">
+      {[
+        { name: "Ziekenhuisbedden", own: ownCapacity?.beds, team: teamCapacity?.beds },
+        { name: "Cellen", own: ownCapacity?.cells, team: teamCapacity?.cells },
+        ...(ownCapacity?.schools ?? teamCapacity?.schools ?? []).map((school, index) => ({
+          name: school.name, own: ownCapacity?.schools[index], team: teamCapacity?.schools[index],
+        })),
+      ].map((item) => <section className="data-panel compact-capacity-panel" key={item.name}>
+        <h3>{item.name}</h3>
+        <div className="compact-capacity-pair">
+          {item.own && <CapacityCircle label="Eigen" capacity={item.own} />}
+          {item.team && <CapacityCircle label="Team" capacity={item.team} />}
+        </div>
+      </section>)}
+    </div> : <>
     <section className="data-panel capacity-panel"><h2>Ziekenhuisbedden</h2>
       {ownCapacity && <CapacityBar label="Eigen" capacity={ownCapacity.beds} />}
       {teamCapacity && <CapacityBar label="Team" capacity={teamCapacity.beds} />}
@@ -199,5 +243,30 @@ export function ProgressPage({ data }: { data: DashboardData }) {
         {ownCapacity && <CapacityBar label="Eigen" capacity={ownCapacity.schools[index]} />}
         {teamCapacity && <CapacityBar label="Team" capacity={teamCapacity.schools[index]} />}
       </section>)}
+    </>}
+  </div>;
+}
+
+export function CapacityCircle({ label, capacity }: { label: string; capacity: Capacity }) {
+  const percentage = capacity.total === 0 ? 0 : capacity.used / capacity.total * 100;
+  const displayed = percentage.toLocaleString("nl-NL", { maximumFractionDigits: 1 });
+  const free = Math.max(0, capacity.total - capacity.used);
+  return <div className="capacity-circle-item">
+    <strong>{label}</strong>
+    <div className="capacity-circle" role="meter"
+      aria-label={`${label}: ${count(capacity.used)} in gebruik van ${count(capacity.total)}`}
+      aria-valuemin={0} aria-valuemax={Math.max(1, capacity.total)}
+      aria-valuenow={Math.min(capacity.used, Math.max(1, capacity.total))}
+      style={{ background: capacity.total === 0 ? "#e9edf3" :
+        `conic-gradient(#d72d35 ${Math.min(100, percentage)}%, #2e9c67 0)` }}>
+      <span>{capacity.total === 0 ? "-" : `${displayed}%`}</span>
+    </div>
+    <div className="capacity-circle-counts">
+      <span>In gebruik: <b>{count(capacity.used)}</b></span>
+      <span>Vrij: <b>{count(free)}</b></span>
+      <span>Totaal: <b>{count(capacity.total)}</b></span>
+    </div>
+    {capacity.total === 0 && <span className="capacity-circle-note">Geen capaciteit</span>}
+    {capacity.used > capacity.total && <Failure message="De API meldt meer bezetting dan berekende capaciteit." />}
   </div>;
 }
