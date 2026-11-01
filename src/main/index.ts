@@ -6,6 +6,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getUpdateFeed } from "./update-feed";
 import { allowedExternalUrl, loadReference } from "./reference-data";
+import { createUserUsageLogger } from "./user-usage";
 import {
   dashboardResources,
   type AuthStatus,
@@ -27,6 +28,10 @@ if (process.platform === "win32") {
 }
 const mainDirectory = dirname(fileURLToPath(import.meta.url));
 const sessionIdFile = resolve(app.getPath("userData"), "session-id.enc");
+const logUserUsage = createUserUsageLogger(resolve(app.getPath("userData"), "user-usage-days.json"), {
+  versie: getDisplayVersion(app.getVersion()), beta: isBetaApp,
+});
+let usageAccount: unknown = null;
 
 let mainWindow: BrowserWindow | null = null;
 let sessionId: string | null = null;
@@ -163,6 +168,7 @@ async function setSessionId(value: unknown, remember: unknown): Promise<void> {
   }
 
   sessionId = cleanedSessionId;
+  usageAccount = null;
   sessionIdLoaded = true;
 }
 
@@ -220,7 +226,9 @@ async function loadDashboard(): Promise<DashboardData> {
       requestGameResource(key, endpoint, sessionRequired),
     ),
   );
-  return Object.fromEntries(results) as DashboardData;
+  const data = Object.fromEntries(results) as DashboardData;
+  usageAccount = data.credits.ok ? data.credits.data : null;
+  return data;
 }
 
 function createMainWindow(): void {
@@ -298,6 +306,12 @@ ipcMain.handle("auth:logout", async (event) => {
   await rm(sessionIdFile, { force: true });
   sessionId = null;
   sessionIdLoaded = true;
+  usageAccount = null;
+});
+
+ipcMain.handle("usage:log", async (event) => {
+  assertMainWindow(event);
+  await logUserUsage(usageAccount);
 });
 
 ipcMain.handle("dashboard:load", async (event) => {

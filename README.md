@@ -27,6 +27,8 @@ Stable en Beta kunnen naast elkaar worden geïnstalleerd. Ze hebben afzonderlijk
 
 Voer bij de eerste start je Meldkamerspel-SessionID in. Je kunt deze versleuteld op je pc bewaren, zodat de app bij een volgende start automatisch je gegevens probeert op te halen.
 
+Op het aanmeldscherm staat **De app verzamelt gebruiksgegevens**. Onder **Meer details** lees je welke gegevens worden verstuurd en waarom. Deze uitleg is ook beschikbaar via **Gebruikersmenu > Over de app**.
+
 Onder het SessionID-veld vind je **Hoe vind ik mijn SessionID?** met instructies voor Chrome, Edge en Firefox:
 
 1. Log in op `https://meldkamerspel.com` in je browser en open de ontwikkelaarstools met **F12**.
@@ -40,6 +42,7 @@ Na een succesvolle aanmelding verschijnen de accountgebonden overzichten. Rechts
 - **Gegevens ophalen:** vernieuw je dashboard handmatig.
 - **Details:** bekijk je accountgegevens, saldo, rang en ranglijstpositie.
 - **Instellingen:** pas het automatisch vernieuwen aan.
+- **Over de app:** bekijk je appversie en uitleg over de gebruiksregistratie.
 - **Updates controleren:** controleer of een nieuwe appversie beschikbaar is.
 - **Uitloggen:** wis de sessie en opgehaalde gegevens uit de app. Gebruik dit ook om van account te wisselen.
 
@@ -87,9 +90,13 @@ Stable ontvangt uitsluitend Stable-updates; Beta uitsluitend Beta-updates. Er wo
 - Je SessionID wordt alleen naar Meldkamerspel gestuurd, niet naar GitHub of de makers van het dashboard.
 - Als je **Bewaar de SessionID versleuteld op deze pc** kiest, wordt deze beveiligd op je pc bewaard.
 - Updates en aanvullende openbare informatie worden via GitHub opgehaald.
+- Bij aanmelden worden je speler-ID, spelersnaam, appversie en of je Beta gebruikt automatisch naar de developer gestuurd om eerste en laatste gebruik bij te houden. Je SessionID en overige spelgegevens worden niet meegestuurd.
+- Per account en installatie wordt maximaal eenmaal succesvol per kalenderdag (Nederlandse tijd) geregistreerd. Bij een fout probeert de app het bij een volgende gegevensverversing opnieuw; het dashboard blijft bruikbaar.
 - Voor het ophalen van gegevens en updates heb je internet nodig.
 
 **Behandel je SessionID als een wachtwoord en deel deze nooit.** De app is afhankelijk van de beschikbaarheid en voorwaarden van de [Meldkamerspel-API](https://www.meldkamerspel.com/api-infos).
+
+Voor vragen over de gebruiksregistratie of een verwijderingsverzoek kun je contact opnemen via [GitHub Issues](https://github.com/MKS-Dashboard/mks-dashboard-v2/issues). Deel daar geen SessionID of andere gevoelige informatie.
 
 ## Extra functies in Beta
 

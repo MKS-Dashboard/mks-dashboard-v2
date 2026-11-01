@@ -56,6 +56,16 @@ De app is afhankelijk van de beschikbaarheid en voorwaarden van de [Meldkamerspe
 
 ## Probleemonderzoek
 
+### Gebruiksregistratie
+
+Na het ophalen van geldige accountgegevens uit `/api/userinfo` registreert het main-proces gebruik via `POST https://piet2001-mks.hf.space/users/log`. De payload is `{ "userid": 12345, "username": "ExampleUser", "versie": "2026.11.01.15.40", "beta": true }`. De identiteit komt uit `user_id` en `user_name`; `versie` is de weergegeven appversie. `beta` is `true` voor Beta en lokale ontwikkeling, en `false` voor Stable, zodat de backend de juiste tabel kan kiezen. De registratie ontvangt geen SessionID, cookies of overige spelgegevens; redirects worden niet gevolgd. Een versie-update wijzigt de bestaande daglimiet niet.
+
+Een HTTP 2xx-respons geldt als succes. De backend bepaalt `firstUse` en `lastUse`. Na succes wordt per userid de kalenderdag in `Europe/Amsterdam` bewaard in `user-usage-days.json` in de appgegevensmap; namen worden lokaal niet in dit bestand opgeslagen. Herstarten, uitloggen en opnieuw aanmelden wissen de daglimiet niet. Gelijktijdige registraties in hetzelfde main-proces worden achter elkaar uitgevoerd. Na een netwerk- of HTTP-fout kan de volgende gegevensverversing opnieuw proberen. Registratiefouten worden afzonderlijk getoond en blokkeren het dashboard niet.
+
+Deze limiet geldt per installatie, niet wereldwijd: Stable en Beta, meerdere pc's of verwijderde appgegevens kunnen extra registraties veroorzaken. De backend moet zelf per userid en dag dedupliceren en rate limiting toepassen. De client kan geen accountbezit bewijzen. Bij een opslagfout na een succesvolle POST blijft de dag in het geheugen gemarkeerd, maar kan na herstart een extra registratie optreden.
+
+De app informeert gebruikers op het aanmeldscherm, via **Gebruikersmenu > Over de app** en in de README over automatische registratie. De melding **De app verzamelt gebruiksgegevens** heeft uitklapbare **Meer details**. Dit is informatie, geen toestemmingsmechanisme of vastgestelde rechtsgrond. Leg ook de rechtsgrond, bewaartermijn, toegangsbeveiliging en afhandeling van verwijderingsverzoeken vast.
+
 ### Errorrapport
 
 Via **Instellingen > Genereer error rapport** wordt een momentopname gemaakt van foutstatussen en de laatst opgehaalde gegevens. Het rapport vermeldt onbekende voertuigtypen, gebouwtypen en specialisaties, verwerkingsfouten, mislukte gegevensverzoeken, updatefouten en overige waargenomen appfouten. Die laatste kunnen inmiddels zijn opgelost.

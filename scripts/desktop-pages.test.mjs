@@ -31,12 +31,99 @@ const refreshInterval = await loadModule("src/renderer/src/refresh-interval.ts")
 const reports = await loadModule("src/renderer/src/error-report.ts");
 const reportPanel = await loadModule("src/renderer/src/ErrorReportPanel.tsx");
 const app = await loadModule("src/renderer/src/App.tsx");
+const usage = await loadModule("src/main/user-usage.ts");
 const reportInput = (data = null) => ({
   data, appInfo: { version: "2026.1031.1400", channel: "stable" },
   lastUpdated: null, updateStatus: { state: "idle" }, now: new Date("2026-10-31T12:00:00Z"),
 });
 const ok = (data) => ({ ok: true, data });
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
+
+test("about page presents version and usage privacy and remains available without signing in", () => {
+  for (const channel of ["stable", "dev"]) {
+    assert.equal(navigation.pageAllowed("about", false, channel, false, false), true);
+    const html = render(app.AboutPage, { appInfo: { version: "2026.11.01.15.40", channel } });
+    assert.match(html, /Over de app/);
+    assert.match(html, /Versie 2026.11.01.15.40/);
+    assert.match(html, /Gebruiksregistratie/);
+    assert.match(html, /Je SessionID en overige spelgegevens worden niet meegestuurd/);
+  }
+});
+
+test("usage notice discloses collected fields under more details without claiming consent", () => {
+  const html = render(app.UsageRegistrationNotice);
+  assert.match(html, /De app verzamelt gebruiksgegevens/);
+  assert.match(html, /<summary>Meer details<\/summary>/);
+  for (const field of ["speler-ID", "spelersnaam", "appversie", "Beta", "developer", "eerste en laatste gebruik"]) {
+    assert.ok(html.includes(field));
+  }
+  assert.doesNotMatch(html, /Hugging Face|akkoord|toestemming|<details[^>]* open/i);
+});
+
+test("usage registration persists successful Amsterdam days, serializes calls and sends only identity fields", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "mks-usage-test-"));
+  try {
+    const file = join(folder, "days.json");
+    let date = new Date("2026-11-01T22:59:00Z");
+    const calls = [];
+    const request = async (url, options) => {
+      calls.push(JSON.parse(options.body));
+      assert.equal(url, "https://piet2001-mks.hf.space/users/log");
+      assert.equal(options.method, "POST");
+      assert.equal(options.redirect, "manual");
+      assert.equal(options.credentials, "omit");
+      assert.deepEqual(Object.keys(options.headers).sort(), ["Accept", "Content-Type"]);
+      return new Response(null, { status: 204 });
+    };
+    const account = { user_id: "12345", user_name: " ExampleUser ", sessionid: "SECRET", coins: 10 };
+    const metadata = { versie: "2026.11.01.15.40", beta: true };
+    const log = usage.createUserUsageLogger(file, metadata, request, () => date);
+    await Promise.all([log(account), log(account), log(account)]);
+    assert.deepEqual(calls, [{ userid: 12345, username: "ExampleUser", ...metadata }]);
+    const restarted = usage.createUserUsageLogger(file, metadata, request, () => date);
+    await restarted(account);
+    assert.equal(calls.length, 1);
+    await restarted({ user_id: 99, user_name: "OtherUser" });
+    assert.equal(calls.length, 2);
+    date = new Date("2026-11-01T23:00:00Z");
+    await restarted(account);
+    assert.equal(calls.length, 3);
+    assert.equal(usage.usageDay(date), "2026-11-02");
+    assert.equal(usage.usageDay(new Date("2026-07-01T22:00:00Z")), "2026-07-02");
+    assert.doesNotMatch(await readFile(file, "utf8"), /SECRET|ExampleUser|OtherUser/);
+  } finally { await rm(folder, { recursive: true, force: true }); }
+});
+
+test("usage failures allow retries, reject invalid identities and never ignore corrupt day storage", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "mks-usage-test-"));
+  try {
+    const file = join(folder, "days.json");
+    let calls = 0;
+    const log = usage.createUserUsageLogger(file, { versie: "0.1.0", beta: false }, async (_url, options) => {
+      calls++;
+      assert.equal(JSON.parse(options.body).beta, false);
+      assert.equal(JSON.parse(options.body).versie, "0.1.0");
+      if (calls === 1) throw new Error("Network unavailable");
+      return new Response(null, { status: calls === 2 ? 503 : 200 });
+    });
+    const account = { user_id: 12345, user_name: "ExampleUser" };
+    await assert.rejects(log(account), /Network unavailable/);
+    await assert.rejects(log(account), /HTTP 503/);
+    await log(account);
+    await log(account);
+    assert.equal(calls, 3);
+    for (const invalid of [null, {}, { user_id: -1, user_name: "User" }, { user_id: 1.5, user_name: "User" },
+      { user_id: 1, user_name: " " }, { user_id: 1, user_name: "x".repeat(201) }]) {
+      await assert.rejects(log(invalid), /accountgegevens|ongeldig/);
+    }
+    const { writeFile } = await import("node:fs/promises");
+    await writeFile(file, "invalid json");
+    const corrupt = usage.createUserUsageLogger(file, { versie: "0.1.0", beta: false },
+      async () => { throw new Error("Should not send"); });
+    await assert.rejects(corrupt(account), SyntaxError);
+    await assert.rejects(corrupt(account), SyntaxError);
+  } finally { await rm(folder, { recursive: true, force: true }); }
+});
 
 test("login help explains how to copy the SessionID in Chrome, Edge and Firefox without exposing it", () => {
   const html = render(app.SessionIdInstructions);
@@ -186,8 +273,15 @@ test("game requests use cookie authentication only for account endpoints and nev
     let status = 200;
     let hasSession = false;
     const requests = [];
+    let registrations = 0;
     globalThis.fetch = async (url, options) => {
       const parsed = new URL(url);
+      if (parsed.hostname === "piet2001-mks.hf.space") {
+        registrations++;
+        assert.equal(options.headers.Cookie, undefined);
+        assert.deepEqual(JSON.parse(options.body), { userid: 12345, username: "ExampleUser", versie: "0.1.0", beta: true });
+        return new Response(null, { status: 204 });
+      }
       requests.push(parsed.pathname);
       assert.equal(parsed.origin, "https://meldkamerspel.com");
       assert.equal(parsed.search, "");
@@ -195,7 +289,9 @@ test("game requests use cookie authentication only for account endpoints and nev
       assert.equal(options.headers.Accept, "application/json");
       assert.equal(options.headers.Cookie,
         hasSession && accountPaths.has(parsed.pathname) ? "_session_id=TEST%2Fsession==" : undefined);
-      return status === 200 ? Response.json([]) : new Response(null, { status });
+      return status === 200
+        ? Response.json(parsed.pathname === "/api/userinfo" ? { user_id: 12345, user_name: "ExampleUser" } : [])
+        : new Response(null, { status });
     };
     for (const invalid of ["", " ", "a;b", "a\r\nCookie: evil", 'a"b', "a,b", "a b", "a\\b", "é", "a".repeat(513), null]) {
       await assert.rejects(setSession(event, invalid, false), /geldige SessionID/);
@@ -214,6 +310,10 @@ test("game requests use cookie authentication only for account endpoints and nev
       assert.equal(result.ok, true);
       assert.doesNotMatch(result.requestUrl, /session|afgeschermd/);
     }
+    await assert.rejects(handlers.get("usage:log")({ sender: {} }), /niet afkomstig/);
+    await handlers.get("usage:log")(event);
+    await handlers.get("usage:log")(event);
+    assert.equal(registrations, 1);
     for (status of [401, 302]) {
       requests.length = 0;
       const failed = await load(event);
@@ -222,6 +322,7 @@ test("game requests use cookie authentication only for account endpoints and nev
       assert.doesNotMatch(JSON.stringify(failed), /TEST%2Fsession|_session_id/);
     }
     await handlers.get("auth:logout")(event);
+    await assert.rejects(handlers.get("usage:log")(event), /accountgegevens/);
     hasSession = false;
     status = 200;
     requests.length = 0;

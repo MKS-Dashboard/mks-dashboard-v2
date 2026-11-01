@@ -6,6 +6,7 @@ const api: MksDashboardApi = {
   setSessionId: (sessionId, remember) => ipcRenderer.invoke("auth:set-session-id", sessionId, remember),
   logout: () => ipcRenderer.invoke("auth:logout"),
   loadDashboard: () => ipcRenderer.invoke("dashboard:load"),
+  logUserUsage: () => ipcRenderer.invoke("usage:log"),
   loadReference: (key) => ipcRenderer.invoke("reference:load", key),
   openExternal: (url) => ipcRenderer.invoke("external:open", url),
   saveErrorReport: (report) => ipcRenderer.invoke("report:save", report),

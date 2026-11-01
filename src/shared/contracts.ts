@@ -58,6 +58,7 @@ export interface MksDashboardApi {
   setSessionId: (sessionId: string, remember: boolean) => Promise<void>;
   logout: () => Promise<void>;
   loadDashboard: () => Promise<DashboardData>;
+  logUserUsage: () => Promise<void>;
   loadReference: (key: ReferenceKey) => Promise<DashboardResourceResult>;
   openExternal: (url: string) => Promise<void>;
   saveErrorReport: (report: string) => Promise<boolean>;

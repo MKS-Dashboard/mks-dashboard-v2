@@ -26,6 +26,41 @@ function recordsFrom(data: unknown): unknown[] {
   return data === null || data === undefined ? [] : [data];
 }
 
+export function UsageRegistrationNotice() {
+  return (
+    <div className="session-help">
+      <p>De app verzamelt gebruiksgegevens.</p>
+      <details>
+        <summary>Meer details</summary>
+        <p>
+          Bij aanmelden sturen we je speler-ID, spelersnaam, appversie en of je Beta gebruikt naar de
+          developer om eerste en laatste gebruik bij te houden.
+          Maximaal eenmaal succesvol per kalenderdag (Nederlandse tijd) per account op deze installatie.
+          Je SessionID en overige spelgegevens worden niet meegestuurd.
+          Bij een fout kan de app het bij een volgende gegevensverversing opnieuw proberen.
+        </p>
+      </details>
+    </div>
+  );
+}
+
+export function AboutPage({ appInfo }: { appInfo: AppInfo | null }) {
+  return (
+    <section className="settings-panel" aria-labelledby="about-title">
+      <div className="settings-heading">
+        <h2 id="about-title">Over de app</h2>
+        <p>MKS Dashboard {appInfo?.channel === "dev" ? "Beta" : ""} — {appInfo ? `Versie ${appInfo.version}` : "Versie laden..."}</p>
+      </div>
+      <div className="settings-option">
+        <div className="settings-option-copy">
+          <h3>Gebruiksregistratie</h3>
+          <UsageRegistrationNotice />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function SessionIdInstructions() {
   return (
     <details className="session-help">
@@ -62,6 +97,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState("");
+  const [usageError, setUsageError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: "idle" });
@@ -79,8 +115,9 @@ function App() {
 
   useEffect(() => {
     if (error) recordAppIssue("App", error);
+    if (usageError) recordAppIssue("Gebruiksregistratie", usageError);
     if (refreshSettingError) recordAppIssue("Instellingen", refreshSettingError);
-  }, [error, refreshSettingError]);
+  }, [error, usageError, refreshSettingError]);
 
   useEffect(() => {
     const onError = (event: ErrorEvent) => recordAppIssue("Runtime", event.message);
@@ -240,6 +277,15 @@ function App() {
       );
       setSignedIn(sessionAccepted);
       setShowSessionForm(!sessionAccepted);
+      if (result.credits.ok) {
+        try {
+          await window.mksDashboard.logUserUsage();
+          setUsageError("");
+        } catch (cause) {
+          setUsageError(cause instanceof Error
+            ? `Gebruiksregistratie: ${cause.message}` : "Gebruiksregistratie is mislukt. Je kunt het dashboard blijven gebruiken.");
+        }
+      }
       if (!sessionAccepted) {
         const auth = await window.mksDashboard.getAuthStatus();
         if (auth.hasSessionId) setError("De gamegegevens zijn niet opgehaald. Controleer je SessionID en internetverbinding.");
@@ -287,6 +333,7 @@ function App() {
 
   const saveAndRefresh = useCallback(async () => {
     setError("");
+    setUsageError("");
     try {
       if (sessionDraft.trim()) {
         await window.mksDashboard.setSessionId(sessionDraft, rememberSession);
@@ -315,6 +362,7 @@ function App() {
       setShowSessionForm(true);
       setPage("overview");
       setError("");
+      setUsageError("");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Uitloggen is mislukt.");
     } finally {
@@ -343,7 +391,7 @@ function App() {
   const activeResource = page === "overview"
     ? null
     : dashboardResources.find((resource) => resource.key === page);
-  const selectedLabel = page === "settings" ? "Instellingen" : page === "rawResponses" ? "Raw API-responses" :
+  const selectedLabel = page === "about" ? "Over de app" : page === "settings" ? "Instellingen" : page === "rawResponses" ? "Raw API-responses" :
     extraPages.find((item) => item.key === page)?.label ?? activeResource?.label ?? "Overzicht";
   const publicPage = isInfoblockPage(page);
   const username = hasSessionId ? accountUsername(data?.credits) : null;
@@ -469,6 +517,10 @@ function App() {
                   if (userMenu.current) userMenu.current.open = false;
                   setPage("settings");
                 }}>Instellingen</button>}
+                <button aria-current={page === "about" ? "page" : undefined} onClick={() => {
+                  if (userMenu.current) userMenu.current.open = false;
+                  setPage("about");
+                }}>Over de app</button>
                 <button disabled={loading || checkingSession || loggingOut} onClick={() => runUserAction(refresh)}>
                   {loading ? "Gegevens ophalen..." : "Gegevens ophalen"}
                 </button>
@@ -490,6 +542,8 @@ function App() {
 
         <section className="content">
           {error && <div className="notice notice-error" role="alert">{error}</div>}
+          {usageError && <div className="notice notice-error" role="alert">{usageError}</div>}
+          {page === "about" && <AboutPage appInfo={appInfo} />}
           {refreshSettingError && <div className="notice notice-error" role="alert">{refreshSettingError}</div>}
           {page === "overview" && updateStatus.state !== "idle" && (
             <div
@@ -581,14 +635,14 @@ function App() {
               </div>
             </section>
             <ErrorReportPanel data={data} appInfo={appInfo} lastUpdated={lastUpdated} updateStatus={updateStatus}
-              errors={[error, refreshSettingError]} />
+              errors={[error, usageError, refreshSettingError]} />
             </div>
           )}
           {showDevMode && page === "rawResponses" && <RawResponsesPage data={data} />}
-          {checkingSession && !publicPage && page !== "settings" && page !== "rawResponses" && (
+          {checkingSession && !publicPage && page !== "settings" && page !== "about" && page !== "rawResponses" && (
             <div className="notice" role="status">Opgeslagen SessionID controleren en gegevens ophalen...</div>
           )}
-          {(!data || showSessionForm) && !checkingSession && !publicPage && page !== "settings" && page !== "rawResponses" && (
+          {(!data || showSessionForm) && !checkingSession && !publicPage && page !== "settings" && page !== "about" && page !== "rawResponses" && (
             <section className="welcome-panel">
               <div className="welcome-icon">M</div>
               <div className="welcome-copy">
@@ -597,6 +651,7 @@ function App() {
                 <p>
                   Voer de SessionID van Meldkamerspel in.
                 </p>
+                <UsageRegistrationNotice />
                 <label className="field-label" htmlFor="session-id">Meldkamerspel-SessionID</label>
                 <input
                   id="session-id"
