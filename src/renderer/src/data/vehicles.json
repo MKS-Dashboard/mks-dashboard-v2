@@ -1,7 +1,7 @@
 [
   {
     "id": 0,
-    "name": "SI‐2",
+    "name": "SI-2",
     "description": "Snel Inzetbare Eenheid (2 pers.)",
     "categories": [
       "Brandweer"
@@ -17,7 +17,7 @@
   },
   {
     "id": 2,
-    "name": "AL",
+    "name": "Autoladder",
     "description": "Autoladder",
     "categories": [
       "Brandweer"
@@ -25,7 +25,7 @@
   },
   {
     "id": 3,
-    "name": "DA-OVD",
+    "name": "DA - Officier van Dienst",
     "description": "Officier van Dienst - Brandweer",
     "categories": [
       "Brandweer"
@@ -33,7 +33,7 @@
   },
   {
     "id": 4,
-    "name": "HV",
+    "name": "Hulpverleningsvoertuig",
     "description": "Hulpverleningsvoertuig",
     "categories": [
       "Brandweer"
@@ -41,7 +41,7 @@
   },
   {
     "id": 5,
-    "name": "AB",
+    "name": "Adembeschermingsvoertuig",
     "description": "Adembeschermingsvoertuig",
     "categories": [
       "Brandweer"
@@ -81,7 +81,7 @@
   },
   {
     "id": 10,
-    "name": "SL",
+    "name": "Slangenwagen",
     "description": "Slangenwagen",
     "categories": [
       "Brandweer"
@@ -89,7 +89,7 @@
   },
   {
     "id": 11,
-    "name": "DB-VEB",
+    "name": "Verkenningseenheid Brandweer",
     "description": "Dienstbus Verkenningseenheid Brandweer",
     "categories": [
       "Brandweer"
@@ -137,7 +137,7 @@
   },
   {
     "id": 18,
-    "name": "HW",
+    "name": "Hoogwerker",
     "description": "Hoogwerker",
     "categories": [
       "Brandweer"
@@ -145,7 +145,7 @@
   },
   {
     "id": 19,
-    "name": "DA-HOD",
+    "name": "DA - Hoofdofficier van Dienst",
     "description": "Hoofd Officier van Dienst - Brandweer",
     "categories": [
       "Brandweer"
@@ -161,7 +161,7 @@
   },
   {
     "id": 21,
-    "name": "DB-K",
+    "name": "DB Klein",
     "description": "Dienstbus klein (9 personen)",
     "categories": [
       "Brandweer"
@@ -185,7 +185,7 @@
   },
   {
     "id": 24,
-    "name": "DA-AGS",
+    "name": "DA - Adviseur Gevaarlijke stoffen",
     "description": "Adviseur Gevaarlijke Stoffen - Brandweer",
     "categories": [
       "Brandweer"
@@ -201,7 +201,7 @@
   },
   {
     "id": 26,
-    "name": "HA",
+    "name": "Haakarmvoertuig",
     "description": "Haakarmvoertuig",
     "categories": [
       "Brandweer"
@@ -209,7 +209,7 @@
   },
   {
     "id": 27,
-    "name": "ABH",
+    "name": "Adembeschermingshaakarmbak",
     "description": "Adembeschermingshaakarmbak",
     "categories": [
       "Brandweer"
@@ -225,7 +225,7 @@
   },
   {
     "id": 29,
-    "name": "WTH",
+    "name": "Watertankhaakarmbak",
     "description": "Watertankhaakarmbak",
     "categories": [
       "Brandweer"
@@ -241,7 +241,7 @@
   },
   {
     "id": 31,
-    "name": "CO",
+    "name": "Commandovoertuig",
     "description": "Commandovoertuig",
     "categories": [
       "Brandweer"
@@ -249,7 +249,7 @@
   },
   {
     "id": 32,
-    "name": "COH",
+    "name": "Commandohaakarmbak",
     "description": "Commandohaakarmbak",
     "categories": [
       "Brandweer"
@@ -257,7 +257,7 @@
   },
   {
     "id": 33,
-    "name": "WO",
+    "name": "Waterongevallenvoertuig",
     "description": "Waterongevallenvoertuig",
     "categories": [
       "Brandweer"
@@ -265,7 +265,7 @@
   },
   {
     "id": 34,
-    "name": "WT",
+    "name": "Watertankwagen",
     "description": "Watertankwagen",
     "categories": [
       "Brandweer"
@@ -273,7 +273,7 @@
   },
   {
     "id": 35,
-    "name": "OVD-P",
+    "name": "Officier van Dienst - Politie",
     "description": "Officier van Dienst - Politie",
     "categories": [
       "Politie"
@@ -281,7 +281,7 @@
   },
   {
     "id": 36,
-    "name": "WOA",
+    "name": "Waterongevallenaanhanger",
     "description": "Waterongevallenaanhanger",
     "categories": [
       "Brandweer"
@@ -297,7 +297,7 @@
   },
   {
     "id": 38,
-    "name": "OvD-G",
+    "name": "Officier van Dienst - Geneeskunde",
     "description": "Officier van Dienst Geneeskunde",
     "categories": [
       "Ambulance"
@@ -313,7 +313,7 @@
   },
   {
     "id": 40,
-    "name": "ME Flex",
+    "name": "ME Flexbus",
     "description": "ME Flexbus",
     "categories": [
       "Politie"
@@ -321,7 +321,7 @@
   },
   {
     "id": 41,
-    "name": "CT (8x8)",
+    "name": "Crashtender (8x8)",
     "description": "Crashtender (8x8)",
     "categories": [
       "Brandweer"
@@ -329,7 +329,7 @@
   },
   {
     "id": 42,
-    "name": "CT (6x6)",
+    "name": "Crashtender (6x6)",
     "description": "Crashtender (6x6)",
     "categories": [
       "Brandweer"
@@ -337,7 +337,7 @@
   },
   {
     "id": 43,
-    "name": "CT (4x4)",
+    "name": "Crashtender (4x4)",
     "description": "Crashtender (4x4)",
     "categories": [
       "Brandweer"
@@ -345,7 +345,7 @@
   },
   {
     "id": 44,
-    "name": "AFO/OSC",
+    "name": "Airport Fire Officer / On Scene Commander",
     "description": "Airport fire Officer / On Scene Commander",
     "categories": [
       "Brandweer"
@@ -353,7 +353,7 @@
   },
   {
     "id": 45,
-    "name": "DPH",
+    "name": "Dompelpomphaakarmbak",
     "description": "Dompelpomphaakarmbak",
     "categories": [
       "Brandweer"
@@ -361,7 +361,7 @@
   },
   {
     "id": 46,
-    "name": "DM-P",
+    "name": "DM-Politie",
     "description": "Dienstmotor Politie",
     "categories": [
       "Politie"
@@ -385,7 +385,7 @@
   },
   {
     "id": 49,
-    "name": "PM-OR",
+    "name": "PM-OR | Materieelvoertuig - Oppervlakteredding",
     "description": "Materieelvoertuig - Oppervlakteredding",
     "categories": [
       "Brandweer"
@@ -393,7 +393,7 @@
   },
   {
     "id": 50,
-    "name": "TS-OR",
+    "name": "TS-OR | Tankautospuit - Oppervlakteredding",
     "description": "Tankautospuit - Oppervlakteredding",
     "categories": [
       "Brandweer"
@@ -401,7 +401,7 @@
   },
   {
     "id": 51,
-    "name": "HVH",
+    "name": "HulpverleningsHaakarmbak",
     "description": "Hulpverleningshaakarmbak",
     "categories": [
       "Brandweer"
@@ -409,7 +409,7 @@
   },
   {
     "id": 52,
-    "name": "RR",
+    "name": "Rapid Responder",
     "description": "Rapid Responder",
     "categories": [
       "Ambulance"
@@ -417,7 +417,7 @@
   },
   {
     "id": 53,
-    "name": "AT-C",
+    "name": "AT-Commandant",
     "description": "AT-Commandant",
     "categories": [
       "Politie"
@@ -425,7 +425,7 @@
   },
   {
     "id": 54,
-    "name": "AT-O",
+    "name": "AT-Operator",
     "description": "AT-Operator",
     "categories": [
       "Politie"
@@ -433,7 +433,7 @@
   },
   {
     "id": 55,
-    "name": "AT-M",
+    "name": "AT-Materiaalwagen",
     "description": "AT-Materiaalwagen",
     "categories": [
       "Politie"
@@ -441,7 +441,7 @@
   },
   {
     "id": 56,
-    "name": "DA-VL",
+    "name": "DA Voorlichter",
     "description": "Dienstauto Voorlichter",
     "categories": [
       "Brandweer"
@@ -449,7 +449,7 @@
   },
   {
     "id": 57,
-    "name": "DA OVDG-RR",
+    "name": "DA Officier van Dienst - Geneeskundig / Rapid Responder",
     "description": "Dienstvoertuig Officier van Dienst-Geneeskundig/Rapid Responder",
     "categories": [
       "Ambulance"
@@ -457,7 +457,7 @@
   },
   {
     "id": 58,
-    "name": "DB-AV",
+    "name": "DB Arrestantenvervoer",
     "description": "Dienstbus - Arrestantenvervoer",
     "categories": [
       "Politie"
@@ -465,7 +465,7 @@
   },
   {
     "id": 59,
-    "name": "NH-O",
+    "name": "Noodhulp - Onopvallend",
     "description": "Noodhulp - Onopvallend",
     "categories": [
       "Politie"
@@ -473,7 +473,7 @@
   },
   {
     "id": 60,
-    "name": "DB-Bike",
+    "name": "DB Biketeam",
     "description": "Dienstbus Biketeam",
     "categories": [
       "Politie"
@@ -481,7 +481,7 @@
   },
   {
     "id": 61,
-    "name": "SLH",
+    "name": "Slangenhaakarmbak",
     "description": "Slangenhaakarmbak",
     "categories": [
       "Brandweer"
@@ -489,7 +489,7 @@
   },
   {
     "id": 62,
-    "name": "TS-HV",
+    "name": "TS-HV | Tankautospuit-Hulpverlening",
     "description": "Tankautospuit-Hulpverlening",
     "categories": [
       "Brandweer"
@@ -497,7 +497,7 @@
   },
   {
     "id": 63,
-    "name": "DM-RR",
+    "name": "DM - Rapid Responder",
     "description": "Rapid Responder - Motor",
     "categories": [
       "Ambulance"
@@ -505,7 +505,7 @@
   },
   {
     "id": 64,
-    "name": "ME-AE",
+    "name": "ME Aanhoudingseenheid",
     "description": "ME - Aanhoudingseenheid",
     "categories": [
       "Politie"
@@ -513,7 +513,7 @@
   },
   {
     "id": 65,
-    "name": "DAT-RB",
+    "name": "DA Terreinwaardig - Reddingsbrigade",
     "description": "Dienstauto Terreinwaardig - Reddingsbrigade",
     "categories": [
       "Kustwacht"
@@ -521,7 +521,7 @@
   },
   {
     "id": 66,
-    "name": "KHV",
+    "name": "Kusthulpverleningsvoertuig",
     "description": "Kusthulpverleningsvoertuig",
     "categories": [
       "Kustwacht"
@@ -529,7 +529,7 @@
   },
   {
     "id": 67,
-    "name": "BA-RB",
+    "name": "Bootaanhanger Reddingsbrigade",
     "description": "Bootaanhanger Reddingsbrigade",
     "categories": [
       "Kustwacht"
@@ -577,7 +577,7 @@
   },
   {
     "id": 73,
-    "name": "VW-BB",
+    "name": "Vrachtwagen - Bereden Brigade",
     "description": "Vrachtwagen – Bereden Brigade",
     "categories": [
       "Politie"
@@ -585,7 +585,7 @@
   },
   {
     "id": 74,
-    "name": "BB-A",
+    "name": "Bereden Brigade Aanhanger",
     "description": "Bereden Brigade Aanhanger",
     "categories": [
       "Politie"
@@ -593,7 +593,7 @@
   },
   {
     "id": 75,
-    "name": "DAT-NH",
+    "name": "Dienstauto terreinvaardig - Noodhulp",
     "description": "Dienstauto terreinvaardig - Noodhulp",
     "categories": [
       "Politie"
@@ -609,7 +609,7 @@
   },
   {
     "id": 77,
-    "name": "KW-Boot",
+    "name": "KW-boot",
     "description": "Kustwacht boot",
     "categories": [
       "Kustwacht"
@@ -633,7 +633,7 @@
   },
   {
     "id": 80,
-    "name": "SAR-Heli",
+    "name": "SAR-heli",
     "description": "SAR helikopter",
     "categories": [
       "Kustwacht"
@@ -641,7 +641,7 @@
   },
   {
     "id": 81,
-    "name": "DA-RWS",
+    "name": "DA-RWS | Dienstvoertuig weginspecteur Rijkswaterstaat",
     "description": "Dienstvoertuig weginspecteur Rijkswaterstaat",
     "categories": [
       "RWS"
@@ -649,7 +649,7 @@
   },
   {
     "id": 82,
-    "name": "DM-RWS",
+    "name": "DM-RWS | Dienstmotor weginspecteur Rijkswaterstaat",
     "description": "Dienstmotor weginspecteur Rijkswaterstaat",
     "categories": [
       "RWS"
@@ -657,7 +657,7 @@
   },
   {
     "id": 83,
-    "name": "DA-SIG",
+    "name": "DA-SIG | Signalisatievoertuig",
     "description": "Signalisatievoertuig",
     "categories": [
       "Brandweer"
@@ -814,5 +814,329 @@
     "categories": [
       "Ambulance"
     ]
+  },
+  {
+    "id": 103,
+    "name": "MICU",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 104,
+    "name": "Berger-K",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 105,
+    "name": "Berger-G",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 106,
+    "name": "Berger-K (RWS)",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 107,
+    "name": "Berger-G (RWS)",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 108,
+    "name": "Berger-K (Politie)",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 109,
+    "name": "Berger-G (Politie)",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 110,
+    "name": "DAT-KMAR",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 111,
+    "name": "DB-KMAR",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 112,
+    "name": "DM-KMAR",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 113,
+    "name": "DAT-EOD",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 114,
+    "name": "DB-EOD",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 115,
+    "name": "VW-EOD",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 116,
+    "name": "DB-Explosievenhonden",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 117,
+    "name": "DB-Explosievenduikers",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 118,
+    "name": "BA-DDG",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 119,
+    "name": "DB-TEV",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 120,
+    "name": "DB-VZ",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 121,
+    "name": "VZH",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 122,
+    "name": "DB-AH",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 123,
+    "name": "VZH-AH",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 124,
+    "name": "DB-PC-LOG",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 125,
+    "name": "DB-LOG",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 126,
+    "name": "VW-LOG",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 127,
+    "name": "BMH-LOG",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 128,
+    "name": "DB-DRONE",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 129,
+    "name": "DB-TDV",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 130,
+    "name": "SB-BA",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 131,
+    "name": "SB-IB",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 132,
+    "name": "AS",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 133,
+    "name": "TS-IB",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 134,
+    "name": "GSH",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 135,
+    "name": "DB-GS",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 136,
+    "name": "GPH",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 137,
+    "name": "DB-GP",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 138,
+    "name": "BOH-DC",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 139,
+    "name": "TS-BO",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 140,
+    "name": "DB-BO",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 141,
+    "name": "GOH-DC",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 142,
+    "name": "TS-GO",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 143,
+    "name": "DB-GO",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 144,
+    "name": "DB-ICB",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 145,
+    "name": "OvD-ICB",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 146,
+    "name": "VW-VZ-ICB",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 147,
+    "name": "HA-ICB",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 148,
+    "name": "GM-ICB",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 149,
+    "name": "HSH-ICB",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 150,
+    "name": "VW-HS",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 151,
+    "name": "BM-VTHS",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 152,
+    "name": "TS-Spoor",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 153,
+    "name": "DB-RI",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 154,
+    "name": "RIA",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 155,
+    "name": "DB-VI",
+    "description": "",
+    "categories": []
+  },
+  {
+    "id": 156,
+    "name": "VIA",
+    "description": "",
+    "categories": []
   }
 ]
