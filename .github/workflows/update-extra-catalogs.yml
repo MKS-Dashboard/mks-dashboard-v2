@@ -72,13 +72,18 @@ jobs:
             Update ${{ matrix.catalog }} catalog from lss-information
 
             Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
-          title: "Update ${{ matrix.catalog }} names and missing types"
+          title: "Update ${{ matrix.catalog }} catalog"
           body: |
             Daily catalog proposal from:
             https://github.com/lss-information/lss-information.github.io/tree/main/gameversions/nl_NL/nl_NL-Data
 
             - Updates existing names and adds missing IDs. Never removes existing records.
-            - Vehicle descriptions and categories are preserved. New vehicles have empty descriptions and categories: review and fill these before merging.
+            Vehicle descriptions are enriched from:
+            https://github.com/MeldkamerspelGameTeam/Blog/blob/main/Kostenoverzichtv2/Scripts/Data/voertuigen.json
+
+            - Existing non-empty vehicle descriptions and all categories are preserved.
+            - Empty descriptions are filled only for exact matches between vehicle name and source abbreviation. No fuzzy matching or equipment imports.
+            - New vehicles have empty categories; review and fill these before merging. Unmatched descriptions stay empty.
             - Equipment imports only ID and name. It is a data catalog, not yet a user-facing page.
             - Tests and TypeScript checks run before creating the updated proposal.
 

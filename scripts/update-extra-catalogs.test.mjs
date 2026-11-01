@@ -1,6 +1,38 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { updateCatalog, refreshCatalog } from "./update-extra-catalogs.mjs";
+import { updateCatalog, refreshCatalog, enrichVehicleDescriptions } from "./update-extra-catalogs.mjs";
+
+test("vehicle descriptions fill only empty exact matches and preserve all other fields", () => {
+  const local = [
+    { id: 0, name: "SI-2", description: "", categories: ["Brandweer"] },
+    { id: 1, name: "TS", description: "Eigen omschrijving", categories: [] },
+    { id: 2, name: "SI‐2", description: "", categories: [] },
+  ];
+  const original = structuredClone(local);
+  const source = [{ afkorting: "SI-2", omschrijving: " Snel Inzetbare Eenheid ", groep: "Ignored" },
+    { afkorting: "TS", omschrijving: "Bronomschrijving" },
+    { afkorting: "RC-Pomp", omschrijving: "Equipment" }];
+  const result = enrichVehicleDescriptions(local, source);
+  assert.deepEqual(result.records[0], { ...local[0], description: "Snel Inzetbare Eenheid" });
+  assert.deepEqual(result.records.slice(1), local.slice(1));
+  assert.deepEqual(local, original);
+  assert.equal(result.changes.length, 1);
+  assert.deepEqual(enrichVehicleDescriptions(result.records, source).changes, []);
+});
+
+test("invalid description sources fail explicitly and HTTP failures never write partial updates", async () => {
+  for (const source of [null, [], [null], [{ afkorting: "X", omschrijving: 42 }],
+    [{ afkorting: "X", omschrijving: "Bad\nName" }],
+    [{ afkorting: "X", omschrijving: "One" }, { afkorting: "X", omschrijving: "Two" }]]) {
+    assert.throws(() => enrichVehicleDescriptions([], source));
+  }
+  let calls = 0;
+  await assert.rejects(refreshCatalog("vehicles", { request: async () => {
+    calls++;
+    return calls === 1 ? Response.json({ 0: { caption: "SI-2" } }) : new Response(null, { status: 503 });
+  } }), /Voertuigomschrijvingen.*HTTP 503/);
+  assert.equal(calls, 2);
+});
 
 test("vehicle names update while descriptions, categories and absent IDs remain unchanged", () => {
   const local = [{ id: 0, name: "Old", description: "Description", categories: ["Brandweer"] },

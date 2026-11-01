@@ -818,85 +818,85 @@
   {
     "id": 103,
     "name": "MICU",
-    "description": "",
+    "description": "Mobiele intensive care unit",
     "categories": []
   },
   {
     "id": 104,
     "name": "Berger-K",
-    "description": "",
+    "description": "Berger Klein",
     "categories": []
   },
   {
     "id": 105,
     "name": "Berger-G",
-    "description": "",
+    "description": "Berger Groot",
     "categories": []
   },
   {
     "id": 106,
     "name": "Berger-K (RWS)",
-    "description": "",
+    "description": "Berger Klein (RWS)",
     "categories": []
   },
   {
     "id": 107,
     "name": "Berger-G (RWS)",
-    "description": "",
+    "description": "Berger Groot (RWS)",
     "categories": []
   },
   {
     "id": 108,
     "name": "Berger-K (Politie)",
-    "description": "",
+    "description": "Berger Klein (Politie)",
     "categories": []
   },
   {
     "id": 109,
     "name": "Berger-G (Politie)",
-    "description": "",
+    "description": "Berger Groot (Politie)",
     "categories": []
   },
   {
     "id": 110,
     "name": "DAT-KMAR",
-    "description": "",
+    "description": "Dienstauto terreinvaardig – KMAR",
     "categories": []
   },
   {
     "id": 111,
     "name": "DB-KMAR",
-    "description": "",
+    "description": "Dienstbus – KMAR",
     "categories": []
   },
   {
     "id": 112,
     "name": "DM-KMAR",
-    "description": "",
+    "description": "Dienstmotor – KMAR",
     "categories": []
   },
   {
     "id": 113,
     "name": "DAT-EOD",
-    "description": "",
+    "description": "Dienstauto terrreinvaardig – Explosieve Opruimingsdienst",
     "categories": []
   },
   {
     "id": 114,
     "name": "DB-EOD",
-    "description": "",
+    "description": "Dienstbus – Explosieve Opruimingsdienst",
     "categories": []
   },
   {
     "id": 115,
     "name": "VW-EOD",
-    "description": "",
+    "description": "Vrachtwagen – Explosieve Opruimingsdienst",
     "categories": []
   },
   {
     "id": 116,
     "name": "DB-Explosievenhonden",
-    "description": "",
+    "description": "Dienstbus – Explosieve speurhonden",
     "categories": []
   },
   {
@@ -908,31 +908,31 @@
   {
     "id": 118,
     "name": "BA-DDG",
-    "description": "",
+    "description": "Bootaanhanger – Defensie Duikgroep",
     "categories": []
   },
   {
     "id": 119,
     "name": "DB-TEV",
-    "description": "",
+    "description": "Dienstbus – Team Explosieven Veiligheid",
     "categories": []
   },
   {
     "id": 120,
     "name": "DB-VZ",
-    "description": "",
+    "description": "Dienstbus - Verzorgingseenheid",
     "categories": []
   },
   {
     "id": 121,
     "name": "VZH",
-    "description": "",
+    "description": "Verzorgingshaakarmbak",
     "categories": []
   },
   {
     "id": 122,
     "name": "DB-AH",
-    "description": "",
+    "description": "Dienstbus - Arbeidshygiëne",
     "categories": []
   },
   {
@@ -944,127 +944,127 @@
   {
     "id": 124,
     "name": "DB-PC-LOG",
-    "description": "",
+    "description": "Dienstbus – Pelotonscommandant Logistiek",
     "categories": []
   },
   {
     "id": 125,
     "name": "DB-LOG",
-    "description": "",
+    "description": "Dienstbus – Logistiek",
     "categories": []
   },
   {
     "id": 126,
     "name": "VW-LOG",
-    "description": "",
+    "description": "Vrachtwagen – Logistiek",
     "categories": []
   },
   {
     "id": 127,
     "name": "BMH-LOG",
-    "description": "",
+    "description": "Bijzonder Materieel Haakarmbak – Logistiek",
     "categories": []
   },
   {
     "id": 128,
     "name": "DB-DRONE",
-    "description": "",
+    "description": "Dienstbus – Drone Team Politie",
     "categories": []
   },
   {
     "id": 129,
     "name": "DB-TDV",
-    "description": "",
+    "description": "Dienstbus - Team Digitale Verkenning",
     "categories": []
   },
   {
     "id": 130,
     "name": "SB-BA",
-    "description": "",
+    "description": "Schuimblusvoertuig met Blusarm",
     "categories": []
   },
   {
     "id": 131,
     "name": "SB-IB",
-    "description": "",
+    "description": "Schuimblusvoertuig Industriële Brandbestrijding",
     "categories": []
   },
   {
     "id": 132,
     "name": "AS",
-    "description": "",
+    "description": "Autospuit",
     "categories": []
   },
   {
     "id": 133,
     "name": "TS-IB",
-    "description": "",
+    "description": "Tankautospuit Industriële Brandbestrijding",
     "categories": []
   },
   {
     "id": 134,
     "name": "GSH",
-    "description": "",
+    "description": "Gevaarlijke Stoffen Haakarmbak",
     "categories": []
   },
   {
     "id": 135,
     "name": "DB-GS",
-    "description": "",
+    "description": "Dienstbus Gevaarlijke Stoffen",
     "categories": []
   },
   {
     "id": 136,
     "name": "GPH",
-    "description": "",
+    "description": "Gaspakken Haakarmbak",
     "categories": []
   },
   {
     "id": 137,
     "name": "DB-GP",
-    "description": "",
+    "description": "Dienstbus Gaspakken",
     "categories": []
   },
   {
     "id": 138,
     "name": "BOH-DC",
-    "description": "",
+    "description": "Basis Ontsmettings Haakarmbak",
     "categories": []
   },
   {
     "id": 139,
     "name": "TS-BO",
-    "description": "",
+    "description": "Tankautospuit Basis Ontsmetting",
     "categories": []
   },
   {
     "id": 140,
     "name": "DB-BO",
-    "description": "",
+    "description": "Dienstbus Basis Ontsmetting",
     "categories": []
   },
   {
     "id": 141,
     "name": "GOH-DC",
-    "description": "",
+    "description": "Grootschalige Ontsmettings Haakarmbak",
     "categories": []
   },
   {
     "id": 142,
     "name": "TS-GO",
-    "description": "",
+    "description": "Tankautospuit Grootschalige Ontsmetting",
     "categories": []
   },
   {
     "id": 143,
     "name": "DB-GO",
-    "description": "",
+    "description": "Dienstbus Grootschalige Ontsmetting",
     "categories": []
   },
   {
     "id": 144,
     "name": "DB-ICB",
-    "description": "",
+    "description": "Dienstbus-Incidentenbestrijding",
     "categories": []
   },
   {
@@ -1076,43 +1076,43 @@
   {
     "id": 146,
     "name": "VW-VZ-ICB",
-    "description": "",
+    "description": "Vrachtwagen Verzorging Incidentenbestrijding",
     "categories": []
   },
   {
     "id": 147,
     "name": "HA-ICB",
-    "description": "",
+    "description": "Haakarmvoertuig-Incidentenbestrijding",
     "categories": []
   },
   {
     "id": 148,
     "name": "GM-ICB",
-    "description": "",
+    "description": "Gereedschap/Materiaalvoertuig-Incidentenbestrijding",
     "categories": []
   },
   {
     "id": 149,
     "name": "HSH-ICB",
-    "description": "",
+    "description": "Herspoorhaakarmbak-ICB",
     "categories": []
   },
   {
     "id": 150,
     "name": "VW-HS",
-    "description": "",
+    "description": "Vrachtwagen Hersporing",
     "categories": []
   },
   {
     "id": 151,
     "name": "BM-VTHS",
-    "description": "",
+    "description": "Bijzonder materieel Veiligheidstester Hoogspanning",
     "categories": []
   },
   {
     "id": 152,
     "name": "TS-Spoor",
-    "description": "",
+    "description": "Tankautospuit=Spoor",
     "categories": []
   },
   {

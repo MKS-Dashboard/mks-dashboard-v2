@@ -114,6 +114,8 @@ De [aanvullende catalogusworkflow](.github/workflows/update-extra-catalogs.yml) 
 
 Bronnen zijn [Vehicles.json](https://raw.githubusercontent.com/lss-information/lss-information.github.io/refs/heads/main/gameversions/nl_NL/nl_NL-Data/Vehicles.json) en [equipments.json](https://raw.githubusercontent.com/lss-information/lss-information.github.io/refs/heads/main/gameversions/nl_NL/nl_NL-Data/equipments.json). Alleen ontbrekende ID's en gewijzigde namen worden voorgesteld; bestaande records worden niet verwijderd. Voertuigomschrijvingen en categorieën blijven behouden. Nieuwe voertuigen krijgen lege omschrijvingen en categorieën, die je vóór samenvoegen handmatig beoordeelt en aanvult.
 
+Lege voertuigomschrijvingen worden daarna aangevuld uit het [kostenoverzicht van MeldkamerspelGameTeam](https://github.com/MeldkamerspelGameTeam/Blog/blob/main/Kostenoverzichtv2/Scripts/Data/voertuigen.json), uitsluitend wanneer de bijgewerkte voertuignaam exact overeenkomt met `afkorting`. Bestaande niet-lege omschrijvingen blijven behouden. Er wordt niet op vergelijkbare namen gekoppeld; equipmentrecords uit deze bron worden niet als voertuigen toegevoegd. Als een van de bronnen ongeldig of onbereikbaar is, wordt geen gedeeltelijke catalogusupdate geschreven.
+
 De nieuwe [equipmentcatalogus](src/renderer/src/data/equipments.json) begint leeg. De eerste update-PR stelt alle bron-ID's en namen voor; overige bronvelden worden niet geïmporteerd. Deze catalogus heeft nog geen pagina of rekenregels in de app.
 
 Lokaal controleren zonder wijzigingen:
