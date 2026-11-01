@@ -45,16 +45,66 @@ export function UsageRegistrationNotice() {
 }
 
 export function AboutPage({ appInfo }: { appInfo: AppInfo | null }) {
+  const [linkError, setLinkError] = useState("");
+  const links = [
+    ["Project op GitHub", "https://github.com/MKS-Dashboard/mks-dashboard-v2"],
+    ["Releaseopmerkingen", "https://github.com/MKS-Dashboard/mks-dashboard-v2/releases"],
+    ["Probleem melden of suggestie doen", "https://github.com/MKS-Dashboard/mks-dashboard-v2/issues/new"],
+    ["Bijdragers", "https://github.com/MKS-Dashboard/mks-dashboard-v2/graphs/contributors"],
+    ["Oorspronkelijke webapp", "https://github.com/MKS-Dashboard/mks-dashboard.github.io"],
+    ["Meldkamerspel", "https://meldkamerspel.com"],
+    ["Openbare missiegegevens", "https://github.com/Piet2001/Missionfiles-All-Versions"],
+  ] as const;
+  async function openLink(url: string): Promise<void> {
+    setLinkError("");
+    try {
+      await window.mksDashboard.openExternal(url);
+    } catch (cause) {
+      setLinkError(cause instanceof Error ? cause.message : "De link kon niet worden geopend.");
+    }
+  }
   return (
     <section className="settings-panel" aria-labelledby="about-title">
       <div className="settings-heading">
         <h2 id="about-title">Over de app</h2>
-        <p>MKS Dashboard {appInfo?.channel === "dev" ? "Beta" : ""} — {appInfo ? `Versie ${appInfo.version}` : "Versie laden..."}</p>
+        <p>{appInfo ? `Versie ${appInfo.version} — ${appInfo.channel === "dev" ? "Beta" : "Stable"}` : "Versie laden..."}</p>
       </div>
       <div className="settings-option">
         <div className="settings-option-copy">
-          <h3>Gebruiksregistratie</h3>
+          <h3>Over MKS Dashboard</h3>
+          <p>Een Windows-app met overzicht over je Meldkamerspel-account, voertuigen, gebouwen en team.</p>
+          <p>Een project van MKS Dashboard, gebaseerd op de oorspronkelijke webapp en onderhouden met hulp van bijdragers.</p>
+          <p>Dit is een onafhankelijk project, geen officiële app van Meldkamerspel.</p>
+        </div>
+      </div>
+      <div className="settings-option">
+        <div className="settings-option-copy">
+          <h3>Privacy</h3>
+          <p>De app leest je spelgegevens rechtstreeks bij Meldkamerspel en wijzigt niets in je spelaccount.</p>
+          <p>Je SessionID wordt alleen naar Meldkamerspel gestuurd. Je kunt deze versleuteld op je pc bewaren.
+            Behandel je SessionID als een wachtwoord en deel deze nooit.</p>
+          <h4>Gebruiksregistratie</h4>
           <UsageRegistrationNotice />
+        </div>
+      </div>
+      <div className="settings-option">
+        <div className="settings-option-copy">
+          <h3>Links &amp; credits</h3>
+          <p>Spelgegevens komen van Meldkamerspel. De vaste spelcatalogi zijn gebaseerd op de oorspronkelijke
+            webapp; aanvullende openbare missiegegevens komen uit Missionfiles-All-Versions.</p>
+          <p>Gebouwd met Electron, React en TypeScript. Met dank aan de makers van de gebruikte software,
+            gegevensbronnen en alle projectbijdragers.</p>
+          {linkError && <div className="notice notice-error" role="alert">{linkError}</div>}
+          <ul>
+            {links.map(([label, url]) => (
+              <li key={url}>
+                <a href={url} onClick={(event) => {
+                  event.preventDefault();
+                  void openLink(url);
+                }}>{label}</a>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>

@@ -42,7 +42,7 @@ Na een succesvolle aanmelding verschijnen de accountgebonden overzichten. Rechts
 - **Gegevens ophalen:** vernieuw je dashboard handmatig.
 - **Details:** bekijk je accountgegevens, saldo, rang en ranglijstpositie.
 - **Instellingen:** pas het automatisch vernieuwen aan.
-- **Over de app:** bekijk je appversie en uitleg over de gebruiksregistratie.
+- **Over de app:** bekijk je appversie, Stable of Beta, privacyinformatie, gegevensbronnen en links naar het project, releaseopmerkingen en bijdragers.
 - **Updates controleren:** controleer of een nieuwe appversie beschikbaar is.
 - **Uitloggen:** wis de sessie en opgehaalde gegevens uit de app. Gebruik dit ook om van account te wisselen.
 

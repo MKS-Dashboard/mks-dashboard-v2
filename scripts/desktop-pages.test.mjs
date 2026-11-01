@@ -46,6 +46,14 @@ test("about page presents version and usage privacy and remains available withou
     assert.match(html, /Over de app/);
     assert.match(html, /Versie 2026.11.01.15.40/);
     assert.match(html, /Gebruiksregistratie/);
+    assert.match(html, /Over MKS Dashboard/);
+    assert.match(html, /Privacy/);
+    assert.match(html, /Links &amp; credits/);
+    assert.match(html, /onafhankelijk project/);
+    assert.match(html, new RegExp(channel === "dev" ? "Beta" : "Stable"));
+    assert.match(html, /href="https:\/\/github.com\/MKS-Dashboard\/mks-dashboard-v2\/releases"/);
+    assert.match(html, /Bijdragers/);
+    assert.match(html, /Missionfiles-All-Versions/);
     assert.match(html, /Je SessionID en overige spelgegevens worden niet meegestuurd/);
   }
 });
