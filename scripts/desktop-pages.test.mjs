@@ -30,12 +30,29 @@ const schoolings = await loadModule("src/renderer/src/schoolings.ts");
 const refreshInterval = await loadModule("src/renderer/src/refresh-interval.ts");
 const reports = await loadModule("src/renderer/src/error-report.ts");
 const reportPanel = await loadModule("src/renderer/src/ErrorReportPanel.tsx");
+const app = await loadModule("src/renderer/src/App.tsx");
 const reportInput = (data = null) => ({
   data, appInfo: { version: "2026.1031.1400", channel: "stable" },
   lastUpdated: null, updateStatus: { state: "idle" }, now: new Date("2026-10-31T12:00:00Z"),
 });
 const ok = (data) => ({ ok: true, data });
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
+
+test("login help explains how to copy the SessionID in Chrome, Edge and Firefox without exposing it", () => {
+  const html = render(app.SessionIdInstructions);
+  assert.match(html, /<details class="session-help"><summary>Hoe vind ik mijn SessionID\?/);
+  assert.match(html, /https:\/\/meldkamerspel\.com/);
+  assert.match(html, /log in op je spelaccount/);
+  assert.match(html, /<kbd>F12<\/kbd>/);
+  assert.match(html, /Chrome \/ Edge:.*Application \(Applicatie\)/);
+  assert.match(html, /Firefox:.*Storage \(Opslag\)/);
+  assert.match(html, /Cookies/);
+  assert.match(html, /<code>_session_id<\/code>.*Value \(Waarde\)/);
+  assert.match(html, /niet de cookienaam/);
+  assert.match(html, /SessionID opslaan en ophalen/);
+  assert.match(html, /deel deze nooit/);
+  assert.doesNotMatch(html, /<details[^>]* open/);
+});
 
 test("error reports aggregate unknown types, all failed sources and malformed records without raw account data", () => {
   reports.clearReportIssues();

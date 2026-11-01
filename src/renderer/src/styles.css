@@ -538,6 +538,31 @@ input:focus-visible {
   color: #a4adba;
 }
 
+.session-help {
+  margin-top: 12px;
+  color: #49576b;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.session-help summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.session-help ol {
+  margin: 10px 0;
+  padding-left: 22px;
+}
+
+.session-help li + li {
+  margin-top: 7px;
+}
+
+.session-help p {
+  margin: 10px 0;
+}
+
 .remember-option {
   display: flex;
   width: fit-content;

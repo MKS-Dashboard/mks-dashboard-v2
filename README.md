@@ -27,6 +27,14 @@ Stable en Beta kunnen naast elkaar worden geïnstalleerd. Ze hebben afzonderlijk
 
 Voer bij de eerste start je Meldkamerspel-SessionID in. Je kunt deze versleuteld op je pc bewaren, zodat de app bij een volgende start automatisch je gegevens probeert op te halen.
 
+Onder het SessionID-veld vind je **Hoe vind ik mijn SessionID?** met instructies voor Chrome, Edge en Firefox:
+
+1. Log in op `https://meldkamerspel.com` in je browser en open de ontwikkelaarstools met **F12**.
+2. Ga in Chrome/Edge naar **Application (Applicatie) > Storage (Opslag) > Cookies**, of in Firefox naar **Storage (Opslag) > Cookies**. Selecteer de Meldkamerspel-website.
+3. Kopieer alleen de **Value (Waarde)** van de cookie `_session_id` en plak deze in de app.
+
+Behandel deze waarde als een wachtwoord en deel deze nooit, ook niet in screenshots of foutrapporten.
+
 Na een succesvolle aanmelding verschijnen de accountgebonden overzichten. Rechtsboven vind je het gebruikersmenu:
 
 - **Gegevens ophalen:** vernieuw je dashboard handmatig.

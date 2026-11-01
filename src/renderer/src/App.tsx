@@ -26,6 +26,28 @@ function recordsFrom(data: unknown): unknown[] {
   return data === null || data === undefined ? [] : [data];
 }
 
+export function SessionIdInstructions() {
+  return (
+    <details className="session-help">
+      <summary>Hoe vind ik mijn SessionID?</summary>
+      <ol>
+        <li>Open <code>https://meldkamerspel.com</code> in je browser en log in op je spelaccount.</li>
+        <li>Druk op <kbd>F12</kbd> om de ontwikkelaarstools van die browser te openen, niet die van de dashboardapp.</li>
+        <li>
+          <strong>Chrome / Edge:</strong> kies <strong>Application (Applicatie)</strong>, open
+          {" "}<strong>Cookies</strong> onder <strong>Storage (Opslag)</strong> en selecteer de Meldkamerspel-website.
+          <br />
+          <strong>Firefox:</strong> kies <strong>Storage (Opslag)</strong>, open <strong>Cookies</strong> en
+          selecteer de Meldkamerspel-website.
+        </li>
+        <li>Zoek de cookie <code>_session_id</code> en kopieer alleen de <strong>Value (Waarde)</strong>, niet de cookienaam.</li>
+        <li>Plak deze waarde in het SessionID-veld hierboven en klik op <strong>SessionID opslaan en ophalen</strong>.</li>
+      </ol>
+      <p>Behandel je SessionID als een wachtwoord: deel deze nooit, ook niet in screenshots of foutrapporten.</p>
+    </details>
+  );
+}
+
 function App() {
   const userMenu = useRef<HTMLDetailsElement>(null);
   const refreshInFlight = useRef(false);
@@ -586,6 +608,7 @@ function App() {
                   value={sessionDraft}
                   onChange={(event) => setSessionDraft(event.target.value)}
                 />
+                <SessionIdInstructions />
                 <label className="remember-option">
                   <input
                     type="checkbox"
