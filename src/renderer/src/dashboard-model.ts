@@ -14,6 +14,43 @@ export interface Vehicle {
   name?: string;
 }
 
+export interface Equipment {
+  id: number;
+  type: string;
+  name: string;
+  buildingId: number;
+  vehicleId: number | null;
+  assignedVehicleId: number | null;
+  size: number;
+}
+
+export function parseEquipments(data: unknown): Equipment[] {
+  function id(value: unknown, field: string): number {
+    if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
+      throw new Error(`Het API-veld '${field}' is geen geldig ID.`);
+    }
+    return value;
+  }
+  const ids = new Set<number>();
+  return array(data).map((item) => {
+    const record = object(item);
+    const equipmentId = id(record.id, "id");
+    if (ids.has(equipmentId)) throw new Error("De equipmentgegevens bevatten een dubbel ID.");
+    ids.add(equipmentId);
+    if (typeof record.equipment_type !== "string" || !record.equipment_type.trim() ||
+      typeof record.caption !== "string") {
+      throw new Error("De equipmentgegevens bevatten een ongeldig type of naam.");
+    }
+    return {
+      id: equipmentId, type: record.equipment_type, name: record.caption,
+      buildingId: id(record.building_id, "building_id"),
+      vehicleId: record.vehicle_id == null ? null : id(record.vehicle_id, "vehicle_id"),
+      assignedVehicleId: record.assigned_vehicle_id == null ? null : id(record.assigned_vehicle_id, "assigned_vehicle_id"),
+      size: number(record.size, "size"),
+    };
+  });
+}
+
 export interface Extension {
   caption: string;
   enabled?: boolean;

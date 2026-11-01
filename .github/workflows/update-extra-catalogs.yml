@@ -82,7 +82,7 @@ jobs:
             - Existing non-empty vehicle descriptions and all categories are preserved.
             - Empty descriptions are filled only for exact matches between vehicle name and source abbreviation. No fuzzy matching or equipment imports.
             - New vehicles have empty categories; review and fill these before merging. Unmatched descriptions stay empty.
-            - Equipment imports only ID and name. It is a data catalog, not yet a user-facing page.
+            - Equipment imports only ID and name for the equipment overview.
             - Tests and TypeScript checks run before creating the updated proposal.
 
             No automatic merge. Each catalog has its own proposal branch and PR.

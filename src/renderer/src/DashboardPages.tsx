@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { recordAppIssue } from "./error-report";
+import { DataTable } from "./AccountPages";
 import type { DashboardData, DashboardResourceResult } from "../../shared/contracts";
 import {
   buildingOverview, capacityOverview, parseBuildings, parseVehicles, vehicleOverview, getVehicleTypeInfo,
@@ -111,22 +112,6 @@ export function VehicleDetailsPage({ result, buildingsResult, vehicleTypeId, gam
     return `${baseUrl}/vehicles/${vehicleId}`;
   };
 
-  const handleOpenVehicle = (url: string) => {
-    window.mksDashboard?.openExternal(url);
-  };
-  
-  if (vehicles.length === 0) {
-    return (
-      <div className="report-page">
-        <div className="section-heading">
-          <div><h2>{vehicleInfo?.name || `Voertuigen van type ${vehicleTypeId}`}</h2><p>Alle voertuigen van dit specifieke type.</p></div>
-        </div>
-        {onBack && <button className="back-button" onClick={onBack}>← Terug naar overzicht</button>}
-        <div className="empty-state">Geen voertuigen van dit type gevonden.</div>
-      </div>
-    );
-  }
-
   return (
     <div className="report-page">
       <div className="section-heading">
@@ -134,32 +119,19 @@ export function VehicleDetailsPage({ result, buildingsResult, vehicleTypeId, gam
           <h2>{vehicleInfo?.name || `Voertuigen van type ${vehicleTypeId}`}</h2>
           <p>Je hebt {count(vehicles.length)} voertuigen van dit type.</p>
         </div>
+        {onBack && <button className="back-button" onClick={onBack}>Terug naar overzicht</button>}
       </div>
-      {onBack && <button className="back-button" onClick={onBack}>← Terug naar overzicht</button>}
-      <Table title={`Voertuigen (${count(vehicles.length)})`}
-        headers={["ID", "Voertuigtype", "Gebouw"]}
+      {!buildingsParsed.ok && <Failure message={`Gebouwlocaties konden niet worden geladen: ${buildingsParsed.error}`} />}
+      <DataTable title="Voertuigen"
+        headers={["ID", "Naam", "Type", "Gebouw"]} linkColumn={0} separateLinkButton rawColumns={[0]}
         rows={vehicles.map((vehicle) => {
-          const vehicleUrl = getVehicleUrl(vehicle.id);
-          const idCell = vehicle.id !== undefined ? (
-            <div className="vehicle-id-cell">
-              <span>{String(vehicle.id)}</span>
-              {vehicleUrl && (
-                <button 
-                  className="vehicle-open-button"
-                  onClick={() => handleOpenVehicle(vehicleUrl)}
-                  title="Open in browser"
-                  aria-label={`Open voertuig ${vehicle.id} in browser`}
-                >
-                  ↗
-                </button>
-              )}
-            </div>
-          ) : "—";
-          return [
-            idCell,
+          return { url: getVehicleUrl(vehicle.id), cells: [
+            vehicle.id ?? "—",
             vehicle.name || vehicleInfo?.name || `Type ${vehicle.type}`,
-            vehicle.buildingId !== undefined && buildingMap.has(vehicle.buildingId) ? buildingMap.get(vehicle.buildingId) : "—",
-          ];
+            vehicleInfo?.name || `Type ${vehicle.type}`,
+            vehicle.buildingId === undefined ? "Niet beschikbaar" :
+              buildingMap.get(vehicle.buildingId) || `Gebouw ${vehicle.buildingId}`,
+          ] };
         })} />
     </div>
   );

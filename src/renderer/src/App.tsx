@@ -7,6 +7,7 @@ import { AllianceEventsPage, AllianceMissionsPage, AwardsPage, EventsPage, Infor
 import { infoblocksAllowed, isInfoblockPage } from "./infoblocks";
 import { RawResponsesPage } from "./RawResponsesPage";
 import { ErrorReportPanel } from "./ErrorReportPanel";
+import { EquipmentsPage } from "./EquipmentsPage";
 import { clearReportIssues, recordAppIssue } from "./error-report";
 import { extraPages, navigationGroups, navigationPages, pageAllowed, type PageKey } from "./navigation";
 import {
@@ -230,6 +231,7 @@ function App() {
   const [refreshSettingsLoaded, setRefreshSettingsLoaded] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [selectedVehicleTypeId, setSelectedVehicleTypeId] = useState<number | null>(null);
+  const [selectedEquipmentType, setSelectedEquipmentType] = useState<string | null>(null);
   const [gameVersion, setGameVersion] = useState<"brandweer" | "politie">("brandweer");
 
   useEffect(() => {
@@ -476,6 +478,7 @@ function App() {
       setSignedIn(false);
       setSessionDraft("");
       setData(null);
+      setSelectedEquipmentType(null);
       clearReportIssues();
       setLastUpdated(null);
       setShowSessionForm(true);
@@ -568,7 +571,7 @@ function App() {
           <button className={`nav-item ${page === "overview" ? "active" : ""}`} onClick={() => setPage("overview")}>
             <span className="nav-icon">O</span> Overzicht
           </button>
-          {visiblePages.filter((item) => item.key === "vehicles").map(navigationButton)}
+          {visiblePages.filter((item) => item.key === "vehicles" || item.key === "equipments").map(navigationButton)}
           {navigationGroups.map((group) => {
             const items = group.pages.flatMap((key) => visiblePages.filter((item) => item.key === key));
             if (!items.length) return null;
@@ -582,7 +585,7 @@ function App() {
               </details>
             );
           })}
-          {visiblePages.filter((item) => item.key !== "vehicles" &&
+          {visiblePages.filter((item) => item.key !== "vehicles" && item.key !== "equipments" &&
             !navigationGroups.some((group) => group.pages.includes(item.key))).map(navigationButton)}
           {showDevMode && (
             <button className={`nav-item ${page === "rawResponses" ? "active" : ""}`} onClick={() => setPage("rawResponses")}>
@@ -843,6 +846,9 @@ function App() {
           )}
 
           {signedIn && currentPageAllowed && <>
+          {page === "equipments" && data && <EquipmentsPage result={data.equipments}
+            buildingsResult={data.buildings} vehiclesResult={data.vehicles} selectedType={selectedEquipmentType}
+            onShowDetails={setSelectedEquipmentType} onBack={() => setSelectedEquipmentType(null)} />}
           {page === "vehicles" && data && selectedVehicleTypeId === null && <VehiclesPage result={data.vehicles} onShowDetails={(id) => setSelectedVehicleTypeId(id)} />}
           {page === "vehicles" && data && selectedVehicleTypeId !== null && <VehicleDetailsPage result={data.vehicles} buildingsResult={data.buildings} vehicleTypeId={selectedVehicleTypeId} gameVersion={gameVersion} onBack={() => setSelectedVehicleTypeId(null)} />}
           {page === "buildings" && data && <BuildingsPage result={data.buildings} />}

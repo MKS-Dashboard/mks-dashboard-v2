@@ -32,12 +32,117 @@ const reports = await loadModule("src/renderer/src/error-report.ts");
 const reportPanel = await loadModule("src/renderer/src/ErrorReportPanel.tsx");
 const app = await loadModule("src/renderer/src/App.tsx");
 const usage = await loadModule("src/main/user-usage.ts");
+const equipmentPages = await loadModule("src/renderer/src/EquipmentsPage.tsx");
+const dashboardPages = await loadModule("src/renderer/src/DashboardPages.tsx");
+const equipmentModel = await loadModule("src/renderer/src/dashboard-model.ts");
 const reportInput = (data = null) => ({
   data, appInfo: { version: "2026.1031.1400", channel: "stable" },
   lastUpdated: null, updateStatus: { state: "idle" }, now: new Date("2026-10-31T12:00:00Z"),
 });
 const ok = (data) => ({ ok: true, data });
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
+
+test("vehicle details use the same back button text as equipment for populated and empty types", () => {
+  for (const vehicles of [[], [{ id: 1, vehicle_type: 0 }]]) {
+    const html = render(dashboardPages.VehicleDetailsPage, {
+      result: ok(vehicles), buildingsResult: ok([]), vehicleTypeId: 0, onBack() {},
+    });
+    assert.match(html, /<button class="back-button">Terug naar overzicht<\/button>/);
+  }
+});
+
+const equipmentItem = (id, fields = {}) => ({
+  id, building_id: 7, vehicle_id: null, assigned_vehicle_id: null,
+  equipment_type: "bomb_disposal_robot", size: 20, caption: "Robot", ...fields,
+});
+
+test("equipment overview counts types and size, resolves names and keeps both vehicle links distinct", () => {
+  const props = {
+    result: ok([equipmentItem(43), equipmentItem(86, { vehicle_id: 10, assigned_vehicle_id: 11 })]),
+    buildingsResult: ok([{ id: 7, caption: "Opslaglocatie", building_type: 0 }]),
+    vehiclesResult: ok([{ id: 10, caption: "Transportvoertuig", vehicle_type: 0 },
+      { id: 11, caption: "Toegewezen voertuig", vehicle_type: 0 }]),
+  };
+  const html = render(equipmentPages.EquipmentsPage, props);
+  assert.match(html, /2 equipmentitems in totaal/);
+  assert.match(html, /RC-Explosievenrobot/);
+  assert.match(html, /<td>2<\/td><td>1<\/td><td>1<\/td><td>40<\/td>/);
+  assert.match(html, /Militair \(2\)/);
+  assert.doesNotMatch(html, /Equipmentitems/);
+  const details = render(equipmentPages.EquipmentsPage, { ...props, selectedType: "bomb_disposal_robot" });
+  assert.match(details, /Opslaglocatie/);
+  assert.match(details, /Transportvoertuig/);
+  assert.match(details, /Niet gekoppeld/);
+  assert.equal(navigation.pageAllowed("equipments", false, "stable", false, false), false);
+  assert.equal(navigation.pageAllowed("equipments", true, "stable", false, false), true);
+  const unknown = render(equipmentPages.EquipmentsPage, { ...props,
+    result: ok([equipmentItem(1, { equipment_type: "new_type" })]),
+    buildingsResult: { ok: false, error: "HTTP 503" }, vehiclesResult: ok([]) });
+  assert.match(unknown, /Onbekend type \(new_type\)/);
+  assert.match(unknown, /Overige \(1\)/);
+  const unknownDetails = render(equipmentPages.EquipmentsPage, { ...props, selectedType: "new_type",
+    result: ok([equipmentItem(1, { equipment_type: "new_type" })]),
+    buildingsResult: { ok: false, error: "HTTP 503" } });
+  assert.match(unknownDetails, /Gebouw 7/);
+  assert.match(unknownDetails, /HTTP 503/);
+  assert.match(render(equipmentPages.EquipmentsPage, { ...props, result: ok([]) }), /0 equipmentitems/);
+  assert.match(render(equipmentPages.EquipmentsPage, { ...props,
+    result: { ok: false, error: "HTTP 401" } }), /HTTP 401/);
+});
+
+test("equipment parsing rejects malformed responses and error reports include unknown equipment without account values", () => {
+  for (const value of [{}, [equipmentItem(1, { size: -1 })], [equipmentItem(1, { equipment_type: null })],
+    [equipmentItem(1, { vehicle_id: "10" })], [equipmentItem(1), equipmentItem(1)]]) {
+    assert.throws(() => equipmentModel.parseEquipments(value));
+  }
+  const report = reports.generateErrorReport(reportInput({ equipments: ok([
+    equipmentItem(1, { equipment_type: "new_type", caption: "PRIVATE" }), null,
+  ]) }));
+  assert.match(report, /onbekend equipmenttype new_type/);
+  assert.match(report, /verwerkingsfout/);
+  assert.doesNotMatch(report, /PRIVATE/);
+});
+
+test("equipment type details list only matching items and provide a back action", () => {
+  const props = {
+    result: ok([equipmentItem(43), equipmentItem(86, { equipment_type: "care_service", caption: "Other item" })]),
+    buildingsResult: ok([]), vehiclesResult: ok([]), onShowDetails() {}, onBack() {},
+  };
+  assert.match(render(equipmentPages.EquipmentsPage, props), /Details van RC-Explosievenrobot/);
+  assert.match(render(equipmentPages.EquipmentsPage, props), /Brandweer \(1\)/);
+  const html = render(equipmentPages.EquipmentsPage, { ...props, selectedType: "bomb_disposal_robot" });
+  assert.match(html, /1 equipmentitems van dit type/);
+  assert.match(html, /Terug naar overzicht/);
+  assert.match(html, /<td>43<\/td>/);
+  assert.doesNotMatch(html, /Other item|Equipment per type/);
+  assert.match(render(equipmentPages.EquipmentsPage, { ...props, selectedType: "missing" }), /0 equipmentitems van dit type/);
+});
+
+test("vehicle details offer searchable sortable rows, names, fallback locations and browser links", () => {
+  const html = render(dashboardPages.VehicleDetailsPage, {
+    result: ok([{ id: 123, caption: "Mijn voertuig", vehicle_type: 0, building_id: 7 },
+      { id: 456, caption: "Ander type", vehicle_type: 1 }]),
+    buildingsResult: ok([]), vehicleTypeId: 0, gameVersion: "politie", onBack() {},
+  });
+  assert.match(html, /Zoeken in Voertuigen/);
+  assert.match(html, /aria-sort=/);
+  assert.match(html, /Mijn voertuig/);
+  assert.match(html, /Gebouw 7/);
+  assert.doesNotMatch(html, /Ander type/);
+  assert.equal(reference.allowedExternalUrl("https://politie.meldkamerspel.com/vehicles/123"),
+    "https://politie.meldkamerspel.com/vehicles/123");
+});
+
+test("vehicle IDs are unformatted text with a separate browser button", () => {
+  const html = render(dashboardPages.VehicleDetailsPage, {
+    result: ok([{ id: 1234567, caption: "Mijn voertuig", vehicle_type: 0 }]),
+    buildingsResult: ok([]), vehicleTypeId: 0,
+  });
+  assert.match(html, /<span>1234567<\/span>/);
+  assert.match(html, /class="vehicle-open-button"/);
+  assert.match(html, /Open voertuig 1234567 in browser/);
+  assert.doesNotMatch(html, /1\.234\.567|class="text-link"/);
+});
 
 test("overview welcomes players, preserves zero balances and exposes refresh status and shortcuts", () => {
   const props = {
@@ -305,7 +410,7 @@ test("game requests use cookie authentication only for account endpoints and nev
     const setSession = handlers.get("auth:set-session-id");
     const load = handlers.get("dashboard:load");
     const accountPaths = new Set([
-      "/api/vehicles", "/api/buildings", "/api/alliance_buildings", "/api/userinfo",
+      "/api/vehicles", "/api/equipments", "/api/buildings", "/api/alliance_buildings", "/api/userinfo",
       "/api/allianceinfo", "/api/schoolings", "/api/alliance_schoolings",
     ]);
     let status = 200;
@@ -342,7 +447,7 @@ test("game requests use cookie authentication only for account endpoints and nev
     hasSession = true;
     requests.length = 0;
     const data = await load(event);
-    assert.equal(requests.length, 10);
+    assert.equal(requests.length, 11);
     assert.deepEqual(new Set(requests.filter((path) => accountPaths.has(path))), accountPaths);
     for (const result of Object.values(data)) {
       assert.equal(result.ok, true);
@@ -355,7 +460,7 @@ test("game requests use cookie authentication only for account endpoints and nev
     for (status of [401, 302]) {
       requests.length = 0;
       const failed = await load(event);
-      assert.equal(requests.length, 10);
+      assert.equal(requests.length, 11);
       assert.equal(failed.credits.ok, false);
       assert.doesNotMatch(JSON.stringify(failed), /TEST%2Fsession|_session_id/);
     }

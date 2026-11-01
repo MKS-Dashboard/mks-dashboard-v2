@@ -43,6 +43,8 @@ node --test scripts\desktop-pages.test.mjs
 
 ## Gegevens en authenticatie
 
+Equipment wordt als accountgegevens opgehaald via `/api/equipments`, met dezelfde cookie-authenticatie als voertuigen. De pagina gebruikt `equipment_type` voor catalogusnamen; `vehicle_id` en `assigned_vehicle_id` worden afzonderlijk getoond. Onbekende typen blijven zichtbaar en worden in het errorrapport vermeld. Equipmentnamen staan in [equipments.json](src/renderer/src/data/equipments.json); gebouwen en voertuigen worden gekoppeld aan de al opgehaalde accountgegevens.
+
 Gameverzoeken worden in het Electron-main-proces lokaal uitgevoerd en zijn alleen-lezen. De app gebruikt geen MKS-proxy.
 
 - De account-endpoints staan in [src/shared/contracts.ts](src/shared/contracts.ts); verzoeken worden uitgevoerd in [src/main/index.ts](src/main/index.ts).
@@ -116,7 +118,7 @@ Bronnen zijn [Vehicles.json](https://raw.githubusercontent.com/lss-information/l
 
 Lege voertuigomschrijvingen worden daarna aangevuld uit het [kostenoverzicht van MeldkamerspelGameTeam](https://github.com/MeldkamerspelGameTeam/Blog/blob/main/Kostenoverzichtv2/Scripts/Data/voertuigen.json), uitsluitend wanneer de bijgewerkte voertuignaam exact overeenkomt met `afkorting`. Bestaande niet-lege omschrijvingen blijven behouden. Er wordt niet op vergelijkbare namen gekoppeld; equipmentrecords uit deze bron worden niet als voertuigen toegevoegd. Als een van de bronnen ongeldig of onbereikbaar is, wordt geen gedeeltelijke catalogusupdate geschreven.
 
-De nieuwe [equipmentcatalogus](src/renderer/src/data/equipments.json) begint leeg. De eerste update-PR stelt alle bron-ID's en namen voor; overige bronvelden worden niet geïmporteerd. Deze catalogus heeft nog geen pagina of rekenregels in de app.
+De [equipmentcatalogus](src/renderer/src/data/equipments.json) bevat alleen ID's en namen voor de equipmentpagina. De update-PR stelt ontbrekende bron-ID's en gewijzigde namen voor; overige bronvelden worden niet geïmporteerd.
 
 Lokaal controleren zonder wijzigingen:
 

@@ -1,10 +1,11 @@
 import { dashboardResources, type AppInfo, type DashboardData, type DashboardResourceResult, type ReferenceKey, type UpdateStatus } from "../../shared/contracts";
-import { parseBuildings, parseVehicles } from "./dashboard-model";
+import { parseBuildings, parseVehicles, parseEquipments } from "./dashboard-model";
 import { parseMissionEvents, parseMissions } from "./data/information-model";
 import { schoolingRecords } from "./schoolings";
 import vehicles from "./data/vehicles.json";
 import buildings from "./data/buildings.json";
 import specializations from "./data/specializations.json";
+import equipments from "./data/equipments.json";
 
 const observedIssues = new Set<string>();
 const referenceErrors = new Map<ReferenceKey, string>();
@@ -69,7 +70,15 @@ export function generateErrorReport({ data, appInfo, lastUpdated, updateStatus, 
       continue;
     }
     check(source, () => {
-      if (resource.key === "vehicles" || resource.key === "buildings" || resource.key === "allianceBuildings") {
+      if (resource.key === "equipments") {
+        if (!Array.isArray(result.data)) throw new Error("De API heeft geen lijst teruggegeven.");
+        result.data.forEach((item, index) => check(`${source}, record ${index + 1}`, () => {
+          const [equipment] = parseEquipments([item]);
+          if (!equipments.some(({ id }) => id === equipment.type)) {
+            add(`${source}: onbekend equipmenttype ${equipment.type}`);
+          }
+        }));
+      } else if (resource.key === "vehicles" || resource.key === "buildings" || resource.key === "allianceBuildings") {
         if (!Array.isArray(result.data)) throw new Error("De API heeft geen lijst teruggegeven.");
         result.data.forEach((item, index) => check(`${source}, record ${index + 1}`, () => {
           if (resource.key === "vehicles") {

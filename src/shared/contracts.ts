@@ -1,5 +1,6 @@
 export const dashboardResources = [
   { key: "vehicles", label: "Voertuigen", endpoint: "/api/vehicles", sessionRequired: true },
+  { key: "equipments", label: "Equipment", endpoint: "/api/equipments", sessionRequired: true },
   { key: "buildings", label: "Gebouwen", endpoint: "/api/buildings", sessionRequired: true },
   { key: "allianceBuildings", label: "Teamgebouwen", endpoint: "/api/alliance_buildings", sessionRequired: true },
   { key: "credits", label: "Accountgegevens", endpoint: "/api/userinfo", sessionRequired: true },

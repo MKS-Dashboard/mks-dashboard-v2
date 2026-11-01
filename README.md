@@ -51,6 +51,9 @@ Na een succesvolle aanmelding verschijnen de accountgebonden overzichten. Rechts
 Het overzicht begroet je met je spelersnaam en toont voertuigen, gebouwen, credits en coins. Via de statistiekkaarten en snelle acties open je direct de bijbehorende pagina's. Je ziet ook wanneer gegevens voor het laatst zijn opgehaald en of automatisch vernieuwen aanstaat.
 
 - **Voertuigen:** aantallen per hulpdienst, voertuigtype en groep, inclusief extra waarden zoals watercapaciteit.
+- **Equipment:** aantallen per categorie en type, met grootte en aantallen voertuigkoppelingen. Onbekende of niet-ingedeelde typen staan onder Overige.
+- Via **Details** bij een equipmenttype zie je alleen de items van dat type, met ID, locatie en voertuigkoppelingen. Gebruik **Terug naar overzicht** om alle typen weer te bekijken.
+- Voertuigdetails en equipmentdetails hebben dezelfde zoekbare en sorteerbare opzet, met de terugknop naast de paginakop. Voertuig-ID's worden zonder duizendtalscheiding getoond; met het knopje naast het ID open je het voertuig in je browser.
 - **Gebouwen:** gebouwtypen, uitbreidingen, specialisaties en opleidingen.
 - **Capaciteit:** bezette en vrije ziekenhuisbedden, cellen en klaslokalen.
 - **Team:** teamgegevens, teamkas, leden, gebouwen en teamopleidingen.
