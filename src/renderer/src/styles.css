@@ -219,6 +219,9 @@ input:focus-visible {
 }
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
   display: flex;
   min-height: 91px;
   align-items: center;
