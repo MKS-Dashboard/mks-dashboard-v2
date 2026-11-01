@@ -28,6 +28,8 @@ npm.cmd run dev
 
 ## Tests en builds
 
+**Over de app > Het project in cijfers** toont een telling die de Vite-configuratie bij elke start/build berekent. [project-stats.ts](scripts/project-stats.ts) telt broncodebestanden in `src`, `scripts`, `install`, `build` en broncode/configuratie in de repositoryroot. Alleen TS, TSX, JS, JSX, MJS, CJS, CSS, HTML, C#, PowerShell en NSIS worden geteld. Niet-lege regels inclusief commentaar tellen mee; JSON, documentatie, dependencies en buildoutputs niet. De telling wordt in de rendererbundle opgenomen en vereist geen bronbestanden op de pc van de eindgebruiker.
+
 ```powershell
 npm.cmd test
 npm.cmd run typecheck

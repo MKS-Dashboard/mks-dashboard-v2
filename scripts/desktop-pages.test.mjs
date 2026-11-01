@@ -13,7 +13,10 @@ async function loadModule(path, mocks = {}) {
   const result = await build({
     entryPoints: [path], bundle: true, write: false, platform: "node",
     format: "cjs", jsx: "automatic", external: ["react", "react-dom", "electron", "electron-updater"],
-    define: { "import.meta.url": JSON.stringify(new URL(`../${path}`, import.meta.url).href) },
+    define: {
+      "import.meta.url": JSON.stringify(new URL(`../${path}`, import.meta.url).href),
+      __PROJECT_STATS__: JSON.stringify({ files: 42, lines: 12345 }),
+    },
   });
   const module = { exports: {} };
   new Function("module", "exports", "require", result.outputFiles[0].text)(
@@ -35,12 +38,33 @@ const usage = await loadModule("src/main/user-usage.ts");
 const equipmentPages = await loadModule("src/renderer/src/EquipmentsPage.tsx");
 const dashboardPages = await loadModule("src/renderer/src/DashboardPages.tsx");
 const equipmentModel = await loadModule("src/renderer/src/dashboard-model.ts");
+const stats = await loadModule("scripts/project-stats.ts");
 const reportInput = (data = null) => ({
   data, appInfo: { version: "2026.1031.1400", channel: "stable" },
   lastUpdated: null, updateStatus: { state: "idle" }, now: new Date("2026-10-31T12:00:00Z"),
 });
 const ok = (data) => ({ ok: true, data });
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
+
+test("project statistics exclude data, dependencies, outputs and blank lines", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "mks-stats-test-"));
+  const { mkdir, writeFile } = await import("node:fs/promises");
+  try {
+    for (const directory of ["src", "scripts", "install", "build", "node_modules", "out"]) {
+      await mkdir(join(folder, directory));
+    }
+    await writeFile(join(folder, "src", "example.ts"), "const value = 1;\r\n\r\n// comment\r\n");
+    await writeFile(join(folder, "src", "data.json"), "{}");
+    await writeFile(join(folder, "scripts", "test.mjs"), "test();\n");
+    await writeFile(join(folder, "node_modules", "dependency.js"), "excluded();");
+    await writeFile(join(folder, "out", "output.js"), "excluded();");
+    await writeFile(join(folder, "README.md"), "# Excluded");
+    assert.deepEqual(stats.projectStats(folder), { files: 2, lines: 3 });
+    const html = render(app.AboutPage, { appInfo: { version: "0.1.0", channel: "stable" } });
+    assert.match(html, /42 broncodebestanden/);
+    assert.match(html, /12\.345 niet-lege regels broncode/);
+  } finally { await rm(folder, { recursive: true, force: true }); }
+});
 
 test("vehicle details use the same back button text as equipment for populated and empty types", () => {
   for (const vehicles of [[], [{ id: 1, vehicle_type: 0 }]]) {

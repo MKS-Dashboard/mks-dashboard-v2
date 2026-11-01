@@ -18,6 +18,8 @@ import {
   type UpdateStatus,
 } from "../../shared/contracts";
 
+declare const __PROJECT_STATS__: { files: number; lines: number };
+
 function recordsFrom(data: unknown): unknown[] {
   if (Array.isArray(data)) return data;
   if (data && typeof data === "object") {
@@ -145,6 +147,11 @@ export function AboutPage({ appInfo }: { appInfo: AppInfo | null }) {
           <p>Een Windows-app met overzicht over je Meldkamerspel-account, voertuigen, gebouwen en team.</p>
           <p>Een project van MKS Dashboard, gebaseerd op de oorspronkelijke webapp en onderhouden met hulp van bijdragers.</p>
           <p>Dit is een onafhankelijk project, geen officiële app van Meldkamerspel.</p>
+          <h4>Het project in cijfers</h4>
+          <p>{__PROJECT_STATS__.files.toLocaleString("nl-NL")} broncodebestanden en
+            {" "}{__PROJECT_STATS__.lines.toLocaleString("nl-NL")} niet-lege regels broncode.</p>
+          <p>Inclusief tests en buildscripts; exclusief databestanden, documentatie, dependencies en
+            gegenereerde bestanden. Commentaarregels tellen mee. Gemeten bij het starten of bouwen van deze versie.</p>
         </div>
       </div>
       <div className="settings-option">
