@@ -118,7 +118,7 @@ Deze optie staat standaard uit en is niet beschikbaar in Stable. Beta heeft ook 
 
 ## Hulp en problemen melden
 
-Meld fouten of wensen via [GitHub Issues](https://github.com/MKS-Dashboard/mks-dashboard-v2/issues). Vermeld je appversie, Stable of Beta, en de stappen waarmee het probleem optreedt. Deel geen SessionID of ongecontroleerde accountgegevens.
+Meld fouten of wensen via de [GitHub-issueformulieren](https://github.com/MKS-Dashboard/mks-dashboard-v2/issues/new/choose). Kies **Bug melden** of **Feature aanvragen**. Het bugformulier vraagt om je appversie, Stable of Beta, en de stappen waarmee het probleem optreedt. Deel geen SessionID of ongecontroleerde accountgegevens.
 
 Lukt aanmelden of gegevens ophalen niet, controleer dan je internetverbinding en probeer opnieuw. Een opgeslagen SessionID blijft bij een verbindingsfout bewaard. Als de app na een update niet automatisch start, open deze via het Windows-startmenu.
 
