@@ -1,6 +1,7 @@
 name: Feature aanvragen
 description: Stel een nieuwe functie of verbetering voor.
 title: "[FEATURE] "
+labels: ["enhancement"]
 body:
   - type: markdown
     attributes:

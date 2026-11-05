@@ -1,6 +1,7 @@
 name: Bug melden
 description: Meld iets dat niet goed werkt in MKS Dashboard.
 title: "[BUG] "
+labels: ["bug"]
 body:
   - type: markdown
     attributes:
