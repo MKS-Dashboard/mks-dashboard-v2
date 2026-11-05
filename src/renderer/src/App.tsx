@@ -220,6 +220,25 @@ export function SessionIdInstructions() {
   );
 }
 
+export function dashboardSessionStatus(data: DashboardData): "valid" | "invalid" | "unverified" {
+  const results = dashboardResources.filter(({ sessionRequired }) => sessionRequired).map(({ key }) => data[key]);
+  if (results.some((result) => result.ok)) return "valid";
+  return results.some((result) => !result.ok && result.errorCode === "session-invalid") ? "invalid" : "unverified";
+}
+
+export function SavedSessionNotice({ status }: { status: "valid" | "invalid" | "unverified" }) {
+  if (status === "invalid") {
+    return <p id="session-status" className="notice notice-error" role="alert">
+      Je SessionID is verlopen of ongeldig. Log opnieuw in bij Meldkamerspel en plak je nieuwe SessionID hieronder.
+    </p>;
+  }
+  return <p id="session-status" className="saved-session-note" role="status">
+    {status === "valid"
+      ? "Er staat al een SessionID ingesteld. Vul alleen iets in als je deze wilt vervangen."
+      : "Er staat een SessionID ingesteld, maar deze kon niet worden gecontroleerd. Controleer je internetverbinding en probeer opnieuw."}
+  </p>;
+}
+
 function App() {
   const userMenu = useRef<HTMLDetailsElement>(null);
   const refreshInFlight = useRef(false);
@@ -250,6 +269,8 @@ function App() {
   const [selectedVehicleTypeId, setSelectedVehicleTypeId] = useState<number | null>(null);
   const [selectedEquipmentType, setSelectedEquipmentType] = useState<string | null>(null);
   const [gameVersion, setGameVersion] = useState<"brandweer" | "politie">("brandweer");
+  const sessionStatus = data ? dashboardSessionStatus(data) : "unverified";
+  const sessionInvalid = sessionStatus === "invalid";
 
   useEffect(() => {
     if (error) recordAppIssue("App", error);
@@ -410,9 +431,8 @@ function App() {
       const result = await window.mksDashboard.loadDashboard();
       setData(result);
       setLastUpdated(new Date());
-      const sessionAccepted = dashboardResources.some(
-        ({ key, sessionRequired = true }) => sessionRequired && result[key].ok,
-      );
+      const status = dashboardSessionStatus(result);
+      const sessionAccepted = status === "valid";
       setSignedIn(sessionAccepted);
       setShowSessionForm(!sessionAccepted);
       if (result.credits.ok) {
@@ -426,7 +446,7 @@ function App() {
       }
       if (!sessionAccepted) {
         const auth = await window.mksDashboard.getAuthStatus();
-        if (auth.hasSessionId) setError("De gamegegevens zijn niet opgehaald. Controleer je SessionID en internetverbinding.");
+        if (auth.hasSessionId && status !== "invalid") setError("De gamegegevens zijn niet opgehaald. Controleer je SessionID en internetverbinding.");
       }
     } catch (cause) {
       setSignedIn(false);
@@ -477,15 +497,17 @@ function App() {
         await window.mksDashboard.setSessionId(sessionDraft, rememberSession);
         setSessionDraft("");
         setHasSessionId(true);
-      } else if (!hasSessionId) {
-        setError("Vul je Meldkamerspel-SessionID in voordat je gegevens ophaalt.");
+      } else if (!hasSessionId || sessionInvalid) {
+        setError(sessionInvalid
+          ? "Vul een nieuwe Meldkamerspel-SessionID in. De ingestelde SessionID is verlopen of ongeldig."
+          : "Vul je Meldkamerspel-SessionID in voordat je gegevens ophaalt.");
         return;
       }
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "De SessionID kon niet worden ingesteld.");
     }
-  }, [hasSessionId, rememberSession, refresh, sessionDraft]);
+  }, [hasSessionId, rememberSession, refresh, sessionDraft, sessionInvalid]);
 
   const deleteSession = useCallback(async () => {
     setLoggingOut(true);
@@ -792,11 +814,12 @@ function App() {
               <div className="welcome-icon">M</div>
               <div className="welcome-copy">
                 <span className="eyebrow">{data ? "ACCOUNTINSTELLINGEN" : "JOUW LOKALE DASHBOARD"}</span>
-                <h2>{data ? "SessionID aanpassen" : "Welkom bij MKS Dashboard Desktop"}</h2>
+                <h2>{sessionInvalid ? "SessionID verlopen of ongeldig" : data ? "SessionID aanpassen" : "Welkom bij MKS Dashboard Desktop"}</h2>
                 <p>
                   Voer de SessionID van Meldkamerspel in.
                 </p>
                 <UsageRegistrationNotice />
+                {hasSessionId && <SavedSessionNotice status={sessionStatus} />}
                 <label className="field-label" htmlFor="session-id">Meldkamerspel-SessionID</label>
                 <input
                   id="session-id"
@@ -805,6 +828,8 @@ function App() {
                   autoComplete="off"
                   spellCheck={false}
                   placeholder="Plak hier je SessionID"
+                  aria-invalid={sessionInvalid || undefined}
+                  aria-describedby={hasSessionId ? "session-status" : undefined}
                   value={sessionDraft}
                   onChange={(event) => setSessionDraft(event.target.value)}
                 />
@@ -818,15 +843,10 @@ function App() {
                   <span>Bewaar de SessionID versleuteld op deze pc</span>
                 </label>
                 <div className="welcome-actions">
-                  <button className="button button-primary" disabled={loading || loggingOut} onClick={() => void saveAndRefresh()}>
+                  <button className="button button-primary" disabled={loading || loggingOut || (sessionInvalid && !sessionDraft.trim())} onClick={() => void saveAndRefresh()}>
                     {loading ? "Gegevens ophalen..." : sessionDraft.trim() ? "SessionID opslaan en ophalen" : "Gegevens ophalen"}
                   </button>
                 </div>
-                {hasSessionId && (
-                  <p className="saved-session-note">
-                    Er staat al een SessionID ingesteld. Vul alleen iets in als je deze wilt vervangen.
-                  </p>
-                )}
                 <p className="privacy-note">
                   Je SessionID wordt uitsluitend naar meldkamerspel.com gestuurd. Live gegevens vereisen internet.
                 </p>

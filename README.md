@@ -27,6 +27,8 @@ Stable en Beta kunnen naast elkaar worden geïnstalleerd. Ze hebben afzonderlijk
 
 Voer bij de eerste start je Meldkamerspel-SessionID in. Je kunt deze versleuteld op je pc bewaren, zodat de app bij een volgende start automatisch je gegevens probeert op te halen.
 
+Wordt je SessionID geweigerd, dan toont de app **SessionID verlopen of ongeldig**. Log opnieuw in bij Meldkamerspel en plak de nieuwe SessionID in de app. Bij een verbindingsfout wordt je SessionID niet als verlopen aangemerkt en kun je opnieuw proberen zonder deze te vervangen.
+
 Op het aanmeldscherm staat **De app verzamelt gebruiksgegevens**. Onder **Meer details** lees je welke gegevens worden verstuurd en waarom. Deze uitleg is ook beschikbaar via **Gebruikersmenu > Over de app**.
 
 Onder het SessionID-veld vind je **Hoe vind ik mijn SessionID?** met instructies voor Chrome, Edge en Firefox:

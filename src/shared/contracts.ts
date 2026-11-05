@@ -16,7 +16,7 @@ export type DashboardResourceKey = (typeof dashboardResources)[number]["key"];
 
 export type DashboardResourceResult =
   | { ok: true; data: unknown; requestUrl?: string }
-  | { ok: false; error: string; requestUrl?: string };
+  | { ok: false; error: string; requestUrl?: string; errorCode?: "session-invalid" };
 
 export type DashboardData = Record<DashboardResourceKey, DashboardResourceResult>;
 

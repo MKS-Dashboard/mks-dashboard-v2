@@ -63,6 +63,35 @@ const reportInput = (data = null) => ({
 const ok = (data) => ({ ok: true, data });
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
 
+test("session notices distinguish rejected credentials from connection failures and successful authentication", () => {
+  const resources = [
+    "vehicles", "equipments", "buildings", "allianceBuildings", "credits", "allianceInfo",
+    "schoolings", "allianceSchoolings", "pointsOfInterest", "missions", "allianceEvents",
+  ];
+  const data = Object.fromEntries(resources.map((key) => [key, { ok: false, error: "Verbindingsfout" }]));
+  data.missions = ok([]);
+  assert.equal(app.dashboardSessionStatus(data), "unverified");
+  const unverified = render(app.SavedSessionNotice, { status: app.dashboardSessionStatus(data) });
+  assert.match(unverified, /kon niet worden gecontroleerd/);
+  assert.match(unverified, /internetverbinding/);
+  assert.doesNotMatch(unverified, /verlopen|Vul alleen iets in/);
+  data.missions = { ok: false, error: "Redirect", errorCode: "session-invalid" };
+  assert.equal(app.dashboardSessionStatus(data), "unverified");
+  data.credits = { ok: false, error: "Sessie geweigerd", errorCode: "session-invalid" };
+  assert.equal(app.dashboardSessionStatus(data), "invalid");
+  const invalid = render(app.SavedSessionNotice, { status: app.dashboardSessionStatus(data) });
+  assert.match(invalid, /role="alert"/);
+  assert.match(invalid, /SessionID is verlopen of ongeldig/);
+  assert.match(invalid, /Log opnieuw in bij Meldkamerspel/);
+  assert.match(invalid, /plak je nieuwe SessionID hieronder/);
+  assert.doesNotMatch(invalid, /Vul alleen iets in/);
+  data.vehicles = ok([]);
+  assert.equal(app.dashboardSessionStatus(data), "valid");
+  assert.match(render(app.SavedSessionNotice, { status: "valid" }), /Vul alleen iets in/);
+  data.credits = ok({ user_id: 1 });
+  assert.equal(app.dashboardSessionStatus(data), "valid");
+});
+
 test("project statistics exclude data, dependencies, outputs and blank lines", async () => {
   const folder = await mkdtemp(join(tmpdir(), "mks-stats-test-"));
   const { mkdir, writeFile } = await import("node:fs/promises");
@@ -437,13 +466,13 @@ test("game requests use cookie authentication only for account endpoints and nev
     const handlers = new Map();
     const sender = { setWindowOpenHandler() {}, on() {} };
     const owner = { webContents: sender, loadFile: async () => {}, loadURL: async () => {} };
-    const app = {
+    const electronApp = {
       isPackaged: false, getVersion: () => "0.1.0", getPath: () => folder,
       setName() {}, setPath() {}, setAppUserModelId() {}, on() {},
       whenReady: () => ({ then: (callback) => callback() }),
     };
     await loadModule("src/main/index.ts", {
-      electron: { app, BrowserWindow: function () { return owner; },
+      electron: { app: electronApp, BrowserWindow: function () { return owner; },
         ipcMain: { handle: (key, handler) => handlers.set(key, handler) } },
       "electron-updater": { autoUpdater: {} },
     });
@@ -498,13 +527,29 @@ test("game requests use cookie authentication only for account endpoints and nev
     await handlers.get("usage:log")(event);
     await handlers.get("usage:log")(event);
     assert.equal(registrations, 1);
-    for (status of [401, 302]) {
+    for (status of [401, 302, 403, 503]) {
       requests.length = 0;
       const failed = await load(event);
       assert.equal(requests.length, 11);
       assert.equal(failed.credits.ok, false);
+      assert.equal(failed.credits.errorCode, [401, 302].includes(status) ? "session-invalid" : undefined);
+      assert.equal(app.dashboardSessionStatus(failed), [401, 302].includes(status) ? "invalid" : "unverified");
+      for (const key of ["missions", "pointsOfInterest", "allianceEvents"]) {
+        assert.equal(failed[key].errorCode, undefined);
+      }
+      if ([401, 302].includes(status)) assert.match(failed.credits.error, /SessionID is verlopen of ongeldig/);
       assert.doesNotMatch(JSON.stringify(failed), /TEST%2Fsession|_session_id/);
     }
+    const gameFetch = globalThis.fetch;
+    globalThis.fetch = async () => { throw new TypeError("fetch failed"); };
+    const offline = await load(event);
+    assert.equal(app.dashboardSessionStatus(offline), "unverified");
+    assert.equal(offline.credits.errorCode, undefined);
+    assert.match(offline.credits.error, /fetch failed/);
+    globalThis.fetch = gameFetch;
+    await setSession(event, "TEST%2Fsession==", false);
+    status = 200;
+    assert.equal(app.dashboardSessionStatus(await load(event)), "valid");
     await handlers.get("auth:logout")(event);
     await assert.rejects(handlers.get("usage:log")(event), /accountgegevens/);
     hasSession = false;
