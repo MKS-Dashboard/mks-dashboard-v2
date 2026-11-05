@@ -136,6 +136,7 @@ node scripts\update-extra-catalogs.mjs equipments --dry-run
 Na een geslaagde releasepublicatie worden automatisch de nieuwste **10 Stable-releases en 10 Beta-releases** bewaard, op basis van het versienummer. Oudere releases, hun downloadbestanden en bijbehorende Git-tags worden verwijderd. Conceptreleases en releases met onbekende tagformaten worden niet opgeruimd.
 
 - **Beta:** een push naar `dev` publiceert automatisch een prerelease.
+- Bij een push naar `dev` geeft de [issueworkflow](.github/workflows/next-release.yml) open issues uit commitberichten met `Closes #16`, `Fixes #16` of `Resolves #16` automatisch het label `next release`. Het label wordt zo nodig aangemaakt. Dit gebeurt onafhankelijk van de releasebuild en sluit het issue niet; GitHub sluit het bij opname in de standaardbranch. Het label blijft daarna staan. Verwijzingen naar andere repositories en pull requests worden overgeslagen.
 - **Stable:** een push naar `main`, bijvoorbeeld na een merge, publiceert automatisch een release na een geslaagde test en build. Handmatig een tag van `main` publiceren in het formaat `vYYYY.MM.DD.HH.MM` blijft mogelijk.
 - Stable-tags worden automatisch gegenereerd als `vYYYY.MM.DD.HH.MM`. Als een tag voor de huidige minuut al bestaat, wacht de versievoorbereiding tot de volgende minuut.
 - Beta-tags gebruiken `vYYYY.MM.DD.HH.MM-beta`. Versietijden gebruiken `Europe/Amsterdam`, inclusief zomer- en wintertijd.
