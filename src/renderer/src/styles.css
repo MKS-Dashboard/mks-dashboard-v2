@@ -633,6 +633,11 @@ input:focus-visible {
   border-top: 1px solid #edf0f4;
 }
 
+.desktop-issues {
+  padding: 25px;
+  border-top: 1px solid #edf0f4;
+}
+
 .raw-response-content {
   padding: 20px;
 }

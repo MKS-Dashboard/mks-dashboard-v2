@@ -26,7 +26,7 @@ export const gameLocales = [
   "pt_BR", "uk_UA", "ko_KR", "es_MX", "ja_JP", "ro_RO", "fi_FI", "sk_SK",
 ] as const;
 
-export type ReferenceKey = "suggestions" | "missionUpdate" | `missions:${typeof gameLocales[number]}`;
+export type ReferenceKey = "suggestions" | "desktopIssues" | "missionUpdate" | `missions:${typeof gameLocales[number]}`;
 
 export interface AuthStatus {
   hasSessionId: boolean;

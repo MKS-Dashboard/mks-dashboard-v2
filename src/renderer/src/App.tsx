@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { BuildingsPage, ProgressPage, read, VehiclesPage, VehicleDetailsPage } from "./DashboardPages";
 import { schoolingRecords } from "./schoolings";
 import { defaultRefreshMinutes, parseRefreshMinutes, refreshCountdown, refreshDue } from "./refresh-interval";
-import { accountUsername, AccountPage, AlliancePage, BuildingDetailsPage, CreditsPage, SchoolingsPage, SuggestionsPage } from "./AccountPages";
+import { accountUsername, AccountPage, AlliancePage, BuildingDetailsPage, CreditsPage, DesktopIssuesOverview, SchoolingsPage, SuggestionsPage } from "./AccountPages";
 import { AllianceEventsPage, AllianceMissionsPage, AwardsPage, EventsPage, InformationPage, MissionsPage, PlannedMissionsPage, POIPage } from "./InformationPages";
 import { infoblocksAllowed, isInfoblockPage } from "./infoblocks";
 import { RawResponsesPage } from "./RawResponsesPage";
@@ -131,7 +131,7 @@ export function AboutPage({ appInfo }: { appInfo: AppInfo | null }) {
   const links = [
     ["Project op GitHub", "https://github.com/MKS-Dashboard/mks-dashboard-v2"],
     ["Releaseopmerkingen", "https://github.com/MKS-Dashboard/mks-dashboard-v2/releases"],
-    ["Probleem melden of suggestie doen", "https://github.com/MKS-Dashboard/mks-dashboard-v2/issues/new"],
+    ["Probleem melden of suggestie doen", "https://github.com/MKS-Dashboard/mks-dashboard-v2/issues/new/choose"],
     ["Bijdragers", "https://github.com/MKS-Dashboard/mks-dashboard-v2/graphs/contributors"],
     ["Oorspronkelijke webapp", "https://github.com/MKS-Dashboard/mks-dashboard.github.io"],
     ["Meldkamerspel", "https://meldkamerspel.com"],
@@ -194,6 +194,7 @@ export function AboutPage({ appInfo }: { appInfo: AppInfo | null }) {
           </ul>
         </div>
       </div>
+      {appInfo?.channel === "dev" && <DesktopIssuesOverview />}
     </section>
   );
 }

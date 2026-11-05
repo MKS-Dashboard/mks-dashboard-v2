@@ -1,6 +1,9 @@
 import { gameLocales, type DashboardResourceResult } from "../shared/contracts";
 
 export function referenceUrl(key: unknown): string {
+  if (key === "desktopIssues") {
+    return "https://api.github.com/repos/MKS-Dashboard/mks-dashboard-v2/issues?state=open&per_page=100";
+  }
   if (key === "suggestions") {
     return "https://api.github.com/repos/MKS-Dashboard/mks-dashboard.github.io/issues?state=open&per_page=100";
   }
@@ -16,16 +19,17 @@ export function referenceUrl(key: unknown): string {
 
 export async function loadReference(key: unknown, request: typeof fetch = fetch): Promise<DashboardResourceResult> {
   const url = referenceUrl(key);
+  const issues = key === "suggestions" || key === "desktopIssues";
   try {
     const allIssues: unknown[] = [];
     for (let page = 1; ; page++) {
-      const response = await request(key === "suggestions" ? `${url}&page=${page}` : url, {
+      const response = await request(issues ? `${url}&page=${page}` : url, {
         headers: { Accept: "application/json" },
         signal: AbortSignal.timeout(30_000),
       });
       if (!response.ok) throw new Error(`Openbare gegevens ophalen is mislukt (HTTP ${response.status}).`);
       const data: unknown = await response.json();
-      if (key !== "suggestions") return { ok: true, data };
+      if (!issues) return { ok: true, data };
       if (!Array.isArray(data)) throw new Error("GitHub heeft geen lijst met suggesties teruggegeven.");
       allIssues.push(...data);
       if (data.length < 100) return { ok: true, data: allIssues };

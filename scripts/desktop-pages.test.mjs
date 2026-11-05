@@ -260,7 +260,36 @@ test("about page presents version and usage privacy and remains available withou
     assert.match(html, /Bijdragers/);
     assert.match(html, /Missionfiles-All-Versions/);
     assert.match(html, /Je SessionID en overige spelgegevens worden niet meegestuurd/);
+    if (channel === "dev") assert.match(html, /GitHub-issues ophalen/);
+    else assert.doesNotMatch(html, /GitHub-issues ophalen|Bugs en featureverzoeken/);
   }
+});
+
+test("desktop issue overview shows open issues and next release without PRs or closed issues", () => {
+  const issue = (number, title, labels = [], state = "open") => ({ number, title, labels, state });
+  const html = render(pages.DesktopIssuesContent, { onRefresh() {}, result: ok([
+    issue(17, "Nieuwe functie", [{ name: "enhancement" }, { name: "next release" }]),
+    issue(16, "Sessieprobleem", ["bug", "internal-label"]),
+    issue(19, "Extra functie", ["feature"]),
+    issue(15, "Al uitgebracht", ["next release"], "closed"),
+    { ...issue(18, "Pull request"), pull_request: {} },
+  ]) });
+  assert.match(html, /Volgende release/);
+  assert.equal((html.match(/Nieuwe functie/g) ?? []).length, 1);
+  assert.equal((html.match(/Sessieprobleem/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /Al uitgebracht|Pull request/);
+  assert.match(html, /<td>Feature<\/td>/);
+  assert.match(html, /<td>Bug<\/td>/);
+  assert.doesNotMatch(html, /enhancement|next release|internal-label|>Labels</);
+  assert.equal((html.match(/<td>Feature<\/td>/g) ?? []).length, 2);
+  assert.match(html, /geen garantie/);
+  for (const result of [ok({}), ok([{ number: "bad" }]), ok([issue(1, "Test", [null])]),
+    { ok: false, error: "GitHub HTTP 403" }]) {
+    const failed = render(pages.DesktopIssuesContent, { onRefresh() {}, result });
+    assert.match(failed, /ongeldig|geen lijst|HTTP 403/);
+  }
+  assert.match(render(pages.DesktopIssuesContent, { onRefresh() {}, result: null }), /role="status"/);
+  assert.match(render(pages.DesktopIssuesContent, { onRefresh() {}, result: ok([]) }), /Volgende release/);
 });
 
 test("usage notice discloses collected fields under more details without claiming consent", () => {
@@ -725,6 +754,22 @@ test("reference data permits only known keys and does not forward session creden
   assert.equal(result.ok, true);
   assert.equal(result.data.length, 101);
   assert.equal(requests, 2);
+});
+
+test("desktop issues use this repository and paginate without account credentials", async () => {
+  let page = 0;
+  const result = await reference.loadReference("desktopIssues", async (url, options) => {
+    page++;
+    const parsed = new URL(url);
+    assert.equal(parsed.pathname, "/repos/MKS-Dashboard/mks-dashboard-v2/issues");
+    assert.equal(parsed.searchParams.get("state"), "open");
+    assert.equal(parsed.searchParams.get("page"), String(page));
+    assert.deepEqual(options.headers, { Accept: "application/json" });
+    return Response.json(page === 1 ? Array(100).fill({ number: 17 }) : []);
+  });
+  assert.equal(page, 2);
+  assert.equal(result.ok, true);
+  assert.equal(result.data.length, 100);
 });
 
 test("external links are HTTPS and limited to expected public hosts", () => {
