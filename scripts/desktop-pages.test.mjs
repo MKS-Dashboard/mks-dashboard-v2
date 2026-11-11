@@ -63,6 +63,19 @@ const reportInput = (data = null) => ({
 const ok = (data) => ({ ok: true, data });
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
 
+test("the navigation starts expanded and has an accessible collapse control", () => {
+  const html = render(app.default, {});
+  assert.match(html, /<aside id="sidebar" class="sidebar"/);
+  assert.match(html, /aria-controls="sidebar" aria-pressed="false" aria-label="Compact menu" title="Menu inklappen"[^>]*><svg[^>]*aria-hidden="true"/);
+  assert.match(html, /title="Overzicht"[^>]*><span class="nav-icon" aria-hidden="true">O<\/span><span class="nav-label">Overzicht<\/span>/);
+});
+
+test("the refresh countdown retains its description and displays the time", () => {
+  const html = render(app.RefreshCountdown, { lastUpdated: new Date(), minutes: 5 });
+  assert.match(html, /title="Vernieuwen over \d+:\d{2}"/);
+  assert.match(html, /<span class="countdown-label">Vernieuwen over <\/span>05:00/);
+});
+
 test("session notices distinguish rejected credentials from connection failures and successful authentication", () => {
   const resources = [
     "vehicles", "equipments", "buildings", "allianceBuildings", "credits", "allianceInfo",

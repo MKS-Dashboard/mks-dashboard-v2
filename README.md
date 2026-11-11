@@ -39,7 +39,7 @@ Onder het SessionID-veld vind je **Hoe vind ik mijn SessionID?** met instructies
 
 Behandel deze waarde als een wachtwoord en deel deze nooit, ook niet in screenshots of foutrapporten.
 
-Na een succesvolle aanmelding verschijnen de accountgebonden overzichten. Rechtsboven vind je het gebruikersmenu:
+Na een succesvolle aanmelding verschijnen de accountgebonden overzichten. Met het menu-icoon bovenaan maak je de navigatie smaller of weer breder. In de smalle balk blijven het logo, de navigatie-iconen en de countdown zichtbaar; houd de muis op een icoon om de naam te zien. Rechtsboven vind je het gebruikersmenu:
 
 - **Gegevens ophalen:** vernieuw je dashboard handmatig.
 - **Details:** bekijk je accountgegevens, saldo, rang en ranglijstpositie.

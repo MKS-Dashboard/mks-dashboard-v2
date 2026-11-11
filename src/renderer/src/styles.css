@@ -49,6 +49,65 @@ input:focus-visible {
   background: #fff;
 }
 
+.menu-collapsed .sidebar {
+  width: 72px;
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+.menu-collapsed .main-area {
+  margin-left: 72px;
+}
+
+.menu-collapsed .brand {
+  justify-content: center;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.menu-collapsed .brand-label,
+.menu-collapsed .nav-heading,
+.menu-collapsed .nav-count,
+.menu-collapsed .nav-group-chevron {
+  display: none;
+}
+
+.menu-collapsed .nav-label,
+.menu-collapsed .sidebar-status:not(.has-countdown),
+.menu-collapsed .countdown-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.menu-collapsed .nav-item {
+  justify-content: center;
+}
+
+.menu-collapsed .nav-group-items {
+  margin-left: 3px;
+  padding-left: 4px;
+}
+
+.menu-collapsed .sidebar-footer {
+  justify-content: center;
+  gap: 4px;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.menu-collapsed .sidebar-status.has-countdown {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.menu-collapsed .status-dot {
+  flex: 0 0 8px;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -244,6 +303,19 @@ input:focus-visible {
 
 .topbar h1 {
   font-size: 20px;
+}
+
+.topbar-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 16px;
+}
+
+.menu-toggle {
+  width: 36px;
+  flex: 0 0 36px;
+  padding: 0;
 }
 
 .topbar-actions,

@@ -36,7 +36,10 @@ export function RefreshCountdown({ lastUpdated, minutes }: { lastUpdated: Date; 
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [lastUpdated, minutes]);
-  return <span>Vernieuwen over {refreshCountdown(lastUpdated.getTime(), now, minutes)}</span>;
+  const countdown = refreshCountdown(lastUpdated.getTime(), now, minutes);
+  return <span className="refresh-countdown" title={`Vernieuwen over ${countdown}`}>
+    <span className="countdown-label">Vernieuwen over </span>{countdown}
+  </span>;
 }
 
 export function OverviewSummary({ data, username, lastUpdated, loading, autoRefresh, refreshMinutes, onNavigate, onRefresh }: {
@@ -244,6 +247,7 @@ function App() {
   const userMenu = useRef<HTMLDetailsElement>(null);
   const refreshInFlight = useRef(false);
   const [page, setPage] = useState<PageKey>("overview");
+  const [menuExpanded, setMenuExpanded] = useState(true);
   const [data, setData] = useState<DashboardData | null>(null);
   const [hasSessionId, setHasSessionId] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
@@ -558,11 +562,13 @@ function App() {
   const publicPage = isInfoblockPage(page);
   const username = hasSessionId ? accountUsername(data?.credits) : null;
   const userMenuLabel = username ?? (checkingSession ? "Account laden..." : hasSessionId ? "Naam niet beschikbaar" : "Niet aangemeld");
+  const showCountdown = !checkingSession && signedIn && !loading && !loggingOut && autoRefresh && !updating && refreshSettingsLoaded && lastUpdated !== null;
   function navigationButton(item: typeof navigationPages[number]) {
     const resource = dashboardResources.find((entry) => entry.key === item.key);
     return (
-      <button className={`nav-item ${page === item.key ? "active" : ""}`} key={item.key} onClick={() => setPage(item.key)}>
-        <span className="nav-icon">{item.label.slice(0, 1)}</span>{item.label}
+      <button className={`nav-item ${page === item.key ? "active" : ""}`} key={item.key}
+        title={item.label} onClick={() => setPage(item.key)}>
+        <span className="nav-icon" aria-hidden="true">{item.label.slice(0, 1)}</span><span className="nav-label">{item.label}</span>
         {resource && data?.[resource.key]?.ok && !["credits", "allianceInfo", "pointsOfInterest"].includes(resource.key) &&
           <span className="nav-count">{resourceCount(data, resource.key)}</span>}
       </button>
@@ -580,7 +586,7 @@ function App() {
   }[updateStatus.state];
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${menuExpanded ? "" : " menu-collapsed"}`}>
       {updating && (
         <div className="update-overlay">
           <section className="update-dialog" role="dialog" aria-modal="true" aria-labelledby="update-title" tabIndex={-1}
@@ -597,10 +603,10 @@ function App() {
           </section>
         </div>
       )}
-      <aside className="sidebar" inert={updating}>
+      <aside id="sidebar" className="sidebar" inert={updating}>
         <div className="brand">
           <div className="brand-mark">MKS</div>
-          <div>
+          <div className="brand-label">
             <strong>{appInfo?.channel === "dev" ? "MKS Dashboard Beta" : "MKS Dashboard"}</strong>
             <span>Desktop</span>
           </div>
@@ -608,8 +614,8 @@ function App() {
 
         <div className="nav-heading">DASHBOARD</div>
         <nav aria-label="Hoofdnavigatie">
-          <button className={`nav-item ${page === "overview" ? "active" : ""}`} onClick={() => setPage("overview")}>
-            <span className="nav-icon">O</span> Overzicht
+          <button className={`nav-item ${page === "overview" ? "active" : ""}`} title="Overzicht" onClick={() => setPage("overview")}>
+            <span className="nav-icon" aria-hidden="true">O</span><span className="nav-label">Overzicht</span>
           </button>
           {visiblePages.filter((item) => item.key === "vehicles" || item.key === "equipments").map(navigationButton)}
           {navigationGroups.map((group) => {
@@ -617,8 +623,8 @@ function App() {
             if (!items.length) return null;
             return (
               <details className="nav-group" key={group.label} open>
-                <summary className={`nav-item ${group.pages.includes(page) ? "active" : ""}`}>
-                  <span className="nav-icon">{group.label.slice(0, 1)}</span>{group.label}
+                <summary className={`nav-item ${group.pages.includes(page) ? "active" : ""}`} title={group.label}>
+                  <span className="nav-icon" aria-hidden="true">{group.label.slice(0, 1)}</span><span className="nav-label">{group.label}</span>
                   <span className="nav-group-chevron" aria-hidden="true">▾</span>
                 </summary>
                 <div className="nav-group-items">{items.map(navigationButton)}</div>
@@ -628,29 +634,40 @@ function App() {
           {visiblePages.filter((item) => item.key !== "vehicles" && item.key !== "equipments" &&
             !navigationGroups.some((group) => group.pages.includes(item.key))).map(navigationButton)}
           {showDevMode && (
-            <button className={`nav-item ${page === "rawResponses" ? "active" : ""}`} onClick={() => setPage("rawResponses")}>
-              <span className="nav-icon">D</span> Raw API-responses
+            <button className={`nav-item ${page === "rawResponses" ? "active" : ""}`} title="Raw API-responses" onClick={() => setPage("rawResponses")}>
+              <span className="nav-icon" aria-hidden="true">D</span><span className="nav-label">Raw API-responses</span>
             </button>
           )}
         </nav>
 
         <div className="sidebar-footer">
           <span className={`status-dot ${signedIn ? "connected" : ""}`} />
-          {checkingSession ? <span>SessionID controleren</span>
+          <div className={`sidebar-status${showCountdown ? " has-countdown" : ""}`}>{checkingSession ? <span>SessionID controleren</span>
             : signedIn ? loading ? <span>Gegevens ophalen...</span>
               : loggingOut ? <span>Uitloggen...</span>
                 : !autoRefresh ? <span>Automatisch vernieuwen uit</span>
                   : updating || !refreshSettingsLoaded || !lastUpdated ? <span>Vernieuwen gepauzeerd</span>
                     : <RefreshCountdown lastUpdated={lastUpdated} minutes={refreshMinutes} />
-              : <span>{hasSessionId ? "SessionID ingesteld" : "Geen SessionID ingesteld"}</span>}
+              : <span>{hasSessionId ? "SessionID ingesteld" : "Geen SessionID ingesteld"}</span>}</div>
         </div>
       </aside>
 
       <main className="main-area" inert={updating}>
         <header className="topbar">
-          <div>
-            <div className="eyebrow">MELDKAMERSPEL</div>
-            <h1>{selectedLabel}</h1>
+          <div className="topbar-heading">
+            <button type="button" className="button button-secondary menu-toggle" aria-controls="sidebar" aria-pressed={!menuExpanded}
+              aria-label="Compact menu"
+              title={menuExpanded ? "Menu inklappen" : "Menu uitklappen"}
+              onClick={() => setMenuExpanded((expanded) => !expanded)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <div>
+              <div className="eyebrow">MELDKAMERSPEL</div>
+              <h1>{selectedLabel}</h1>
+            </div>
           </div>
           <div className="topbar-actions">
             {["available", "downloaded"].includes(updateStatus.state) && (
