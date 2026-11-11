@@ -125,7 +125,7 @@ Genegeerde en lokale buildbestanden staan niet in dit overzicht.
 
 ## Niet meegetelde bestanden
 
-**6.537 niet-lege regels** in 22 bestanden.
+**6.898 niet-lege regels** in 22 bestanden.
 3 binaire of niet-tekstbestanden tellen mee als bestand, maar niet voor de regels. Symbolische koppelingen worden ook als niet-tekst behandeld.
 De tekstregels omvatten ook dit overzicht en tellen niet mee in de broncodetelling.
 
@@ -133,7 +133,7 @@ De tekstregels omvatten ook dit overzicht en tellen niet mee in de broncodetelli
 | --- | ---: | ---: | ---: |
 | `(zonder extensie)` | 1 | 6 | 0 |
 | `.exe` | 2 | 0 | 2 |
-| `.json` | 6 | 5.747 | 0 |
+| `.json` | 6 | 6.108 | 0 |
 | `.md` | 3 | 313 | 0 |
 | `.png` | 1 | 0 | 1 |
 | `.yml` | 9 | 471 | 0 |
