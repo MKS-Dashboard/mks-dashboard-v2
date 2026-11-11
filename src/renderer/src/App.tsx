@@ -813,7 +813,7 @@ function App() {
           {(!data || showSessionForm) && !checkingSession && !publicPage && page !== "settings" && page !== "about" && page !== "rawResponses" && (
             <section className="welcome-panel">
               <div className="welcome-icon">M</div>
-              <div className="welcome-copy">
+              <form className="welcome-copy" onSubmit={(event) => { event.preventDefault(); void saveAndRefresh(); }}>
                 <span className="eyebrow">{data ? "ACCOUNTINSTELLINGEN" : "JOUW LOKALE DASHBOARD"}</span>
                 <h2>{sessionInvalid ? "SessionID verlopen of ongeldig" : data ? "SessionID aanpassen" : "Welkom bij MKS Dashboard Desktop"}</h2>
                 <p>
@@ -844,14 +844,14 @@ function App() {
                   <span>Bewaar de SessionID versleuteld op deze pc</span>
                 </label>
                 <div className="welcome-actions">
-                  <button className="button button-primary" disabled={loading || loggingOut || (sessionInvalid && !sessionDraft.trim())} onClick={() => void saveAndRefresh()}>
+                  <button type="submit" className="button button-primary" disabled={loading || loggingOut || (sessionInvalid && !sessionDraft.trim())}>
                     {loading ? "Gegevens ophalen..." : sessionDraft.trim() ? "SessionID opslaan en ophalen" : "Gegevens ophalen"}
                   </button>
                 </div>
                 <p className="privacy-note">
                   Je SessionID wordt uitsluitend naar meldkamerspel.com gestuurd. Live gegevens vereisen internet.
                 </p>
-              </div>
+              </form>
             </section>
           )}
 
