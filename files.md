@@ -6,20 +6,20 @@ Genegeerde en lokale buildbestanden staan niet in dit overzicht.
 
 ## Broncodetelling
 
-**11.380 niet-lege regels** in 61 bestanden, inclusief commentaar.
+**11.462 niet-lege regels** in 61 bestanden, inclusief commentaar.
 
 | Extensie | Bestanden | Niet-lege regels |
 | --- | ---: | ---: |
-| `.cjs` | 1 | 39 |
+| `.cjs` | 1 | 45 |
 | `.cs` | 2 | 224 |
 | `.css` | 1 | 1.377 |
 | `.html` | 1 | 16 |
 | `.json` | 13 | 4.403 |
-| `.mjs` | 16 | 1.966 |
+| `.mjs` | 16 | 2.039 |
 | `.nsh` | 1 | 73 |
 | `.ps1` | 2 | 125 |
-| `.ts` | 16 | 1.239 |
-| `.tsx` | 8 | 1.918 |
+| `.ts` | 16 | 1.241 |
+| `.tsx` | 8 | 1.919 |
 
 ## Bestandsboom
 
@@ -125,7 +125,7 @@ Genegeerde en lokale buildbestanden staan niet in dit overzicht.
 
 ## Niet meegetelde bestanden
 
-**6.531 niet-lege regels** in 22 bestanden.
+**6.537 niet-lege regels** in 22 bestanden.
 3 binaire of niet-tekstbestanden tellen mee als bestand, maar niet voor de regels. Symbolische koppelingen worden ook als niet-tekst behandeld.
 De tekstregels omvatten ook dit overzicht en tellen niet mee in de broncodetelling.
 
@@ -134,6 +134,6 @@ De tekstregels omvatten ook dit overzicht en tellen niet mee in de broncodetelli
 | `(zonder extensie)` | 1 | 6 | 0 |
 | `.exe` | 2 | 0 | 2 |
 | `.json` | 6 | 5.747 | 0 |
-| `.md` | 3 | 310 | 0 |
+| `.md` | 3 | 313 | 0 |
 | `.png` | 1 | 0 | 1 |
-| `.yml` | 9 | 468 | 0 |
+| `.yml` | 9 | 471 | 0 |
