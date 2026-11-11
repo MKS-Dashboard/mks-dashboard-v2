@@ -17,19 +17,20 @@ import {
 } from "../shared/contracts";
 
 const GAME_ORIGIN = "https://meldkamerspel.com";
+const isTestApp = app.isPackaged && /-tst(?:\.|$)/.test(app.getVersion());
 const isBetaApp = !app.isPackaged || /-beta(?:\.|$)/.test(app.getVersion());
-const productName = isBetaApp ? "MKS Dashboard Beta" : "MKS Dashboard";
-if (isBetaApp) {
+const productName = isTestApp ? "MKS Dashboard TST" : isBetaApp ? "MKS Dashboard Beta" : "MKS Dashboard";
+if (isTestApp || isBetaApp) {
   app.setName(productName);
   app.setPath("userData", resolve(app.getPath("appData"), productName));
 }
 if (process.platform === "win32") {
-  app.setAppUserModelId(isBetaApp ? "com.mksdashboard.desktop.beta" : "com.mksdashboard.desktop");
+  app.setAppUserModelId(isTestApp ? "com.mksdashboard.desktop.tst" : isBetaApp ? "com.mksdashboard.desktop.beta" : "com.mksdashboard.desktop");
 }
 const mainDirectory = dirname(fileURLToPath(import.meta.url));
 const sessionIdFile = resolve(app.getPath("userData"), "session-id.enc");
 const logUserUsage = createUserUsageLogger(resolve(app.getPath("userData"), "user-usage-days.json"), {
-  versie: getDisplayVersion(app.getVersion()), beta: isBetaApp,
+  versie: getDisplayVersion(app.getVersion()), beta: isBetaApp || isTestApp,
 });
 let usageAccount: unknown = null;
 
@@ -53,6 +54,7 @@ function setUpdateStatus(status: UpdateStatus): void {
 }
 
 async function checkForUpdates(): Promise<void> {
+  if (isTestApp) throw new Error("Updates zijn niet beschikbaar voor TST-builds. Download een nieuw PR-artifact.");
   if (!app.isPackaged) return;
   if (updateExecuting || updateStatus.state === "checking" || updateStatus.state === "downloaded") return;
 
@@ -69,7 +71,7 @@ async function checkForUpdates(): Promise<void> {
 }
 
 function configureAutoUpdates(): void {
-  if (!app.isPackaged) return;
+  if (!app.isPackaged || isTestApp) return;
 
   const isDevChannel = /-beta(?:\.|$)/.test(app.getVersion());
   autoUpdater.channel = isDevChannel ? "beta" : "latest";
@@ -331,8 +333,8 @@ ipcMain.handle("app:info", (event) => {
   assertMainWindow(event);
   const version = app.getVersion();
   return {
-    version: getDisplayVersion(version),
-    channel: isBetaApp ? "dev" : "stable",
+    version: isTestApp ? version : getDisplayVersion(version),
+    channel: isTestApp ? "test" : isBetaApp ? "dev" : "stable",
   };
 });
 

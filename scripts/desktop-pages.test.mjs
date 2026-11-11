@@ -260,7 +260,7 @@ test("overview welcomes players, preserves zero balances and exposes refresh sta
 });
 
 test("about page presents version and usage privacy and remains available without signing in", () => {
-  for (const channel of ["stable", "dev"]) {
+  for (const channel of ["stable", "dev", "test"]) {
     assert.equal(navigation.pageAllowed("about", false, channel, false, false), true);
     const html = render(app.AboutPage, { appInfo: { version: "2026.11.01.15.40", channel } });
     assert.match(html, /Over de app/);
@@ -270,13 +270,51 @@ test("about page presents version and usage privacy and remains available withou
     assert.match(html, /Privacy/);
     assert.match(html, /Links &amp; credits/);
     assert.match(html, /onafhankelijk project/);
-    assert.match(html, new RegExp(channel === "dev" ? "Beta" : "Stable"));
+    assert.match(html, new RegExp(channel === "test" ? "TST" : channel === "dev" ? "Beta" : "Stable"));
     assert.match(html, /href="https:\/\/github.com\/MKS-Dashboard\/mks-dashboard-v2\/releases"/);
     assert.match(html, /Bijdragers/);
     assert.match(html, /Missionfiles-All-Versions/);
     assert.match(html, /Je SessionID en overige spelgegevens worden niet meegestuurd/);
-    if (channel === "dev") assert.match(html, /GitHub-issues ophalen/);
+    if (channel !== "stable") assert.match(html, /GitHub-issues ophalen/);
     else assert.doesNotMatch(html, /GitHub-issues ophalen|Bugs en featureverzoeken/);
+  }
+});
+
+test("packaged TST builds use separate storage and never configure or perform updates", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "mks-tst-test-"));
+  const previousResourcesPath = process.resourcesPath;
+  try {
+    process.resourcesPath = folder;
+    const handlers = new Map();
+    const calls = [];
+    const sender = { setWindowOpenHandler() {}, on() {} };
+    const window = { webContents: sender, loadFile: async () => {}, loadURL: async () => {} };
+    const electronApp = {
+      isPackaged: true, getVersion: () => "0.1.0-tst.42", getPath: () => folder,
+      setName: (name) => calls.push(["name", name]),
+      setPath: (key, value) => calls.push([key, value]),
+      setAppUserModelId: (id) => calls.push(["id", id]), on() {},
+      whenReady: () => ({ then: (callback) => callback() }),
+    };
+    const autoUpdater = new Proxy({}, { get() { throw new Error("TST mag updater niet gebruiken"); },
+      set() { throw new Error("TST mag updater niet configureren"); } });
+    await loadModule("src/main/index.ts", {
+      electron: { app: electronApp, BrowserWindow: function () { return window; },
+        ipcMain: { handle: (key, handler) => handlers.set(key, handler) } },
+      "electron-updater": { autoUpdater },
+    });
+    assert.ok(calls.some(([key, name]) => key === "name" && name === "MKS Dashboard TST"));
+    assert.ok(calls.some(([key, path]) => key === "userData" && path === join(folder, "MKS Dashboard TST")));
+    if (process.platform === "win32") assert.ok(calls.some(([key, id]) => key === "id" && id === "com.mksdashboard.desktop.tst"));
+    const event = { sender };
+    assert.deepEqual(handlers.get("app:info")(event), { version: "0.1.0-tst.42", channel: "test" });
+    await assert.rejects(handlers.get("updates:check")(event), /niet beschikbaar voor TST/);
+    await assert.rejects(handlers.get("updates:install")(event), /geen update/);
+    assert.equal(navigation.pageAllowed("rawResponses", false, "test", false, true), true);
+    assert.equal(infoblocks.infoblocksAllowed("test", true), true);
+  } finally {
+    process.resourcesPath = previousResourcesPath;
+    await rm(folder, { recursive: true, force: true });
   }
 });
 

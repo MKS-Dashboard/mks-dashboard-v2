@@ -39,7 +39,11 @@ npm.cmd run build
 npm.cmd run dist -- --publish never
 ```
 
-De installer verschijnt in [release](release). `npm.cmd run dist` voert ook de typecontrole en appbuild uit. Gebruik voor gerichte tests de bestaande Node-testrunner, bijvoorbeeld:
+De installer verschijnt in [release](release). `npm.cmd run dist` voert ook de typecontrole en appbuild uit.
+
+PR-artifacts zijn afzonderlijke **MKS Dashboard TST**-installers met een eigen app-ID en gegevensmap, naast Stable en Beta. Hun versienummer en bestandsnaam bevatten `tst` en het Actions-runnummer. TST heeft dezelfde Dev-functies als Beta en wordt voor gebruiksregistratie als Beta behandeld. TST-builds ontvangen geen automatische of handmatige app-updates; download een nieuw artifact om een nieuwere PR-build te testen. Verschillende TST-builds gebruiken dezelfde TST-installatie en kunnen elkaar vervangen. De installatieoptie om handmatig een andere map te kiezen blijft beschikbaar: selecteer daarbij nooit de map van Stable of Beta.
+
+Gebruik voor gerichte tests de bestaande Node-testrunner, bijvoorbeeld:
 
 ```powershell
 node --test scripts\desktop-pages.test.mjs

@@ -11,5 +11,5 @@ export function isInfoblockPage(page: string): boolean {
 }
 
 export function infoblocksAllowed(channel: AppInfo["channel"] | undefined, enabled: boolean): boolean {
-  return channel === "dev" && enabled;
+  return (channel === "dev" || channel === "test") && enabled;
 }

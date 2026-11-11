@@ -152,7 +152,7 @@ export function AboutPage({ appInfo }: { appInfo: AppInfo | null }) {
     <section className="settings-panel" aria-labelledby="about-title">
       <div className="settings-heading">
         <h2 id="about-title">Over de app</h2>
-        <p>{appInfo ? `Versie ${appInfo.version} — ${appInfo.channel === "dev" ? "Beta" : "Stable"}` : "Versie laden..."}</p>
+        <p>{appInfo ? `Versie ${appInfo.version} — ${appInfo.channel === "test" ? "TST" : appInfo.channel === "dev" ? "Beta" : "Stable"}` : "Versie laden..."}</p>
       </div>
       <div className="settings-option">
         <div className="settings-option-copy">
@@ -197,7 +197,7 @@ export function AboutPage({ appInfo }: { appInfo: AppInfo | null }) {
           </ul>
         </div>
       </div>
-      {appInfo?.channel === "dev" && <DesktopIssuesOverview />}
+      {(appInfo?.channel === "dev" || appInfo?.channel === "test") && <DesktopIssuesOverview />}
     </section>
   );
 }
@@ -382,7 +382,7 @@ function App() {
   }, []);
 
   const showInfoblocks = infoblocksAllowed(appInfo?.channel, infoblocks);
-  const showDevMode = appInfo?.channel === "dev" && devMode;
+  const showDevMode = (appInfo?.channel === "dev" || appInfo?.channel === "test") && devMode;
   const allowed = (key: PageKey) => pageAllowed(key, signedIn, appInfo?.channel, infoblocks, devMode);
   const visibleResources = dashboardResources.filter((item) => item.key !== "credits" && allowed(item.key));
   const visiblePages = navigationPages.filter((item) => item.key !== "credits" && allowed(item.key));
@@ -607,7 +607,7 @@ function App() {
         <div className="brand">
           <div className="brand-mark">MKS</div>
           <div className="brand-label">
-            <strong>{appInfo?.channel === "dev" ? "MKS Dashboard Beta" : "MKS Dashboard"}</strong>
+            <strong>{appInfo?.channel === "test" ? "MKS Dashboard TST" : appInfo?.channel === "dev" ? "MKS Dashboard Beta" : "MKS Dashboard"}</strong>
             <span>Desktop</span>
           </div>
         </div>
@@ -709,9 +709,10 @@ function App() {
                 <button disabled={loading || checkingSession || loggingOut} onClick={() => runUserAction(refresh)}>
                   {loading ? "Gegevens ophalen..." : "Gegevens ophalen"}
                 </button>
-                <button disabled={["checking", "downloading", "downloaded", "installing"].includes(updateStatus.state)}
+                <button disabled={appInfo?.channel === "test" || ["checking", "downloading", "downloaded", "installing"].includes(updateStatus.state)}
+                  title={appInfo?.channel === "test" ? "TST-builds ontvangen geen updates; download een nieuw PR-artifact." : undefined}
                   onClick={() => runUserAction(() => window.mksDashboard.checkForUpdates())}>
-                  {updateStatus.state === "downloading" ? "Update downloaden..." :
+                  {appInfo?.channel === "test" ? "Updates niet beschikbaar (TST)" : updateStatus.state === "downloading" ? "Update downloaden..." :
                     updateStatus.state === "checking" ? "Updates controleren..." : "Updates controleren"}
                 </button>
                 {hasSessionId && (
@@ -783,7 +784,7 @@ function App() {
                   <option value="politie">Politie (politie.meldkamerspel.com)</option>
                 </select>
               </div>
-              {appInfo?.channel === "dev" && <div className="settings-option">
+              {(appInfo?.channel === "dev" || appInfo?.channel === "test") && <div className="settings-option">
                 <div className="settings-option-copy">
                   <div className="settings-option-title">
                     <label htmlFor="infoblocks-toggle">Infoblocks</label>
@@ -793,13 +794,13 @@ function App() {
                     Toon openbare informatie zoals missies, evenementen en POI's, zonder accountkoppeling.
                   </p>
                 </div>
-                {appInfo?.channel === "dev" && (
+                {(appInfo?.channel === "dev" || appInfo?.channel === "test") && (
                   <input id="infoblocks-toggle" className="settings-toggle" type="checkbox"
                     aria-describedby="infoblocks-description" checked={infoblocks} disabled={!settingsLoaded}
                     onChange={(event) => changeSetting("infoblocks", event.target.checked)} />
                 )}
               </div>}
-              {appInfo?.channel === "dev" && (
+              {(appInfo?.channel === "dev" || appInfo?.channel === "test") && (
                 <div className="settings-option">
                   <div className="settings-option-copy">
                     <div className="settings-option-title">
@@ -941,7 +942,7 @@ function App() {
         </section>
         <footer className="app-footer">
           <span>
-            Versie {appInfo?.version ?? "…"} · {appInfo?.channel === "dev" ? "Dev" : "Stable"}
+            Versie {appInfo?.version ?? "…"} · {appInfo?.channel === "test" ? "TST" : appInfo?.channel === "dev" ? "Dev" : "Stable"}
           </span>
         </footer>
       </main>

@@ -2,12 +2,18 @@ const { resolve } = require("node:path");
 
 const buildTimestamp = process.env.BUILD_TIMESTAMP;
 const updateChannel = process.env.UPDATE_CHANNEL;
+const testBuildNumber = process.env.TEST_BUILD_NUMBER;
+if (testBuildNumber !== undefined && !/^[1-9]\d*$/.test(testBuildNumber)) {
+  throw new Error("TEST_BUILD_NUMBER moet een positief geheel getal zijn.");
+}
+const isTest = testBuildNumber !== undefined;
 const publishChannel = updateChannel === "dev" ? "beta" : "latest";
 const isBeta = updateChannel === "dev";
 
 module.exports = {
-  appId: isBeta ? "com.mksdashboard.desktop.beta" : "com.mksdashboard.desktop",
-  productName: isBeta ? "MKS Dashboard Beta" : "MKS Dashboard",
+  appId: isTest ? "com.mksdashboard.desktop.tst" : isBeta ? "com.mksdashboard.desktop.beta" : "com.mksdashboard.desktop",
+  productName: isTest ? "MKS Dashboard TST" : isBeta ? "MKS Dashboard Beta" : "MKS Dashboard",
+  ...(isTest && { extraMetadata: { version: `${require("./package.json").version.split("-")[0]}-tst.${testBuildNumber}` } }),
   directories: {
     output: "release",
   },
@@ -18,7 +24,7 @@ module.exports = {
   extraResources: [
     { from: resolve(__dirname, "build", "icon.png"), to: "icon.png" },
   ],
-  artifactName: buildTimestamp && updateChannel
+  artifactName: isTest ? "MKS-Dashboard-Setup-${version}.${ext}" : buildTimestamp && updateChannel
     ? `MKS-Dashboard-Setup-${buildTimestamp}-${updateChannel}.\${ext}`
     : "MKS-Dashboard-Setup-${version}.${ext}",
   publish: [

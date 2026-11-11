@@ -80,6 +80,10 @@ jobs:
           echo "BUILD_TIMESTAMP=${{ steps.stable-version.outputs.display_timestamp }}" >> "$GITHUB_ENV"
           echo "UPDATE_CHANNEL=stable" >> "$GITHUB_ENV"
 
+      - name: Set test build identity
+        if: github.event_name == 'pull_request'
+        run: echo "TEST_BUILD_NUMBER=${{ github.run_number }}" >> "$GITHUB_ENV"
+
       - name: Build Windows installer
         run: xvfb-run --auto-servernum --server-args="-screen 0 1280x800x24" npm run dist -- --publish never
 
@@ -118,7 +122,7 @@ jobs:
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: mks-dashboard-windows-setup-${{ github.run_number }}
+          name: mks-dashboard-windows-setup-${{ github.event_name == 'pull_request' && 'tst-' || '' }}${{ github.run_number }}
           path: release/*.exe
           if-no-files-found: error
           retention-days: 14

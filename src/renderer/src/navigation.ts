@@ -29,7 +29,7 @@ export function pageAllowed(page: PageKey, signedIn: boolean, channel: AppInfo["
   infoblocks: boolean, devMode: boolean): boolean {
   if (page === "overview") return true;
   if (page === "settings" || page === "about") return true;
-  if (page === "rawResponses") return channel === "dev" && devMode;
+  if (page === "rawResponses") return (channel === "dev" || channel === "test") && devMode;
   if (isInfoblockPage(page)) return infoblocksAllowed(channel, infoblocks);
   return signedIn;
 }

@@ -51,7 +51,7 @@ export interface UpdateStatus {
 
 export interface AppInfo {
   version: string;
-  channel: "stable" | "dev";
+  channel: "stable" | "dev" | "test";
 }
 
 export interface MksDashboardApi {

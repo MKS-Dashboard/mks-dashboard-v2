@@ -23,6 +23,8 @@ Je kunt de volledige installer ook zelf downloaden via [GitHub Releases](https:/
 
 Stable en Beta kunnen naast elkaar worden geïnstalleerd. Ze hebben afzonderlijke instellingen en opgeslagen sessies. Beta kan nog onvoltooide functies of fouten bevatten.
 
+Installers uit pull-request-artifacts heten **MKS Dashboard TST** en gebruiken een eigen installatie en instellingen, naast Stable en Beta. TST ontvangt geen updates: download een nieuw artifact voor een nieuwere testversie. Kies bij een aangepaste installatie niet de installatiemap van Stable of Beta.
+
 > De installers zijn niet digitaal ondertekend. Windows kan daarom een beveiligingswaarschuwing tonen. Download uitsluitend uit deze repository.
 
 ## Aan de slag

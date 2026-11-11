@@ -4,7 +4,44 @@ import { mkdtemp, mkdir, copyFile, writeFile, readFile, rm } from "node:fs/promi
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { createRequire } from "node:module";
 import test from "node:test";
+
+test("PR installers use a separate TST identity without changing Stable and Beta builds", async () => {
+  const require = createRequire(import.meta.url);
+  const configPath = require.resolve("../electron-builder.config.cjs");
+  const oldTestNumber = process.env.TEST_BUILD_NUMBER;
+  const oldChannel = process.env.UPDATE_CHANNEL;
+  function config(testNumber, channel) {
+    if (testNumber === undefined) delete process.env.TEST_BUILD_NUMBER;
+    else process.env.TEST_BUILD_NUMBER = testNumber;
+    if (channel === undefined) delete process.env.UPDATE_CHANNEL;
+    else process.env.UPDATE_CHANNEL = channel;
+    delete require.cache[configPath];
+    return require(configPath);
+  }
+  try {
+    const stable = config(undefined, "stable");
+    const beta = config(undefined, "dev");
+    const tst = config("42", undefined);
+    assert.equal(stable.appId, "com.mksdashboard.desktop");
+    assert.equal(beta.appId, "com.mksdashboard.desktop.beta");
+    assert.equal(tst.appId, "com.mksdashboard.desktop.tst");
+    assert.equal(tst.productName, "MKS Dashboard TST");
+    assert.match(tst.extraMetadata.version, /^\d+\.\d+\.\d+-tst\.42$/);
+    assert.equal(tst.artifactName, "MKS-Dashboard-Setup-${version}.${ext}");
+    assert.throws(() => config("invalid", undefined), /positief geheel getal/);
+    const workflow = await readFile(new URL("../.github/workflows/windows-installer.yml", import.meta.url), "utf8");
+    assert.match(workflow, /if: github\.event_name == 'pull_request'\s+run: echo "TEST_BUILD_NUMBER=\$\{\{ github\.run_number \}\}"/);
+    assert.match(workflow, /github\.event_name == 'pull_request' && 'tst-'/);
+  } finally {
+    if (oldTestNumber === undefined) delete process.env.TEST_BUILD_NUMBER;
+    else process.env.TEST_BUILD_NUMBER = oldTestNumber;
+    if (oldChannel === undefined) delete process.env.UPDATE_CHANNEL;
+    else process.env.UPDATE_CHANNEL = oldChannel;
+    delete require.cache[configPath];
+  }
+});
 
 test("Stable workflow prepares, labels and publishes main pushes and explicit tags", async () => {
   const workflow = (await readFile(new URL("../.github/workflows/windows-installer.yml", import.meta.url), "utf8")).replace(/\r\n/g, "\n");
