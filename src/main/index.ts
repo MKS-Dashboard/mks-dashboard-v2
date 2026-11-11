@@ -202,6 +202,14 @@ async function requestGameResource(
       signal: AbortSignal.timeout(20_000),
     });
 
+    if (sessionRequired && (response.status === 401 || (response.status >= 300 && response.status < 400))) {
+      return [key, {
+        ok: false,
+        error: "Je SessionID is verlopen of ongeldig. Log opnieuw in bij Meldkamerspel en plak je nieuwe SessionID in de app.",
+        errorCode: "session-invalid",
+        requestUrl: diagnosticUrl,
+      }];
+    }
     if (response.status >= 300 && response.status < 400) {
       throw new Error("Je sessie is verlopen of je bent niet aangemeld. Meld opnieuw aan.");
     }

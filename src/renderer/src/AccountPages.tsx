@@ -217,6 +217,57 @@ export function SuggestionsPage() {
   </div>;
 }
 
+export function DesktopIssuesOverview() {
+  const { result, refresh } = useReference("desktopIssues");
+  return <DesktopIssuesContent result={result} onRefresh={refresh} />;
+}
+
+export function DesktopIssuesContent({ result, onRefresh }: {
+  result: DashboardResourceResult | null; onRefresh: () => void;
+}) {
+  const parsed = result ? read(result, (data) => {
+    if (!Array.isArray(data)) throw new Error("GitHub heeft geen lijst met issues teruggegeven.");
+    return data.filter((item) => !("pull_request" in record(item))).map((item) => {
+      const issue = record(item);
+      if (!Number.isSafeInteger(issue.number) || Number(issue.number) < 1 || typeof issue.title !== "string" ||
+        !Array.isArray(issue.labels)) throw new Error("Een GitHub-issue heeft een ongeldig formaat.");
+      const labels = issue.labels.map((label: unknown) => {
+        const name = typeof label === "string" ? label : record(label).name;
+        if (typeof name !== "string") throw new Error("Een GitHub-label heeft een ongeldig formaat.");
+        return name;
+      });
+      return { number: Number(issue.number), title: issue.title, labels, state: issue.state };
+    }).filter((issue) => issue.state === "open");
+  }) : null;
+  const nextRelease = (issue: { labels: string[] }) => issue.labels.some((label) => label.toLowerCase() === "next release");
+  const rows = (issues: { number: number; title: string; labels: string[] }[]): Row[] => issues.map((issue) => {
+    const labels = issue.labels.map((label) => label.toLowerCase());
+    const types = [
+      ...(labels.includes("bug") ? ["Bug"] : []),
+      ...(labels.includes("enhancement") || labels.includes("feature") ? ["Feature"] : []),
+    ];
+    return {
+      cells: [issue.number, issue.title, types.join(" / ") || "-", "Bekijken / reageren"],
+      url: `https://github.com/MKS-Dashboard/mks-dashboard-v2/issues/${issue.number}`,
+    };
+  });
+  const headers = ["Nummer", "Titel", "Type", "Info / reageren"];
+  return <div className="report-page desktop-issues">
+    <div className="section-heading">
+      <div><h3>Bugs en featureverzoeken</h3><p>Openstaande GitHub-issues van deze desktopapp, zonder pull requests.</p></div>
+      <button className="button button-secondary" onClick={onRefresh}>Vernieuwen</button>
+    </div>
+    <p>Onder Volgende release staan de wijzigingen die bedoeld zijn voor de volgende Stable-release.
+      Dit is een planning, geen garantie. Gesloten issues worden niet getoond.</p>
+    {!parsed ? <div role="status">GitHub-issues ophalen...</div> : !parsed.ok ? <Failure message={parsed.error} /> : <>
+      <DataTable title="Volgende release" headers={headers} rows={rows(parsed.value.filter(nextRelease))}
+        linkColumn={3} rawColumns={[0]} />
+      <DataTable title="Openstaande bugs en featureverzoeken" headers={headers}
+        rows={rows(parsed.value.filter((issue) => !nextRelease(issue)))} linkColumn={3} rawColumns={[0]} />
+    </>}
+  </div>;
+}
+
 export function creditStatistics(data: unknown) {
   const missions = list(data).map((item) => {
     const mission = record(item);

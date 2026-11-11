@@ -1,0 +1,65 @@
+name: Bug melden
+description: Meld iets dat niet goed werkt in MKS Dashboard.
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Bedankt voor je melding! Kijk eerst of het probleem al in een bestaand issue staat.
+        Deel nooit je SessionID. Controleer screenshots en errorrapporten ook op accountgegevens en andere gevoelige informatie.
+  - type: input
+    id: version
+    attributes:
+      label: Appversie
+      description: Je vindt de versie via Gebruikersmenu > Over de app.
+      placeholder: "Bijvoorbeeld: 2026.11.05.19.00"
+    validations:
+      required: true
+  - type: dropdown
+    id: channel
+    attributes:
+      label: Kanaal
+      options:
+        - Stable
+        - Beta
+        - Lokale ontwikkeling
+        - Weet ik niet
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows-versie
+      placeholder: "Bijvoorbeeld: Windows 11"
+  - type: textarea
+    id: description
+    attributes:
+      label: Wat gaat er mis?
+      description: Beschrijf het probleem en vermeld een eventuele foutmelding.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Stappen om het probleem te herhalen
+      placeholder: |
+        1. Open de app
+        2. Ga naar ...
+        3. Klik op ...
+        4. Het probleem verschijnt
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Wat had je verwacht?
+    validations:
+      required: true
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Screenshots, errorrapport of extra informatie
+      description: |
+        Voeg eventueel screenshots of een errorrapport toe. Een rapport maak je via Instellingen > Genereer error rapport.
+        Controleer alles voordat je het deelt: geen SessionID, ongecontroleerde API-responses of andere gevoelige informatie.

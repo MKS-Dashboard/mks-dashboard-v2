@@ -37,6 +37,23 @@ const app = await loadModule("src/renderer/src/App.tsx");
 const usage = await loadModule("src/main/user-usage.ts");
 const equipmentPages = await loadModule("src/renderer/src/EquipmentsPage.tsx");
 const dashboardPages = await loadModule("src/renderer/src/DashboardPages.tsx");
+
+test("compact capacity circles preserve counts, zero capacity and overflow warnings", () => {
+  const render = (component, props) => renderToStaticMarkup(createElement(component, props));
+  const normal = render(dashboardPages.CapacityCircle, { label: "Eigen", capacity: { total: 20, used: 5 } });
+  assert.match(normal, /25%/);
+  assert.match(normal, /Vrij: <b>15<\/b>/);
+  assert.match(normal, /Totaal: <b>20<\/b>/);
+  assert.match(normal, /aria-valuenow="5"/);
+  const empty = render(dashboardPages.CapacityCircle, { label: "Team", capacity: { total: 0, used: 0 } });
+  assert.match(empty, /Geen capaciteit/);
+  assert.doesNotMatch(empty, /NaN|Infinity/);
+  const overflow = render(dashboardPages.CapacityCircle, { label: "Eigen", capacity: { total: 10, used: 15 } });
+  assert.match(overflow, /150%/);
+  assert.match(overflow, /aria-valuenow="10"/);
+  assert.match(overflow, /meer bezetting/);
+  assert.match(overflow, /Vrij: <b>0<\/b>/);
+});
 const equipmentModel = await loadModule("src/renderer/src/dashboard-model.ts");
 const stats = await loadModule("scripts/project-stats.ts");
 const reportInput = (data = null) => ({
@@ -45,6 +62,35 @@ const reportInput = (data = null) => ({
 });
 const ok = (data) => ({ ok: true, data });
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
+
+test("session notices distinguish rejected credentials from connection failures and successful authentication", () => {
+  const resources = [
+    "vehicles", "equipments", "buildings", "allianceBuildings", "credits", "allianceInfo",
+    "schoolings", "allianceSchoolings", "pointsOfInterest", "missions", "allianceEvents",
+  ];
+  const data = Object.fromEntries(resources.map((key) => [key, { ok: false, error: "Verbindingsfout" }]));
+  data.missions = ok([]);
+  assert.equal(app.dashboardSessionStatus(data), "unverified");
+  const unverified = render(app.SavedSessionNotice, { status: app.dashboardSessionStatus(data) });
+  assert.match(unverified, /kon niet worden gecontroleerd/);
+  assert.match(unverified, /internetverbinding/);
+  assert.doesNotMatch(unverified, /verlopen|Vul alleen iets in/);
+  data.missions = { ok: false, error: "Redirect", errorCode: "session-invalid" };
+  assert.equal(app.dashboardSessionStatus(data), "unverified");
+  data.credits = { ok: false, error: "Sessie geweigerd", errorCode: "session-invalid" };
+  assert.equal(app.dashboardSessionStatus(data), "invalid");
+  const invalid = render(app.SavedSessionNotice, { status: app.dashboardSessionStatus(data) });
+  assert.match(invalid, /role="alert"/);
+  assert.match(invalid, /SessionID is verlopen of ongeldig/);
+  assert.match(invalid, /Log opnieuw in bij Meldkamerspel/);
+  assert.match(invalid, /plak je nieuwe SessionID hieronder/);
+  assert.doesNotMatch(invalid, /Vul alleen iets in/);
+  data.vehicles = ok([]);
+  assert.equal(app.dashboardSessionStatus(data), "valid");
+  assert.match(render(app.SavedSessionNotice, { status: "valid" }), /Vul alleen iets in/);
+  data.credits = ok({ user_id: 1 });
+  assert.equal(app.dashboardSessionStatus(data), "valid");
+});
 
 test("project statistics exclude data, dependencies, outputs and blank lines", async () => {
   const folder = await mkdtemp(join(tmpdir(), "mks-stats-test-"));
@@ -214,7 +260,36 @@ test("about page presents version and usage privacy and remains available withou
     assert.match(html, /Bijdragers/);
     assert.match(html, /Missionfiles-All-Versions/);
     assert.match(html, /Je SessionID en overige spelgegevens worden niet meegestuurd/);
+    if (channel === "dev") assert.match(html, /GitHub-issues ophalen/);
+    else assert.doesNotMatch(html, /GitHub-issues ophalen|Bugs en featureverzoeken/);
   }
+});
+
+test("desktop issue overview shows open issues and next release without PRs or closed issues", () => {
+  const issue = (number, title, labels = [], state = "open") => ({ number, title, labels, state });
+  const html = render(pages.DesktopIssuesContent, { onRefresh() {}, result: ok([
+    issue(17, "Nieuwe functie", [{ name: "enhancement" }, { name: "next release" }]),
+    issue(16, "Sessieprobleem", ["bug", "internal-label"]),
+    issue(19, "Extra functie", ["feature"]),
+    issue(15, "Al uitgebracht", ["next release"], "closed"),
+    { ...issue(18, "Pull request"), pull_request: {} },
+  ]) });
+  assert.match(html, /Volgende release/);
+  assert.equal((html.match(/Nieuwe functie/g) ?? []).length, 1);
+  assert.equal((html.match(/Sessieprobleem/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /Al uitgebracht|Pull request/);
+  assert.match(html, /<td>Feature<\/td>/);
+  assert.match(html, /<td>Bug<\/td>/);
+  assert.doesNotMatch(html, /enhancement|next release|internal-label|>Labels</);
+  assert.equal((html.match(/<td>Feature<\/td>/g) ?? []).length, 2);
+  assert.match(html, /geen garantie/);
+  for (const result of [ok({}), ok([{ number: "bad" }]), ok([issue(1, "Test", [null])]),
+    { ok: false, error: "GitHub HTTP 403" }]) {
+    const failed = render(pages.DesktopIssuesContent, { onRefresh() {}, result });
+    assert.match(failed, /ongeldig|geen lijst|HTTP 403/);
+  }
+  assert.match(render(pages.DesktopIssuesContent, { onRefresh() {}, result: null }), /role="status"/);
+  assert.match(render(pages.DesktopIssuesContent, { onRefresh() {}, result: ok([]) }), /Volgende release/);
 });
 
 test("usage notice discloses collected fields under more details without claiming consent", () => {
@@ -420,13 +495,13 @@ test("game requests use cookie authentication only for account endpoints and nev
     const handlers = new Map();
     const sender = { setWindowOpenHandler() {}, on() {} };
     const owner = { webContents: sender, loadFile: async () => {}, loadURL: async () => {} };
-    const app = {
+    const electronApp = {
       isPackaged: false, getVersion: () => "0.1.0", getPath: () => folder,
       setName() {}, setPath() {}, setAppUserModelId() {}, on() {},
       whenReady: () => ({ then: (callback) => callback() }),
     };
     await loadModule("src/main/index.ts", {
-      electron: { app, BrowserWindow: function () { return owner; },
+      electron: { app: electronApp, BrowserWindow: function () { return owner; },
         ipcMain: { handle: (key, handler) => handlers.set(key, handler) } },
       "electron-updater": { autoUpdater: {} },
     });
@@ -481,13 +556,29 @@ test("game requests use cookie authentication only for account endpoints and nev
     await handlers.get("usage:log")(event);
     await handlers.get("usage:log")(event);
     assert.equal(registrations, 1);
-    for (status of [401, 302]) {
+    for (status of [401, 302, 403, 503]) {
       requests.length = 0;
       const failed = await load(event);
       assert.equal(requests.length, 11);
       assert.equal(failed.credits.ok, false);
+      assert.equal(failed.credits.errorCode, [401, 302].includes(status) ? "session-invalid" : undefined);
+      assert.equal(app.dashboardSessionStatus(failed), [401, 302].includes(status) ? "invalid" : "unverified");
+      for (const key of ["missions", "pointsOfInterest", "allianceEvents"]) {
+        assert.equal(failed[key].errorCode, undefined);
+      }
+      if ([401, 302].includes(status)) assert.match(failed.credits.error, /SessionID is verlopen of ongeldig/);
       assert.doesNotMatch(JSON.stringify(failed), /TEST%2Fsession|_session_id/);
     }
+    const gameFetch = globalThis.fetch;
+    globalThis.fetch = async () => { throw new TypeError("fetch failed"); };
+    const offline = await load(event);
+    assert.equal(app.dashboardSessionStatus(offline), "unverified");
+    assert.equal(offline.credits.errorCode, undefined);
+    assert.match(offline.credits.error, /fetch failed/);
+    globalThis.fetch = gameFetch;
+    await setSession(event, "TEST%2Fsession==", false);
+    status = 200;
+    assert.equal(app.dashboardSessionStatus(await load(event)), "valid");
     await handlers.get("auth:logout")(event);
     await assert.rejects(handlers.get("usage:log")(event), /accountgegevens/);
     hasSession = false;
@@ -510,6 +601,12 @@ test("refresh intervals default to five minutes and never refresh before the con
   }
   assert.equal(refreshInterval.refreshDue(1000, 300999, 5), false);
   assert.equal(refreshInterval.refreshDue(1000, 301000, 5), true);
+  assert.equal(refreshInterval.refreshCountdown(1000, 1000, 5), "05:00");
+  assert.equal(refreshInterval.refreshCountdown(1000, 2000, 5), "04:59");
+  assert.equal(refreshInterval.refreshCountdown(1000, 300999, 5), "00:01");
+  assert.equal(refreshInterval.refreshCountdown(1000, 301000, 5), "00:00");
+  assert.equal(refreshInterval.refreshCountdown(1000, 400000, 5), "00:00");
+  assert.equal(refreshInterval.refreshCountdown(1000, 1000, 1), "01:00");
   assert.equal(refreshInterval.refreshDue(1000, 301000, 10), false);
 });
 
@@ -657,6 +754,22 @@ test("reference data permits only known keys and does not forward session creden
   assert.equal(result.ok, true);
   assert.equal(result.data.length, 101);
   assert.equal(requests, 2);
+});
+
+test("desktop issues use this repository and paginate without account credentials", async () => {
+  let page = 0;
+  const result = await reference.loadReference("desktopIssues", async (url, options) => {
+    page++;
+    const parsed = new URL(url);
+    assert.equal(parsed.pathname, "/repos/MKS-Dashboard/mks-dashboard-v2/issues");
+    assert.equal(parsed.searchParams.get("state"), "open");
+    assert.equal(parsed.searchParams.get("page"), String(page));
+    assert.deepEqual(options.headers, { Accept: "application/json" });
+    return Response.json(page === 1 ? Array(100).fill({ number: 17 }) : []);
+  });
+  assert.equal(page, 2);
+  assert.equal(result.ok, true);
+  assert.equal(result.data.length, 100);
 });
 
 test("external links are HTTPS and limited to expected public hosts", () => {

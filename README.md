@@ -27,6 +27,8 @@ Stable en Beta kunnen naast elkaar worden geïnstalleerd. Ze hebben afzonderlijk
 
 Voer bij de eerste start je Meldkamerspel-SessionID in. Je kunt deze versleuteld op je pc bewaren, zodat de app bij een volgende start automatisch je gegevens probeert op te halen.
 
+Wordt je SessionID geweigerd, dan toont de app **SessionID verlopen of ongeldig**. Log opnieuw in bij Meldkamerspel en plak de nieuwe SessionID in de app. Bij een verbindingsfout wordt je SessionID niet als verlopen aangemerkt en kun je opnieuw proberen zonder deze te vervangen.
+
 Op het aanmeldscherm staat **De app verzamelt gebruiksgegevens**. Onder **Meer details** lees je welke gegevens worden verstuurd en waarom. Deze uitleg is ook beschikbaar via **Gebruikersmenu > Over de app**.
 
 Onder het SessionID-veld vind je **Hoe vind ik mijn SessionID?** met instructies voor Chrome, Edge en Firefox:
@@ -56,8 +58,11 @@ Het overzicht begroet je met je spelersnaam en toont voertuigen, gebouwen, credi
 - Voertuigdetails en equipmentdetails hebben dezelfde zoekbare en sorteerbare opzet, met de terugknop naast de paginakop. Voertuig-ID's worden zonder duizendtalscheiding getoond; met het knopje naast het ID open je het voertuig in je browser.
 - **Gebouwen:** gebouwtypen, uitbreidingen, specialisaties en opleidingen.
 - **Capaciteit:** bezette en vrije ziekenhuisbedden, cellen en klaslokalen.
+
 - **Team:** teamgegevens, teamkas, leden, gebouwen en teamopleidingen.
 - **Account:** spelersnaam, credits, coins, rang en ranglijstpositie.
+
+Progressdata heeft bovenaan een toggle voor **Normaal** (de bestaande voortgangsbalken) en **Compact** (cirkeldiagrammen met eigen en teamcapaciteit). Je keuze wordt lokaal onthouden, ook na het herstarten van de app; standaard is Normaal. Compact toont op brede schermen vier kaarten naast elkaar, inclusief bezetting, vrije plaatsen en totalen. Op kleinere schermen worden de kaarten over minder kolommen verdeeld.
 
 Welke gegevens je ziet, hangt af van je account en de gegevens die Meldkamerspel beschikbaar stelt.
 
@@ -68,6 +73,8 @@ Automatisch vernieuwen staat standaard **aan**, met een interval van **5 minuten
 Ook als automatisch vernieuwen uitstaat, kun je altijd **Gegevens ophalen** gebruiken. Je gekozen interval blijft bewaard.
 
 Dit interval geldt voor gamegegevens, niet voor app-updates.
+
+Na aanmelding toont de linkeronderhoek een countdown tot de volgende automatische refresh. Tijdens ophalen verschijnt de ophaalstatus; als automatisch vernieuwen uitstaat, wordt dat aangegeven. Handmatig ophalen reset de countdown.
 
 ### Een foutrapport maken
 
@@ -105,13 +112,15 @@ Voor vragen over de gebruiksregistratie of een verwijderingsverzoek kun je conta
 
 ## Extra functies in Beta
 
+In Beta toont **Over de app** ook openstaande bugs en featureverzoeken van deze desktopapp, met een typeaanduiding Bug of Feature in plaats van alle GitHub-labels. Onder **Volgende release** staan open issues met het label `next release`; deze staan niet dubbel bij de overige openstaande issues. Dit overzicht is zonder Meldkamerspel-aanmelding beschikbaar en vereist internet. Gesloten issues verdwijnen uit het overzicht, ook als het label blijft staan.
+
 In Beta kun je via **Instellingen > Infoblocks** extra informatiepagina's inschakelen: missies, geplande en grote teammissies, evenementen, teamevents, POI's, onderscheidingen, informatie, credits per spelversie en suggesties.
 
 Deze optie staat standaard uit en is niet beschikbaar in Stable. Beta heeft ook een technische **Dev mode** voor probleemonderzoek; uitleg staat in de [ontwikkelaarshandleiding](dev.md#probleemonderzoek).
 
 ## Hulp en problemen melden
 
-Meld fouten of wensen via [GitHub Issues](https://github.com/MKS-Dashboard/mks-dashboard-v2/issues). Vermeld je appversie, Stable of Beta, en de stappen waarmee het probleem optreedt. Deel geen SessionID of ongecontroleerde accountgegevens.
+Meld fouten of wensen via de [GitHub-issueformulieren](https://github.com/MKS-Dashboard/mks-dashboard-v2/issues/new/choose). Kies **Bug melden** of **Feature aanvragen**. Het bugformulier vraagt om je appversie, Stable of Beta, en de stappen waarmee het probleem optreedt. Deel geen SessionID of ongecontroleerde accountgegevens.
 
 Lukt aanmelden of gegevens ophalen niet, controleer dan je internetverbinding en probeer opnieuw. Een opgeslagen SessionID blijft bij een verbindingsfout bewaard. Als de app na een update niet automatisch start, open deze via het Windows-startmenu.
 

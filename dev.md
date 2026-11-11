@@ -28,6 +28,8 @@ npm.cmd run dev
 
 ## Tests en builds
 
+De [tsconfig.json](tsconfig.json) koppelt voor de IDE de afzonderlijke Node- en rendererprojecten. Gedeelde compileropties staan in [tsconfig.base.json](tsconfig.base.json); de renderer gebruikt JSX via [tsconfig.web.json](tsconfig.web.json). Blijft VS Code na een configuratiewijziging oude JSX-fouten tonen, voer dan **TypeScript: Restart TS Server** uit via het opdrachtpalet.
+
 **Over de app > Het project in cijfers** toont een telling die de Vite-configuratie bij elke start/build berekent. [project-stats.ts](scripts/project-stats.ts) telt broncodebestanden in `src`, `scripts`, `install`, `build` en broncode/configuratie in de repositoryroot. Alleen TS, TSX, JS, JSX, MJS, CJS, CSS, HTML, C#, PowerShell en NSIS worden geteld. Niet-lege regels inclusief commentaar tellen mee; JSON, documentatie, dependencies en buildoutputs niet. De telling wordt in de rendererbundle opgenomen en vereist geen bronbestanden op de pc van de eindgebruiker.
 
 ```powershell
@@ -134,6 +136,7 @@ node scripts\update-extra-catalogs.mjs equipments --dry-run
 Na een geslaagde releasepublicatie worden automatisch de nieuwste **10 Stable-releases en 10 Beta-releases** bewaard, op basis van het versienummer. Oudere releases, hun downloadbestanden en bijbehorende Git-tags worden verwijderd. Conceptreleases en releases met onbekende tagformaten worden niet opgeruimd.
 
 - **Beta:** een push naar `dev` publiceert automatisch een prerelease.
+- Bij een push naar `dev` geeft de [issueworkflow](.github/workflows/next-release.yml) open issues uit commitberichten met `Closes #16`, `Fixes #16` of `Resolves #16` automatisch het label `next release`. Het label wordt zo nodig aangemaakt. Dit gebeurt onafhankelijk van de releasebuild en sluit het issue niet; GitHub sluit het bij opname in de standaardbranch. Het label blijft daarna staan. Verwijzingen naar andere repositories en pull requests worden overgeslagen.
 - **Stable:** een push naar `main`, bijvoorbeeld na een merge, publiceert automatisch een release na een geslaagde test en build. Handmatig een tag van `main` publiceren in het formaat `vYYYY.MM.DD.HH.MM` blijft mogelijk.
 - Stable-tags worden automatisch gegenereerd als `vYYYY.MM.DD.HH.MM`. Als een tag voor de huidige minuut al bestaat, wacht de versievoorbereiding tot de volgende minuut.
 - Beta-tags gebruiken `vYYYY.MM.DD.HH.MM-beta`. Versietijden gebruiken `Europe/Amsterdam`, inclusief zomer- en wintertijd.

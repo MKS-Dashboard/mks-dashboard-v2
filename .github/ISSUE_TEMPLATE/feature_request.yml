@@ -1,0 +1,34 @@
+name: Feature aanvragen
+description: Stel een nieuwe functie of verbetering voor.
+title: "[FEATURE] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Heb je een idee voor MKS Dashboard? Kijk eerst of er al een vergelijkbaar verzoek bestaat.
+        Deel geen SessionID of andere gevoelige informatie, ook niet in voorbeelden of screenshots.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Welke behoefte of welk probleem heb je?
+      description: Vertel wat je wilt bereiken en wat er nu ontbreekt of omslachtig is.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Wat stel je voor?
+      description: Beschrijf hoe de functie of verbetering volgens jou zou moeten werken.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatieven
+      description: Heb je andere oplossingen overwogen of gebruik je nu een omweg?
+  - type: textarea
+    id: context
+    attributes:
+      label: Extra informatie of voorbeelden
+      description: Voeg eventueel een voorbeeld of screenshot toe. Verwijder eerst gevoelige informatie.

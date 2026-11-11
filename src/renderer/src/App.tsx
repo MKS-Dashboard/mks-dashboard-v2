@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BuildingsPage, ProgressPage, read, VehiclesPage, VehicleDetailsPage } from "./DashboardPages";
 import { schoolingRecords } from "./schoolings";
-import { defaultRefreshMinutes, parseRefreshMinutes, refreshDue } from "./refresh-interval";
-import { accountUsername, AccountPage, AlliancePage, BuildingDetailsPage, CreditsPage, SchoolingsPage, SuggestionsPage } from "./AccountPages";
+import { defaultRefreshMinutes, parseRefreshMinutes, refreshCountdown, refreshDue } from "./refresh-interval";
+import { accountUsername, AccountPage, AlliancePage, BuildingDetailsPage, CreditsPage, DesktopIssuesOverview, SchoolingsPage, SuggestionsPage } from "./AccountPages";
 import { AllianceEventsPage, AllianceMissionsPage, AwardsPage, EventsPage, InformationPage, MissionsPage, PlannedMissionsPage, POIPage } from "./InformationPages";
 import { infoblocksAllowed, isInfoblockPage } from "./infoblocks";
 import { RawResponsesPage } from "./RawResponsesPage";
@@ -27,6 +27,16 @@ function recordsFrom(data: unknown): unknown[] {
     if (nestedArray) return nestedArray;
   }
   return data === null || data === undefined ? [] : [data];
+}
+
+export function RefreshCountdown({ lastUpdated, minutes }: { lastUpdated: Date; minutes: number }) {
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [lastUpdated, minutes]);
+  return <span>Vernieuwen over {refreshCountdown(lastUpdated.getTime(), now, minutes)}</span>;
 }
 
 export function OverviewSummary({ data, username, lastUpdated, loading, autoRefresh, refreshMinutes, onNavigate, onRefresh }: {
@@ -121,7 +131,7 @@ export function AboutPage({ appInfo }: { appInfo: AppInfo | null }) {
   const links = [
     ["Project op GitHub", "https://github.com/MKS-Dashboard/mks-dashboard-v2"],
     ["Releaseopmerkingen", "https://github.com/MKS-Dashboard/mks-dashboard-v2/releases"],
-    ["Probleem melden of suggestie doen", "https://github.com/MKS-Dashboard/mks-dashboard-v2/issues/new"],
+    ["Probleem melden of suggestie doen", "https://github.com/MKS-Dashboard/mks-dashboard-v2/issues/new/choose"],
     ["Bijdragers", "https://github.com/MKS-Dashboard/mks-dashboard-v2/graphs/contributors"],
     ["Oorspronkelijke webapp", "https://github.com/MKS-Dashboard/mks-dashboard.github.io"],
     ["Meldkamerspel", "https://meldkamerspel.com"],
@@ -184,6 +194,7 @@ export function AboutPage({ appInfo }: { appInfo: AppInfo | null }) {
           </ul>
         </div>
       </div>
+      {appInfo?.channel === "dev" && <DesktopIssuesOverview />}
     </section>
   );
 }
@@ -208,6 +219,25 @@ export function SessionIdInstructions() {
       <p>Behandel je SessionID als een wachtwoord: deel deze nooit, ook niet in screenshots of foutrapporten.</p>
     </details>
   );
+}
+
+export function dashboardSessionStatus(data: DashboardData): "valid" | "invalid" | "unverified" {
+  const results = dashboardResources.filter(({ sessionRequired }) => sessionRequired).map(({ key }) => data[key]);
+  if (results.some((result) => result.ok)) return "valid";
+  return results.some((result) => !result.ok && result.errorCode === "session-invalid") ? "invalid" : "unverified";
+}
+
+export function SavedSessionNotice({ status }: { status: "valid" | "invalid" | "unverified" }) {
+  if (status === "invalid") {
+    return <p id="session-status" className="notice notice-error" role="alert">
+      Je SessionID is verlopen of ongeldig. Log opnieuw in bij Meldkamerspel en plak je nieuwe SessionID hieronder.
+    </p>;
+  }
+  return <p id="session-status" className="saved-session-note" role="status">
+    {status === "valid"
+      ? "Er staat al een SessionID ingesteld. Vul alleen iets in als je deze wilt vervangen."
+      : "Er staat een SessionID ingesteld, maar deze kon niet worden gecontroleerd. Controleer je internetverbinding en probeer opnieuw."}
+  </p>;
 }
 
 function App() {
@@ -240,6 +270,8 @@ function App() {
   const [selectedVehicleTypeId, setSelectedVehicleTypeId] = useState<number | null>(null);
   const [selectedEquipmentType, setSelectedEquipmentType] = useState<string | null>(null);
   const [gameVersion, setGameVersion] = useState<"brandweer" | "politie">("brandweer");
+  const sessionStatus = data ? dashboardSessionStatus(data) : "unverified";
+  const sessionInvalid = sessionStatus === "invalid";
 
   useEffect(() => {
     if (error) recordAppIssue("App", error);
@@ -400,9 +432,8 @@ function App() {
       const result = await window.mksDashboard.loadDashboard();
       setData(result);
       setLastUpdated(new Date());
-      const sessionAccepted = dashboardResources.some(
-        ({ key, sessionRequired = true }) => sessionRequired && result[key].ok,
-      );
+      const status = dashboardSessionStatus(result);
+      const sessionAccepted = status === "valid";
       setSignedIn(sessionAccepted);
       setShowSessionForm(!sessionAccepted);
       if (result.credits.ok) {
@@ -416,7 +447,7 @@ function App() {
       }
       if (!sessionAccepted) {
         const auth = await window.mksDashboard.getAuthStatus();
-        if (auth.hasSessionId) setError("De gamegegevens zijn niet opgehaald. Controleer je SessionID en internetverbinding.");
+        if (auth.hasSessionId && status !== "invalid") setError("De gamegegevens zijn niet opgehaald. Controleer je SessionID en internetverbinding.");
       }
     } catch (cause) {
       setSignedIn(false);
@@ -432,7 +463,7 @@ function App() {
     if (!autoRefresh || !signedIn || !refreshSettingsLoaded || !lastUpdated || checkingSession || loading || loggingOut || updating) return;
     const timer = setInterval(() => {
       if (refreshDue(lastUpdated.getTime(), Date.now(), refreshMinutes)) void refresh();
-    }, 60_000);
+    }, 1000);
     return () => clearInterval(timer);
   }, [autoRefresh, signedIn, refreshSettingsLoaded, lastUpdated, checkingSession, loading, loggingOut, updating, refreshMinutes, refresh]);
 
@@ -467,15 +498,17 @@ function App() {
         await window.mksDashboard.setSessionId(sessionDraft, rememberSession);
         setSessionDraft("");
         setHasSessionId(true);
-      } else if (!hasSessionId) {
-        setError("Vul je Meldkamerspel-SessionID in voordat je gegevens ophaalt.");
+      } else if (!hasSessionId || sessionInvalid) {
+        setError(sessionInvalid
+          ? "Vul een nieuwe Meldkamerspel-SessionID in. De ingestelde SessionID is verlopen of ongeldig."
+          : "Vul je Meldkamerspel-SessionID in voordat je gegevens ophaalt.");
         return;
       }
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "De SessionID kon niet worden ingesteld.");
     }
-  }, [hasSessionId, rememberSession, refresh, sessionDraft]);
+  }, [hasSessionId, rememberSession, refresh, sessionDraft, sessionInvalid]);
 
   const deleteSession = useCallback(async () => {
     setLoggingOut(true);
@@ -602,8 +635,14 @@ function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <span className={`status-dot ${hasSessionId ? "connected" : ""}`} />
-          <span>{checkingSession ? "SessionID controleren" : hasSessionId ? "SessionID ingesteld" : "Geen SessionID ingesteld"}</span>
+          <span className={`status-dot ${signedIn ? "connected" : ""}`} />
+          {checkingSession ? <span>SessionID controleren</span>
+            : signedIn ? loading ? <span>Gegevens ophalen...</span>
+              : loggingOut ? <span>Uitloggen...</span>
+                : !autoRefresh ? <span>Automatisch vernieuwen uit</span>
+                  : updating || !refreshSettingsLoaded || !lastUpdated ? <span>Vernieuwen gepauzeerd</span>
+                    : <RefreshCountdown lastUpdated={lastUpdated} minutes={refreshMinutes} />
+              : <span>{hasSessionId ? "SessionID ingesteld" : "Geen SessionID ingesteld"}</span>}
         </div>
       </aside>
 
@@ -776,11 +815,12 @@ function App() {
               <div className="welcome-icon">M</div>
               <div className="welcome-copy">
                 <span className="eyebrow">{data ? "ACCOUNTINSTELLINGEN" : "JOUW LOKALE DASHBOARD"}</span>
-                <h2>{data ? "SessionID aanpassen" : "Welkom bij MKS Dashboard Desktop"}</h2>
+                <h2>{sessionInvalid ? "SessionID verlopen of ongeldig" : data ? "SessionID aanpassen" : "Welkom bij MKS Dashboard Desktop"}</h2>
                 <p>
                   Voer de SessionID van Meldkamerspel in.
                 </p>
                 <UsageRegistrationNotice />
+                {hasSessionId && <SavedSessionNotice status={sessionStatus} />}
                 <label className="field-label" htmlFor="session-id">Meldkamerspel-SessionID</label>
                 <input
                   id="session-id"
@@ -789,6 +829,8 @@ function App() {
                   autoComplete="off"
                   spellCheck={false}
                   placeholder="Plak hier je SessionID"
+                  aria-invalid={sessionInvalid || undefined}
+                  aria-describedby={hasSessionId ? "session-status" : undefined}
                   value={sessionDraft}
                   onChange={(event) => setSessionDraft(event.target.value)}
                 />
@@ -802,15 +844,10 @@ function App() {
                   <span>Bewaar de SessionID versleuteld op deze pc</span>
                 </label>
                 <div className="welcome-actions">
-                  <button className="button button-primary" disabled={loading || loggingOut} onClick={() => void saveAndRefresh()}>
+                  <button className="button button-primary" disabled={loading || loggingOut || (sessionInvalid && !sessionDraft.trim())} onClick={() => void saveAndRefresh()}>
                     {loading ? "Gegevens ophalen..." : sessionDraft.trim() ? "SessionID opslaan en ophalen" : "Gegevens ophalen"}
                   </button>
                 </div>
-                {hasSessionId && (
-                  <p className="saved-session-note">
-                    Er staat al een SessionID ingesteld. Vul alleen iets in als je deze wilt vervangen.
-                  </p>
-                )}
                 <p className="privacy-note">
                   Je SessionID wordt uitsluitend naar meldkamerspel.com gestuurd. Live gegevens vereisen internet.
                 </p>
