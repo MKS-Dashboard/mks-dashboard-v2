@@ -275,8 +275,8 @@ test("about page presents version and usage privacy and remains available withou
     assert.match(html, /Bijdragers/);
     assert.match(html, /Missionfiles-All-Versions/);
     assert.match(html, /Je SessionID en overige spelgegevens worden niet meegestuurd/);
-    if (channel !== "stable") assert.match(html, /GitHub-issues ophalen/);
-    else assert.doesNotMatch(html, /GitHub-issues ophalen|Bugs en featureverzoeken/);
+    assert.match(html, /GitHub-issues ophalen/);
+    assert.match(html, /Bugs en featureverzoeken/);
   }
 });
 

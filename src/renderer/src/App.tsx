@@ -197,7 +197,7 @@ export function AboutPage({ appInfo }: { appInfo: AppInfo | null }) {
           </ul>
         </div>
       </div>
-      {(appInfo?.channel === "dev" || appInfo?.channel === "test") && <DesktopIssuesOverview />}
+      <DesktopIssuesOverview />
     </section>
   );
 }

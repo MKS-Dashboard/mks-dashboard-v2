@@ -116,7 +116,7 @@ Voor vragen over de gebruiksregistratie of een verwijderingsverzoek kun je conta
 
 ## Extra functies in Beta
 
-In Beta toont **Over de app** ook openstaande bugs en featureverzoeken van deze desktopapp, met een typeaanduiding Bug of Feature in plaats van alle GitHub-labels. Onder **Volgende release** staan open issues met het label `next release`; deze staan niet dubbel bij de overige openstaande issues. Dit overzicht is zonder Meldkamerspel-aanmelding beschikbaar en vereist internet. Gesloten issues verdwijnen uit het overzicht, ook als het label blijft staan.
+In Stable, Beta en TST toont **Over de app** ook openstaande bugs en featureverzoeken van deze desktopapp, met een typeaanduiding Bug of Feature in plaats van alle GitHub-labels. Onder **Volgende release** staan open issues met het label `next release`; deze staan niet dubbel bij de overige openstaande issues. Dit overzicht is zonder Meldkamerspel-aanmelding beschikbaar en vereist internet. Gesloten issues verdwijnen uit het overzicht, ook als het label blijft staan.
 
 In Beta kun je via **Instellingen > Infoblocks** extra informatiepagina's inschakelen: missies, geplande en grote teammissies, evenementen, teamevents, POI's, onderscheidingen, informatie, credits per spelversie en suggesties.
 
