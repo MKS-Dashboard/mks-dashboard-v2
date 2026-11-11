@@ -105,7 +105,7 @@ test("session notices distinguish rejected credentials from connection failures 
   assert.equal(app.dashboardSessionStatus(data), "valid");
 });
 
-test("project statistics exclude data, dependencies, outputs and blank lines", async () => {
+test("project statistics include application data and exclude other JSON, dependencies, outputs and blank lines", async () => {
   const folder = await mkdtemp(join(tmpdir(), "mks-stats-test-"));
   const { mkdir, writeFile } = await import("node:fs/promises");
   try {
@@ -114,11 +114,13 @@ test("project statistics exclude data, dependencies, outputs and blank lines", a
     }
     await writeFile(join(folder, "src", "example.ts"), "const value = 1;\r\n\r\n// comment\r\n");
     await writeFile(join(folder, "src", "data.json"), "{}");
+    await mkdir(join(folder, "src", "renderer", "src", "data"), { recursive: true });
+    await writeFile(join(folder, "src", "renderer", "src", "data", "vehicles.json"), "{\n\n  \"id\": 1\n}\n");
     await writeFile(join(folder, "scripts", "test.mjs"), "test();\n");
     await writeFile(join(folder, "node_modules", "dependency.js"), "excluded();");
     await writeFile(join(folder, "out", "output.js"), "excluded();");
     await writeFile(join(folder, "README.md"), "# Excluded");
-    assert.deepEqual(stats.projectStats(folder), { files: 2, lines: 3 });
+    assert.deepEqual(stats.projectStats(folder), { files: 3, lines: 6 });
     const html = render(app.AboutPage, { appInfo: { version: "0.1.0", channel: "stable" } });
     assert.match(html, /42 broncodebestanden/);
     assert.match(html, /12\.345 niet-lege regels broncode/);

@@ -4,6 +4,8 @@ Een Windows-app met overzicht over je Meldkamerspel-account, voertuigen, gebouwe
 
 De app draait op je eigen pc en haalt je gegevens rechtstreeks op bij Meldkamerspel.
 
+Een automatisch bijgewerkt overzicht van repositorybestanden en de telling per extensie, voor zowel meegetelde als niet-meegetelde bestanden, staat in [files.md](./files.md). Na een push naar `dev` wordt dit overzicht zo nodig bijgewerkt met een afzonderlijke botcommit, zonder extra build te starten.
+
 ## Downloaden en installeren
 
 **Benodigd:** Windows 10 of nieuwer en een internetverbinding. Je hoeft geen extra software te installeren.

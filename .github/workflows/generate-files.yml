@@ -1,0 +1,52 @@
+name: Update file overview
+
+on:
+  push:
+    branches:
+      - dev
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-file-overview
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out dev
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Generate and push overview
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin dev
+            git switch --detach origin/dev
+            node scripts/generate-files.mjs
+            git add -- files.md
+            if git diff --cached --quiet; then
+              echo "File overview is already up to date."
+              exit 0
+            fi
+            git commit -m "docs: update file overview"
+            if git push origin HEAD:refs/heads/dev; then
+              exit 0
+            fi
+            echo "Push failed; retrying with the latest dev commit."
+            sleep "$attempt"
+          done
+          echo "::error::Could not push the file overview after five attempts."
+          exit 1
