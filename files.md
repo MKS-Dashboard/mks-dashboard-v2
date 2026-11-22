@@ -6,7 +6,7 @@ Genegeerde en lokale buildbestanden staan niet in dit overzicht.
 
 ## Broncodetelling
 
-**11.462 niet-lege regels** in 61 bestanden, inclusief commentaar.
+**11.483 niet-lege regels** in 61 bestanden, inclusief commentaar.
 
 | Extensie | Bestanden | Niet-lege regels |
 | --- | ---: | ---: |
@@ -15,11 +15,11 @@ Genegeerde en lokale buildbestanden staan niet in dit overzicht.
 | `.css` | 1 | 1.377 |
 | `.html` | 1 | 16 |
 | `.json` | 13 | 4.403 |
-| `.mjs` | 16 | 2.039 |
+| `.mjs` | 16 | 2.059 |
 | `.nsh` | 1 | 73 |
 | `.ps1` | 2 | 125 |
 | `.ts` | 16 | 1.241 |
-| `.tsx` | 8 | 1.919 |
+| `.tsx` | 8 | 1.920 |
 
 ## Bestandsboom
 
