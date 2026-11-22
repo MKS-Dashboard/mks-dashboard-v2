@@ -686,6 +686,27 @@ test("schoolings support API result wrappers and show actual course fields for o
   }
 });
 
+test("own and team schoolings sort end dates chronologically in both directions", () => {
+  const courses = [
+    { education_title: "Maart", finish_time: "2026-03-01T12:00:00Z" },
+    { education_title: "Januari", finish_time: "2026-01-31T12:00:00Z" },
+    { education_title: "Ochtend", ends_at: "2025-12-01T08:00:00Z" },
+    { education_title: "Middag", end_time: Date.parse("2025-12-01T14:00:00Z") / 1000 },
+    { education_title: "Ongeldig", finish_time: "onbekend" },
+    { education_title: "Ontbreekt" },
+  ];
+  for (const alliance of [false, true]) {
+    const table = pages.SchoolingsPage({ result: ok({ result: courses }), alliance });
+    const order = (column, descending = false) => {
+      const html = render(pages.DataTable, { ...table.props, initialColumn: column, initialDescending: descending });
+      return [...html.matchAll(/<tr><td>([^<]*)<\/td>/g)].map((match) => match[1]);
+    };
+    assert.deepEqual(order(4), ["Ochtend", "Middag", "Januari", "Maart", "Ongeldig", "Ontbreekt"]);
+    assert.deepEqual(order(4, true), ["Maart", "Januari", "Middag", "Ochtend", "Ongeldig", "Ontbreekt"]);
+    assert.deepEqual(order(0), ["Januari", "Maart", "Middag", "Ochtend", "Ongeldig", "Ontbreekt"]);
+  }
+});
+
 test("navigation hides account pages when logged out and keeps Dev options independent", () => {
   const accountPages = navigation.navigationPages.filter((item) => !infoblocks.isInfoblockPage(item.key));
   for (const { key } of accountPages) {

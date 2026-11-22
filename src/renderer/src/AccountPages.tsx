@@ -9,7 +9,7 @@ import { schoolingRecords } from "./schoolings";
 import { loadReportedReference } from "./error-report";
 
 type Scalar = string | number;
-type Row = { cells: Scalar[]; url?: string; onDetails?: () => void };
+type Row = { cells: Scalar[]; sortValues?: Record<number, number | null>; url?: string; onDetails?: () => void };
 const format = (value: Scalar) => typeof value === "number" ? value.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) : value;
 
 export function DataTable({ title, headers, rows, linkColumn, initialColumn = 0, initialDescending = false, tone = "",
@@ -26,8 +26,9 @@ export function DataTable({ title, headers, rows, linkColumn, initialColumn = 0,
   const visible = rows.filter((row) => row.cells.some((cell) =>
     String(cell).toLocaleLowerCase("nl").includes(search.trim().toLocaleLowerCase("nl"))))
     .sort((a, b) => {
-      const left = a.cells[sort.column];
-      const right = b.cells[sort.column];
+      const left = a.sortValues?.[sort.column] !== undefined ? a.sortValues[sort.column] : a.cells[sort.column];
+      const right = b.sortValues?.[sort.column] !== undefined ? b.sortValues[sort.column] : b.cells[sort.column];
+      if (left === null || right === null) return left === right ? 0 : left === null ? 1 : -1;
       const value = typeof left === "number" && typeof right === "number"
         ? left - right : String(left).localeCompare(String(right), "nl", { numeric: true });
       return sort.descending ? -value : value;
@@ -163,7 +164,7 @@ export function SchoolingsPage({ result, alliance = false }: { result: Dashboard
   const parsed = read(result, (data) => schoolingRecords(data).map((schooling): Row => {
     const end = schooling.finish_time ?? schooling.ends_at ?? schooling.end_time;
     const timestamp = typeof end === "number" ? end * 1000 : typeof end === "string" ? Date.parse(end) : NaN;
-    return { cells: [
+    return { sortValues: { 4: Number.isFinite(timestamp) ? timestamp : null }, cells: [
       scalar(schooling.education_title ?? schooling.caption ?? schooling.name ?? schooling.schooling_type ?? schooling.id),
       scalar(schooling.building_id),
       scalar(schooling.open_spaces), yes(schooling.running),
